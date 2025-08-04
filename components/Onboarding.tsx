@@ -49,7 +49,7 @@ const Onboarding = () => {
       email: user?.emailAddresses[0].emailAddress,
       fullName: `${user?.firstName} ${user?.lastName}`,
       facultyId: data?.faculty,
-      department: data?.department,
+      departmentId: data?.department,
       year: data?.year,
       matricNo: data?.matric,
       onboarded: true,

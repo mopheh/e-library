@@ -2,6 +2,7 @@
 @import url("https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&family=Bebas+Neue&family=Oswald:wght@200..700&family=Anton&family=Nunito+Sans:ital,opsz,wght@0,6..12,200..1000;1,6..12,200..1000&display=swap");
 @import "tailwindcss";
 @import "tw-animate-css";
+
 @custom-variant dark (&:is(.dark *));
 
 @theme {
@@ -10,6 +11,7 @@
   --font-oswald: "Oswald", sans-serif;
   --font-nunito: "Nunito-sans", sans-serif;
   --font-bebas: "Bebas Neue", sans-serif;
+  --font-source-sans-pro: "Source Sans Pro", sans-serif;
   --font-poppins: 'Poppins', sans-serif;
   --font-josefin-sans: 'Josefin Sans', sans-serif;
   --font-cabin: 'Cabin', sans-serif;
@@ -151,18 +153,57 @@
   }
 
   .bg-pattern {
-    background-image: url("../public/welcome.jpg");
+    background-image: url("/welcome.jpg");
     background-size: cover;
     background-position: center;
+  }
+  input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
   }
 }
   .cl-internal-wki6ry, .cl-internal-19d97sq {box-shadow: none; border: none;}
   .cl-internal-1dauvpw {
     display: none !important;
   }
+.cl-internal-10dnlbh {
+  font-family: var(--font-open-sans);
+}
+.cl-internal-1ibm8uq {
+  color: #34D399;
+}
+.cl-internal-1xbzp4o[data-variant="default"] {
+  color: white;
+  border-color: white;
+  box-shadow: 0px 0px 0px 1px  color-mix(in srgb, transparent, var(--clerk-color-border, #ffffff) 11%), 0px 0px 1px 0px  color-mix(in srgb, transparent, #ffffff 7%);
+}
+.cl-internal-1xbzp4o[data-variant="default"]:hover{
+
+}
+.cl-internal-h8rb83, .cl-internal-hzo3he {
+  color: white;
+}
+.cl-internal-b78bk8, .cl-internal-66mzqw {
+  color: #ffffff;
+  font-family: var(--font-poppins);
+}
+.cl-internal-p5lgop, .cl-internal-lsuqh3, .cl-internal-1kw7woc{
+  padding: calc(1rem * 0.675) calc( 1rem * 0.75)
+}
+.cl-internal-k1gx3c {
+  background-color: white;
+}
+.cl-internal-lsuqh3{
+  backdrop-filter: blur(2px);
+  background-color: #ffffff;
+}
+.cl-internal-p5lgop, .cl-internal-lsuqh3, .cl-internal-i1u4p8{
+  font-family: var(--font-poppins);
+}
 .cl-internal-uumn80 {
   width: 200px !important;
-  height: 100px;
+  height: 150px;
 }
 @layer utilities {
   @keyframes gradient {

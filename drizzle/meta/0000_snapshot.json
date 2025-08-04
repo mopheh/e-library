@@ -1,5 +1,5 @@
 {
-  "id": "822d698c-fce3-441b-9b63-55ac9b75f3d5",
+  "id": "a85eee0a-61ad-4a90-9099-8bc43fd9be80",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -233,9 +233,9 @@
           "primaryKey": false,
           "notNull": true
         },
-        "department": {
-          "name": "department",
-          "type": "varchar(255)",
+        "department_id": {
+          "name": "department_id",
+          "type": "uuid",
           "primaryKey": false,
           "notNull": true
         },
@@ -276,6 +276,19 @@
           "tableTo": "faculty",
           "columnsFrom": [
             "faculty_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "users_department_id_department_id_fk": {
+          "name": "users_department_id_department_id_fk",
+          "tableFrom": "users",
+          "tableTo": "department",
+          "columnsFrom": [
+            "department_id"
           ],
           "columnsTo": [
             "id"

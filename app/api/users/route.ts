@@ -7,6 +7,7 @@ export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const facultyId = searchParams.get("facultyId");
+    const departmentId = searchParams.get("departmentId");
 
     if (facultyId) {
       // Case: Filtered by facultyId
@@ -14,6 +15,14 @@ export async function GET(req: NextRequest) {
         .select()
         .from(users)
         .where(eq(users.facultyId, facultyId));
+      return NextResponse.json(filterUsers);
+    }
+    if (departmentId) {
+      // Case: Filtered by facultyId
+      const filterUsers = await db
+        .select()
+        .from(users)
+        .where(eq(users.departmentId, departmentId));
       return NextResponse.json(filterUsers);
     }
 

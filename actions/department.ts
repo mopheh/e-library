@@ -1,6 +1,6 @@
 "use server";
 import { db } from "@/database/drizzle";
-import { departments } from "@/database/schema";
+import { departments, faculty } from "@/database/schema";
 import { eq } from "drizzle-orm";
 
 type Department = {
@@ -24,4 +24,18 @@ export const createDepartment = async (data: Department) => {
   } catch (err: any) {
     throw new Error(err.message || "Error creating departments");
   }
+};
+export const getDepartmentWithFaculty = async (departmentId: string) => {
+  const result = await db
+    .select({
+      departmentName: departments.name,
+      facultyName: faculty.name,
+      facultyId: faculty.id,
+    })
+    .from(departments)
+    .innerJoin(faculty, eq(departments.facultyId, faculty.id))
+    .where(eq(departments.id, departmentId))
+    .limit(1);
+
+  return result[0]; // or handle null result
 };

@@ -1,0 +1,1 @@
+ALTER TABLE "reading_sessions" ADD COLUMN "duration" integer DEFAULT 0 NOT NULL;

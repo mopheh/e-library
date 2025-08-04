@@ -4,3 +4,13 @@ type FormData = {
   year: string;
   matric: string;
 };
+type Course = {
+  id: string;
+  courseCode: string;
+  title: string;
+  departmentId: string;
+  unitLoad: number;
+  semester: string;
+  level: string;
+  departments: string[];
+};

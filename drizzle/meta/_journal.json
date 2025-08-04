@@ -5,8 +5,64 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1751196549075,
-      "tag": "0000_rare_ultimatum",
+      "when": 1752014451817,
+      "tag": "0000_large_xorn",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1752245886129,
+      "tag": "0001_amused_psylocke",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1752247559737,
+      "tag": "0002_dark_iron_monger",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1752893796598,
+      "tag": "0003_nifty_christian_walker",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1753131446277,
+      "tag": "0004_nervous_skaar",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1754073574490,
+      "tag": "0005_secret_spiral",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1754082080382,
+      "tag": "0006_omniscient_pixie",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1754126378590,
+      "tag": "0007_bent_rocket_raccoon",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1754143708000,
+      "tag": "0008_wise_luke_cage",
       "breakpoints": true
     }
   ]

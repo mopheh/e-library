@@ -53,8 +53,8 @@ const Page = () => {
             department={[{ ...departmentInfo, id: department }]}
             students={students}
           >
-            <div className="overflow-x-auto w-full">
-              <table className="table-auto w-full border-collapse">
+            <div className="w-full overflow-x-auto">
+              <table className="table-auto min-w-[500px] border-collapse">
                 <thead className="text-left">
                   <tr className="tracking-wider uppercase font-normal text-gray-400 text-xs font-karla border-b border-gray-200">
                     <th className="py-3">Name</th>
@@ -80,8 +80,8 @@ const Page = () => {
             courses={courses}
             department={[{ ...departmentInfo, id: department }]}
           >
-            <div className="overflow-x-auto w-full">
-              <table className="table-auto w-full border-collapse">
+            <div className="w-full overflow-x-auto">
+              <table className="table-auto min-w-[500px] border-collapse">
                 <thead className="text-left">
                   <tr className="tracking-wider uppercase font-normal text-gray-400 text-xs font-karla border-b border-gray-200">
                     <th className="py-3">Title</th>

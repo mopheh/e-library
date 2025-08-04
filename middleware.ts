@@ -65,7 +65,7 @@ export default clerkMiddleware(async (auth, req) => {
   const { userId } = await auth()
   const path = req.nextUrl.pathname
 
-  // ✅ Allow access to static/public assets
+  // ✅ Allow static/public assets and Clerk auth routes
   const safePrefixes = [
     "/_next",
     "/api",
@@ -76,7 +76,17 @@ export default clerkMiddleware(async (auth, req) => {
     "/uploads",
     "/icons",
   ]
-  if (safePrefixes.some((prefix) => path.startsWith(prefix))) {
+  const clerkAuthRoutes = [
+    "/sign-in",
+    "/sign-up",
+    "/sso-callback",
+    "/reset-password",
+  ]
+
+  if (
+    safePrefixes.some((prefix) => path.startsWith(prefix)) ||
+    clerkAuthRoutes.includes(path)
+  ) {
     return NextResponse.next()
   }
 
@@ -85,12 +95,12 @@ export default clerkMiddleware(async (auth, req) => {
     return NextResponse.redirect(new URL("/sign-in", req.url))
   }
 
-  // ✅ Allow access to /dashboard/admin/data/...
+  // ✅ Allow access to /admin/data/...
   if (path.startsWith("/admin/data")) {
     return NextResponse.next()
   }
 
-  // 🚫 Redirect everyone else to the upload page
+  // 🚫 Redirect all other routes to /admin/data
   return NextResponse.redirect(new URL("/admin/data", req.url))
 })
 

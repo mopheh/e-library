@@ -10,8 +10,12 @@ import { useDepartmentUsers } from "@/hooks/useUsers"
 import StudentRow from "@/components/adminDashboard/StudentRow"
 import { useBooks } from "@/hooks/useBooks"
 import { BooksRow } from "@/components/Dashboard/BooksRow"
-
-const Page = ({ params }: { params: { department: string } }) => {
+interface PageProps {
+  params: {
+    department: string
+  }
+}
+const Page = ({ params }: PageProps) => {
   // @ts-ignore
   const { role, department } = React.use(params)
   const { data: students } = useDepartmentUsers(department)

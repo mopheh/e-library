@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { db } from "@/database/drizzle"
-import { courses } from "@/database/schema"
+import { courses, departmentCourses } from "@/database/schema"
 import { eq } from "drizzle-orm"
 
 export async function GET(req: NextRequest) {
@@ -12,13 +12,23 @@ export async function GET(req: NextRequest) {
     const limit = Number(searchParams.get("limit")) || 1000
 
     if (departmentId) {
-      const filterCourses = await db
-        .select()
-        .from(courses)
-        .where(eq(courses.departmentId, departmentId))
+      const result = await db
+        .select({
+          id: courses.id,
+          courseCode: courses.courseCode,
+          title: courses.title,
+          unitLoad: courses.unitLoad,
+          level: courses.level,
+          semester: courses.semester,
+          departmentId: courses.departmentId,
+        })
+        .from(departmentCourses)
+        .innerJoin(courses, eq(departmentCourses.courseId, courses.id))
+        .where(eq(departmentCourses.departmentId, departmentId))
         .limit(limit)
         .offset(skip)
-      return NextResponse.json(filterCourses)
+
+      return NextResponse.json(result)
     }
 
     // Case: Fetch all departments

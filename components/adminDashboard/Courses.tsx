@@ -27,7 +27,7 @@ const Courses: React.FC<CoursesProps> = ({
   next,
 }) => {
   const [open, setOpen] = useState(false)
-
+  console.log(courses)
   return (
     <div>
       {open && (
@@ -46,40 +46,42 @@ const Courses: React.FC<CoursesProps> = ({
           </button>
         </div>
 
-        <table className="table-auto w-full border-collapse">
-          <thead className="text-left">
-            <tr className="tracking-wider uppercase text-gray-400 text-xs font-karla border-b border-gray-200">
-              <th className="py-3">Course Code</th>
-              <th>Title</th>
-              <th>Unit Load</th>
-              <th>Level</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {courses?.map((course) => (
-              <tr
-                key={course.id}
-                className="font-poppins text-xs py-3 text-gray-800 font-normal border-b border-gray-200"
-              >
-                <td className="px-6 py-4 uppercase">{course.courseCode}</td>
-                <td>{course.title}</td>
-                <td>{course.unitLoad}</td>
-                <td className="py-4 text-green-500 font-medium">
-                  {course.level}
-                </td>
-                <td className="flex pt-2 gap-1.5">
-                  <div className="p-2 cursor-pointer bg-red-500 text-white rounded">
-                    <TrashIcon className="h-4 w-4" />
-                  </div>
-                  <div className="p-2 cursor-pointer bg-gray-500 text-white rounded">
-                    <EditIcon className="h-4 w-4" />
-                  </div>
-                </td>
+        <div className="w-full overflow-x-auto">
+          <table className="table-auto min-w-[500px] border-collapse">
+            <thead className="text-left">
+              <tr className="tracking-wider uppercase text-gray-400 text-xs font-karla border-b border-gray-200">
+                <th className="py-3">Course Code</th>
+                <th>Title</th>
+                <th>Unit Load</th>
+                <th>Level</th>
+                <th>Actions</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {courses?.map((course) => (
+                <tr
+                  key={course.id}
+                  className="font-poppins text-xs py-3 text-gray-800 font-normal border-b border-gray-200"
+                >
+                  <td className="px-6 py-4 uppercase">{course.courseCode}</td>
+                  <td>{course.title}</td>
+                  <td>{course.unitLoad}</td>
+                  <td className="py-4 text-green-500 font-medium">
+                    {course.level}
+                  </td>
+                  <td className="flex pt-2 gap-1.5">
+                    <div className="p-2 cursor-pointer bg-red-500 text-white rounded">
+                      <TrashIcon className="h-4 w-4" />
+                    </div>
+                    <div className="p-2 cursor-pointer bg-gray-500 text-white rounded">
+                      <EditIcon className="h-4 w-4" />
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
         <div className="flex justify-between mt-4">
           <button
             onClick={() => next(page - 1)}

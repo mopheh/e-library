@@ -2,21 +2,17 @@
 import React, { useEffect, useState } from "react"
 import Courses from "@/components/adminDashboard/Courses"
 import CustomList from "@/components/adminDashboard/CustomList"
-import Welcome from "@/components/Welcome"
-import Stat from "@/components/Dashboard/Stat"
 import { useCourses } from "@/hooks/useCourses"
 import { getDepartmentWithFaculty } from "@/actions/department"
 import { useDepartmentUsers } from "@/hooks/useUsers"
 import StudentRow from "@/components/adminDashboard/StudentRow"
 import { useBooks } from "@/hooks/useBooks"
 import { BooksRow } from "@/components/Dashboard/BooksRow"
-interface PageProps {
-  params: {
-    department: string
-  }
-}
-const Page = ({ params }: PageProps) => {
-  const { department } = params
+import { useParams } from "next/navigation"
+
+const Page = () => {
+  const department = useParams().department as string
+
   const { data: students } = useDepartmentUsers(department)
   const [coursePage, setCoursePage] = useState(1)
   const [bookPage, setBookPage] = useState(1)

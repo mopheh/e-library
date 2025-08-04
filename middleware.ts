@@ -75,6 +75,7 @@ export default clerkMiddleware(async (auth, req) => {
     "/fonts",
     "/uploads",
     "/icons",
+    "/univault.png",
   ]
   const clerkAuthRoutes = [
     "/sign-in",
@@ -89,7 +90,12 @@ export default clerkMiddleware(async (auth, req) => {
   ) {
     return NextResponse.next()
   }
-
+  // ✅ Allow static files (even in root) based on extension
+  const staticFilePattern =
+    /\.(png|jpg|jpeg|gif|webp|svg|ico|css|js|woff2?|ttf|pdf|csv|docx?|xlsx?|zip|webmanifest)$/
+  if (staticFilePattern.test(path)) {
+    return NextResponse.next()
+  }
   // ✅ Allow signed-in users only
   if (!userId) {
     return NextResponse.redirect(new URL("/sign-in", req.url))

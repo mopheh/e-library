@@ -1,7 +1,8 @@
-import React from "react";
-import Link from "next/link";
-import { TrashIcon } from "@heroicons/react/24/outline";
-import { EditIcon } from "lucide-react";
+"usw client"
+import React from "react"
+import Link from "next/link"
+import { TrashIcon } from "@heroicons/react/24/outline"
+import { EditIcon } from "lucide-react"
 
 const StudentRow = ({ student }: { student: Credentials }) => {
   return (
@@ -19,6 +20,6 @@ const StudentRow = ({ student }: { student: Credentials }) => {
         </div>
       </td>
     </tr>
-  );
-};
-export default StudentRow;
+  )
+}
+export default StudentRow

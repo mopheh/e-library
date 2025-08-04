@@ -1,3 +1,4 @@
+"use client"
 import React, { useState } from "react"
 import { PlusIcon } from "@heroicons/react/20/solid"
 import AddCoursesForm from "@/components/AddCourses"

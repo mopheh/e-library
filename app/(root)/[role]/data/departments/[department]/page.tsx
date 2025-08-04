@@ -67,7 +67,7 @@ const Page = ({ params }: { params: { department: string } }) => {
                 </thead>
                 <tbody>
                   {students &&
-                    students.map((student: Credential) => (
+                    students.map((student: Credentials) => (
                       <StudentRow key={student.id} student={student} />
                     ))}
                 </tbody>

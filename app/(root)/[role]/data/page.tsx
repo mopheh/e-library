@@ -3,7 +3,7 @@ import React from "react"
 import Sidebar from "@/components/Dashboard/Sidebar"
 import AdminDashboard from "@/components/adminDashboard/AdminDashboard"
 
-const Page = ({ params }: { params: { role: string } }) => {
+const Page = () => {
   // @ts-ignore
   return <AdminDashboard />
 }

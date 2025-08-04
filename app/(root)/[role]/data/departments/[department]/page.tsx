@@ -15,8 +15,7 @@ interface PageProps {
     department: string
   }
 }
-const Page = ({ params }: PageProps) => {
-  // @ts-ignore
+const Page = ({ params }: Props) => {
   const { department } = params
   const { data: students } = useDepartmentUsers(department)
   const [coursePage, setCoursePage] = useState(1)

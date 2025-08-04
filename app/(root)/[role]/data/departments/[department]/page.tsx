@@ -17,7 +17,7 @@ interface PageProps {
 }
 const Page = ({ params }: PageProps) => {
   // @ts-ignore
-  const { role, department } = React.use(params)
+  const { department } = params
   const { data: students } = useDepartmentUsers(department)
   const [coursePage, setCoursePage] = useState(1)
   const [bookPage, setBookPage] = useState(1)

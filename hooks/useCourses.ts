@@ -1,11 +1,12 @@
 import { useQuery } from "@tanstack/react-query"
+import { ParamValue } from "next/dist/server/request/params"
 
 export const useCourses = ({
   departmentId,
   page,
   limit,
 }: {
-  departmentId?: string
+  departmentId?: ParamValue
   page?: number
   limit?: number
 }) => {

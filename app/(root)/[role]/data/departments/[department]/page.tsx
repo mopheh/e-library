@@ -15,7 +15,7 @@ interface PageProps {
     department: string
   }
 }
-const Page = ({ params }: Props) => {
+const Page = ({ params }: PageProps) => {
   const { department } = params
   const { data: students } = useDepartmentUsers(department)
   const [coursePage, setCoursePage] = useState(1)

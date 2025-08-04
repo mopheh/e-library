@@ -11,9 +11,9 @@ const Nav = () => {
   const { user } = useUser()
   const { signOut } = useAuth()
   return (
-    <div className="flex w-full justify-between items-start mb-5">
+    <div className="flex w-full justify-between items-start sm:items-center mb-5 gap-2 sm:gap-4">
       <Breadcrumbs />
-      <div className="flex gap-2 items-center font-poppins">
+      <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center font-poppins">
         {/* <div className="border-1 w-56 flex items-center bg-white border-gray-200 px-2 rounded-2xl">
           <SearchIcon className="w-5 h-5 text-gray-500 mr-2" />
           <input
@@ -22,20 +22,20 @@ const Nav = () => {
             type="text"
           />
         </div> */}
-        <div className="text-gray-500 flex items-center gap-2">
+        <div className="text-gray-500 flex items-center gap-3">
           {/* <BellIcon className="w-5 h-5" /> */}
-          <div className="flex gap-2 items-center">
+          <div className="flex gap-2 items-center flex-wrap sm:flex-nowrap">
             {user && (
               <>
                 <Image
                   src={user?.imageUrl}
                   alt={"user image"}
-                  height={45}
-                  width={45}
+                  height={40}
+                  width={40}
                   title="My profile"
-                  className="rounded-full border-1 border-white cursor-pointer "
+                  className="rounded-full border-1 border-white cursor-pointer"
                 />
-                <div className="text-xs">
+                <div className=" text-[10px] sm:text-xs">
                   <h3 className="text-gray-800 font-medium">
                     {user?.fullName}
                   </h3>

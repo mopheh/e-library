@@ -10,7 +10,7 @@ type FormData = {
   department: string
 }
 const AddFacultyForm = ({ type }: { type: string }) => {
-  const { data: faculties, isError, error, refetch } = useFaculties(0, 1000)
+  const { data: faculties, isError, error, refetch } = useFaculties(1, 1000)
   useEffect(() => {
     if (isError) {
       toast.error("Something went wrong", {

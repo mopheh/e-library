@@ -15,7 +15,7 @@ type FormData = {
   tel: string
 }
 const Onboarding = () => {
-  const { data: faculties, isError, error } = useFaculties(0, 1000)
+  const { data: faculties, isError, error } = useFaculties(1, 1000)
   useEffect(() => {
     if (isError) {
       toast.error("Something went wrong", {

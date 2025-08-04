@@ -6,19 +6,18 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme {
-
   --font-lato: "Lato", sans-serif;
   --font-oswald: "Oswald", sans-serif;
   --font-nunito: "Nunito-sans", sans-serif;
   --font-bebas: "Bebas Neue", sans-serif;
   --font-source-sans-pro: "Source Sans Pro", sans-serif;
-  --font-poppins: 'Poppins', sans-serif;
-  --font-josefin-sans: 'Josefin Sans', sans-serif;
-  --font-cabin: 'Cabin', sans-serif;
-  --font-cairo: 'Cairo', sans-serif;
-  --font-rubik: 'Rubik', sans-serif;
-  --font-open-sans: 'Open Sans', sans-serif;
-  --font-karla: 'Karla', sans-serif;
+  --font-poppins: "Poppins", sans-serif;
+  --font-josefin-sans: "Josefin Sans", sans-serif;
+  --font-cabin: "Cabin", sans-serif;
+  --font-cairo: "Cairo", sans-serif;
+  --font-rubik: "Rubik", sans-serif;
+  --font-open-sans: "Open Sans", sans-serif;
+  --font-karla: "Karla", sans-serif;
   --font-display--font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   --font-display--font-variation-settings: "opsz" 32;
 }
@@ -149,7 +148,7 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground
+    @apply bg-background text-foreground;
   }
 
   .bg-pattern {
@@ -163,42 +162,54 @@
     margin: 0;
   }
 }
-  .cl-internal-wki6ry, .cl-internal-19d97sq {box-shadow: none; border: none;}
-  .cl-internal-1dauvpw {
-    display: none !important;
-  }
+.cl-internal-wki6ry,
+.cl-internal-19d97sq {
+  box-shadow: none;
+  border: none;
+}
+.cl-internal-1dauvpw {
+  display: none !important;
+}
 .cl-internal-10dnlbh {
   font-family: var(--font-open-sans);
 }
 .cl-internal-1ibm8uq {
-  color: #34D399;
+  color: #34d399;
 }
 .cl-internal-1xbzp4o[data-variant="default"] {
   color: white;
   border-color: white;
-  box-shadow: 0px 0px 0px 1px  color-mix(in srgb, transparent, var(--clerk-color-border, #ffffff) 11%), 0px 0px 1px 0px  color-mix(in srgb, transparent, #ffffff 7%);
+  box-shadow:
+    0px 0px 0px 1px
+      color-mix(in srgb, transparent, var(--clerk-color-border, #ffffff) 11%),
+    0px 0px 1px 0px color-mix(in srgb, transparent, #ffffff 7%);
 }
-.cl-internal-1xbzp4o[data-variant="default"]:hover{
-
+.cl-internal-1xbzp4o[data-variant="default"]:hover {
 }
-.cl-internal-h8rb83, .cl-internal-hzo3he {
+.cl-internal-h8rb83,
+.cl-internal-hzo3he {
   color: white;
 }
-.cl-internal-b78bk8, .cl-internal-66mzqw {
+.cl-internal-b78bk8,
+.cl-internal-66mzqw {
   color: #ffffff;
   font-family: var(--font-poppins);
 }
-.cl-internal-p5lgop, .cl-internal-lsuqh3, .cl-internal-1kw7woc{
-  padding: calc(1rem * 0.675) calc( 1rem * 0.75)
+.cl-internal-p5lgop,
+.cl-internal-lsuqh3,
+.cl-internal-1kw7woc {
+  padding: calc(1rem * 0.675) calc(1rem * 0.75);
 }
 .cl-internal-k1gx3c {
   background-color: white;
 }
-.cl-internal-lsuqh3{
+.cl-internal-lsuqh3 {
   backdrop-filter: blur(2px);
   background-color: #ffffff;
 }
-.cl-internal-p5lgop, .cl-internal-lsuqh3, .cl-internal-i1u4p8{
+.cl-internal-p5lgop,
+.cl-internal-lsuqh3,
+.cl-internal-i1u4p8 {
   font-family: var(--font-poppins);
 }
 .cl-internal-uumn80 {

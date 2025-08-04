@@ -1,72 +1,75 @@
 // components/AIChatAssistant.tsx
-"use client";
-import { useState } from "react";
-import AIResponse from "@/components/Dashboard/Response";
-import { FiSend } from "react-icons/fi";
-import { useRef, useEffect } from "react";
-import { convertToMarkdownMath } from "@/lib/utils";
+"use client"
+import { useState } from "react"
+import AIResponse from "@/components/Dashboard/Response"
+import { FiSend } from "react-icons/fi"
+import { useRef, useEffect } from "react"
+import { convertToMarkdownMath } from "@/lib/utils"
 
 interface AIChatAssistantProps {
-  pageText?: string;
+  pageText?: string
 }
-
+type Message = {
+  role: "user" | "assistant" | "system"
+  content: string
+}
 export default function AIChatAssistant({ pageText }: AIChatAssistantProps) {
-  const bottomRef = useRef<HTMLDivElement | null>(null);
+  const bottomRef = useRef<HTMLDivElement | null>(null)
 
-  const [messages, setMessages] = useState([]);
-  const [input, setInput] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [messages, setMessages] = useState<Message[]>([])
+  const [input, setInput] = useState("")
+  const [loading, setLoading] = useState(false)
 
-  const containerRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (containerRef.current) {
-      containerRef.current.scrollIntoView({ behavior: "smooth" });
+      containerRef.current.scrollIntoView({ behavior: "smooth" })
     }
-  }, [messages]);
+  }, [messages])
 
   const sendMessage = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if (!input.trim()) return;
+    e.preventDefault()
+    if (!input.trim()) return
 
-    const userMessage = { role: "user", content: input };
+    const userMessage = { role: "user", content: input }
     // @ts-ignore
-    setMessages((prev) => [...prev, userMessage]);
+    setMessages((prev) => [...prev, userMessage])
 
-    const hasContent = pageText && pageText.trim().length > 0;
+    const hasContent = pageText && pageText.trim().length > 0
 
     const systemMessage = {
       role: "system",
       content: hasContent
         ? `You are a helpful study assistant. The student is reading the following textbook content:\n\n"${pageText}".\n\nAnswer the student's question using only this content.`
         : `You are a helpful study assistant, but the textbook page is currently empty. Politely ask the student to share a clearer page or rephrase their question.`,
-    };
+    }
 
-    const currentMessages = [systemMessage, ...messages, userMessage];
+    const currentMessages = [systemMessage, ...messages, userMessage]
 
-    setInput("");
-    setLoading(true);
+    setInput("")
+    setLoading(true)
 
     try {
       const res = await fetch("/api/ask", {
         method: "POST",
         body: JSON.stringify({ messages: currentMessages }),
-      });
+      })
 
-      const data = await res.json();
+      const data = await res.json()
 
       // Add empty assistant message for typing effect
       // @ts-ignore
-      setMessages((prev) => [...prev, { role: "assistant", content: "" }]);
+      setMessages((prev) => [...prev, { role: "assistant", content: "" }])
 
       // Simulate typing delay
-      let index = 0;
-      const fullResponse = data.response;
+      let index = 0
+      const fullResponse = data.response
 
       const typeInterval = setInterval(() => {
         // @ts-ignore
         setMessages((prev) => {
-          const last = prev.at(-1);
+          const last = prev.at(-1)
           const updated = [
             ...prev.slice(0, -1),
             {
@@ -74,19 +77,19 @@ export default function AIChatAssistant({ pageText }: AIChatAssistantProps) {
               ...last!,
               content: fullResponse.slice(0, index),
             },
-          ];
-          return updated;
-        });
+          ]
+          return updated
+        })
 
-        index += 10;
-        if (index > fullResponse.length) clearInterval(typeInterval);
-      }, 10);
+        index += 10
+        if (index > fullResponse.length) clearInterval(typeInterval)
+      }, 10)
     } catch (error) {
-      console.error("Error sending message", error);
+      console.error("Error sending message", error)
     }
 
-    setLoading(false);
-  };
+    setLoading(false)
+  }
 
   return (
     <div className="w-[40%] h-full flex flex-col bg-white p-4">
@@ -156,5 +159,5 @@ export default function AIChatAssistant({ pageText }: AIChatAssistantProps) {
         </button>
       </form>
     </div>
-  );
+  )
 }

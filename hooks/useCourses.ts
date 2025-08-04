@@ -10,11 +10,15 @@ export const useCourses = ({
   page?: number
   limit?: number
 }) => {
+  const currentPage = page ?? 1
+  const currentLimit = limit ?? 100
+
+  const skip = (currentPage - 1) * currentLimit
+
   const queryKey = departmentId
-    ? ["courses", departmentId, page, limit]
+    ? ["courses", departmentId, currentPage, currentLimit]
     : ["courses"]
 
-  const skip = (page - 1) * limit
   console.log({
     limit,
     page,
@@ -23,7 +27,7 @@ export const useCourses = ({
     queryKey,
     queryFn: async (): Promise<Course[]> => {
       const url = departmentId
-        ? `/api/courses?departmentId=${departmentId}&skip=${skip}&limit=${limit}`
+        ? `/api/courses?departmentId=${departmentId}&skip=${skip}&limit=${currentLimit}`
         : `/api/courses`
       const res = await fetch(url)
       const data = await res.json()

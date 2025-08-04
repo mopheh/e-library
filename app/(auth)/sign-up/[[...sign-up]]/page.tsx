@@ -1,10 +1,10 @@
-"use client";
+"use client"
 
-import { SignUp, useUser } from "@clerk/nextjs";
-import React, { useEffect, useState } from "react";
-import Image from "next/image";
-import { motion } from "framer-motion";
-import clsx from "clsx";
+import { SignUp, useUser } from "@clerk/nextjs"
+import React, { useEffect, useState } from "react"
+import Image from "next/image"
+import { motion } from "framer-motion"
+import clsx from "clsx"
 
 const images = [
   "/pic-1.jpg",
@@ -13,33 +13,33 @@ const images = [
   "/pic-4.jpg",
   "/pic-5.jpg",
   "/pic-6.jpg",
-];
+]
 
 export default function Page() {
-  const { isLoaded } = useUser();
-  const [currentImage, setCurrentImage] = useState(0);
-  const [showForm, setShowForm] = useState(false);
+  const { isLoaded } = useUser()
+  const [currentImage, setCurrentImage] = useState(0)
+  const [showForm, setShowForm] = useState(false)
 
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentImage((prev) => {
-        let next;
+        let next
         do {
-          next = Math.floor(Math.random() * images.length);
-        } while (next === prev);
-        return next;
-      });
-    }, 6000);
-    return () => clearInterval(interval);
-  }, []);
+          next = Math.floor(Math.random() * images.length)
+        } while (next === prev)
+        return next
+      })
+    }, 6000)
+    return () => clearInterval(interval)
+  }, [])
 
   // Delay animation until Clerk SignIn is ready
   useEffect(() => {
     const checkClerkLoaded = setTimeout(() => {
-      setShowForm(true); // simulate delay for Clerk load
-    }, 400); // adjust if needed
-    return () => clearTimeout(checkClerkLoaded);
-  }, [isLoaded]);
+      setShowForm(true) // simulate delay for Clerk load
+    }, 400) // adjust if needed
+    return () => clearTimeout(checkClerkLoaded)
+  }, [isLoaded])
 
   return (
     <div className="relative min-h-screen w-full overflow-hidden bg-[#f9f6f1]">
@@ -51,7 +51,7 @@ export default function Page() {
           fill
           className={clsx(
             "object-cover transition-opacity duration-1000 ease-in-out",
-            index === currentImage ? "opacity-100" : "opacity-0",
+            index === currentImage ? "opacity-100" : "opacity-0"
           )}
           priority={index === 0}
         />
@@ -75,7 +75,6 @@ export default function Page() {
           >
             <SignUp
               appearance={{
-                baseTheme: "dark",
                 variables: {
                   colorPrimary: "#10B981", // Deep blue for buttons
                   colorText: "#ffffff", // Light text for contrast
@@ -118,5 +117,5 @@ export default function Page() {
         © {new Date().getFullYear()} UniVault. All rights reserved.
       </footer>
     </div>
-  );
+  )
 }

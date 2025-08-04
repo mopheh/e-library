@@ -1,16 +1,16 @@
-import React, { useEffect } from "react";
-import { useForm } from "react-hook-form";
-import { createFaculty } from "@/actions/faculty";
-import { toast } from "sonner";
-import { useQueryClient } from "@tanstack/react-query";
-import { createDepartment } from "@/actions/department";
-import { useFaculties } from "@/hooks/useFaculties";
+import React, { useEffect } from "react"
+import { useForm } from "react-hook-form"
+import { createFaculty } from "@/actions/faculty"
+import { toast } from "sonner"
+import { useQueryClient } from "@tanstack/react-query"
+import { createDepartment } from "@/actions/department"
+import { useFaculties } from "@/hooks/useFaculties"
 type FormData = {
-  faculty: string;
-  department: string;
-};
+  faculty: string
+  department: string
+}
 const AddFacultyForm = ({ type }: { type: string }) => {
-  const { data: faculties, isError, error, refetch } = useFaculties();
+  const { data: faculties, isError, error, refetch } = useFaculties(0, 1000)
   useEffect(() => {
     if (isError) {
       toast.error("Something went wrong", {
@@ -20,23 +20,23 @@ const AddFacultyForm = ({ type }: { type: string }) => {
           fontFamily: "Josefin Sans",
           fontWeight: "bold",
         },
-      });
+      })
     }
-  }, [isError]);
-  const queryClient = useQueryClient();
+  }, [isError])
+  const queryClient = useQueryClient()
   const {
     register,
     handleSubmit,
     watch,
     reset,
     formState: { errors },
-  } = useForm<FormData>();
-  const selectedFaculty = watch("faculty");
+  } = useForm<FormData>()
+  const selectedFaculty = watch("faculty")
   const onSubmit = async (data: FormData) => {
     const promise =
       type === "faculty"
         ? createFaculty(data)
-        : createDepartment({ name: data.department, faculty: data.faculty });
+        : createDepartment({ name: data.department, faculty: data.faculty })
     toast.promise(promise, {
       loading:
         type === "department"
@@ -59,18 +59,18 @@ const AddFacultyForm = ({ type }: { type: string }) => {
           fontWeight: "bold",
         },
       }),
-    });
+    })
     try {
-      console.log("Creating!!!");
-      await promise;
-      queryClient.invalidateQueries({ queryKey: ["departments"] });
-      reset();
-      await refetch();
+      console.log("Creating!!!")
+      await promise
+      queryClient.invalidateQueries({ queryKey: ["departments"] })
+      reset()
+      await refetch()
       // await refetchDepartment();
     } catch (err: any) {
-      console.log(err);
+      console.log(err)
     }
-  };
+  }
   return (
     <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
       {type === "faculty" && (
@@ -125,6 +125,6 @@ const AddFacultyForm = ({ type }: { type: string }) => {
         Submit
       </button>
     </form>
-  );
-};
-export default AddFacultyForm;
+  )
+}
+export default AddFacultyForm

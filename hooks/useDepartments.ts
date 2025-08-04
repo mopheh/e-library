@@ -12,15 +12,19 @@ export const useDepartments = ({
   page?: number
   limit?: number
 }) => {
+  const currentPage = page ?? 1
+  const currentLimit = limit ?? 100
+
+  const skip = (currentPage - 1) * currentLimit
+
   const queryKey = facultyId
     ? ["departments", facultyId]
-    : ["departments", page, limit]
-  const skip = (page - 1) * limit
+    : ["departments", currentPage, currentLimit]
   return useQuery({
     queryKey,
     queryFn: async (): Promise<Department[]> => {
       const url = facultyId
-        ? `/api/departments?facultyId=${facultyId}&skip=${skip}&limit=${limit}`
+        ? `/api/departments?facultyId=${facultyId}&skip=${skip}&limit=${currentLimit}`
         : `/api/departments?skip=${skip}&limit=${5}`
       const res = await fetch(url)
       const data = await res.json()

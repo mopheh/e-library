@@ -1,21 +1,21 @@
-"use client";
-import React, { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
-import { useUser } from "@clerk/nextjs";
-import { useRouter } from "next/navigation";
-import { createUser } from "@/actions/auth";
-import { useFaculties } from "@/hooks/useFaculties";
-import { toast } from "sonner";
-import { useDepartments } from "@/hooks/useDepartments";
+"use client"
+import React, { useEffect, useState } from "react"
+import { useForm } from "react-hook-form"
+import { useUser } from "@clerk/nextjs"
+import { useRouter } from "next/navigation"
+import { createUser } from "@/actions/auth"
+import { useFaculties } from "@/hooks/useFaculties"
+import { toast } from "sonner"
+import { useDepartments } from "@/hooks/useDepartments"
 type FormData = {
-  matric: string;
-  faculty: string;
-  department: string;
-  year: string;
-  tel: string;
-};
+  matric: string
+  faculty: string
+  department: string
+  year: string
+  tel: string
+}
 const Onboarding = () => {
-  const { data: faculties, isError, error } = useFaculties();
+  const { data: faculties, isError, error } = useFaculties(0, 1000)
   useEffect(() => {
     if (isError) {
       toast.error("Something went wrong", {
@@ -25,26 +25,28 @@ const Onboarding = () => {
           fontFamily: "Josefin Sans",
           fontWeight: "bold",
         },
-      });
+      })
     }
-  }, [isError]);
-  const { user } = useUser();
-  const router = useRouter();
+  }, [isError])
+  const { user } = useUser()
+  const router = useRouter()
 
   const {
     register,
     handleSubmit,
     watch,
     formState: { errors },
-  } = useForm<FormData>();
+  } = useForm<FormData>()
 
-  const selectedFaculty = watch("faculty");
-  const { data: departments, isLoading: loadingDepartments } =
-    useDepartments(selectedFaculty);
+  const selectedFaculty = watch("faculty")
+  const { data: departments, isLoading: loadingDepartments } = useDepartments({
+    facultyId: selectedFaculty,
+  })
 
   const onSubmit = async (data: FormData) => {
     //@ts-ignore
     const promise = createUser({
+      //@ts-ignore
       clerkId: user?.id,
       email: user?.emailAddresses[0].emailAddress,
       fullName: `${user?.firstName} ${user?.lastName}`,
@@ -53,7 +55,7 @@ const Onboarding = () => {
       year: data?.year,
       matricNo: data?.matric,
       onboarded: true,
-    });
+    })
     toast.promise(promise, {
       loading: "Creating User..",
       success: {
@@ -73,9 +75,9 @@ const Onboarding = () => {
           fontWeight: "bold",
         },
       }),
-    });
+    })
 
-    await promise;
+    await promise
 
     await user?.update({
       unsafeMetadata: {
@@ -83,10 +85,10 @@ const Onboarding = () => {
         role: "student",
         onboarded: true,
       },
-    });
+    })
 
-    router.push("/dashboard/student");
-  };
+    router.push("/dashboard/student")
+  }
   return (
     <div className="w-[60%] py-5 px-8 bg-white shadow-xl rounded-lg">
       <h1 className={`text-xl font-bold mb-4 font-karla`}>
@@ -172,6 +174,6 @@ const Onboarding = () => {
         </button>
       </form>
     </div>
-  );
-};
-export default Onboarding;
+  )
+}
+export default Onboarding

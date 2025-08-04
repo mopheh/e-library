@@ -1,11 +1,11 @@
-import { NextResponse } from "next/server";
-import { db } from "@/database/drizzle";
-import { departments, faculty, users } from "@/database/schema";
-import { eq } from "drizzle-orm";
-import { auth } from "@clerk/nextjs/server";
+import { NextResponse } from "next/server"
+import { db } from "@/database/drizzle"
+import { departments, faculty, users } from "@/database/schema"
+import { eq } from "drizzle-orm"
+import { auth } from "@clerk/nextjs/server"
 
 export async function GET() {
-  const { userId } = await auth();
+  const { userId } = await auth()
 
   const [userInfo] = await db
     .select({
@@ -16,9 +16,10 @@ export async function GET() {
       level: users.year,
     })
     .from(users)
+    //@ts-ignore
     .where(eq(users.clerkId, userId))
     .innerJoin(departments, eq(users.departmentId, departments.id))
-    .innerJoin(faculty, eq(departments.facultyId, faculty.id));
+    .innerJoin(faculty, eq(departments.facultyId, faculty.id))
 
-  return NextResponse.json(userInfo ?? {});
+  return NextResponse.json(userInfo ?? {})
 }

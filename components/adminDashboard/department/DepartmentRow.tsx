@@ -14,7 +14,7 @@ const DepartmentRow = ({
   const { data: users, isLoading, isError } = useDepartmentUsers(departmentId)
 
   return (
-    <tr className="font-poppins text-xs py-3 text-gray-800 font-normal border-b border-gray-200">
+    <tr className="font-poppins text-xs py-3 text-gray-800 font-normal border-b border-gray-200 dark:border-gray-900 font-light dark:text-gray-200">
       <td className="px-6 py-4">{name}</td>
       <td className="px-6 py-4">
         {isLoading ? "Loading..." : isError ? "Error" : (users?.length ?? 0)}

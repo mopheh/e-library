@@ -36,11 +36,14 @@ const AdminDashboard = () => {
       {open && (
         <div className="fixed inset-0 backdrop-blur-xs w-screen h-screen"></div>
       )}
-      <div className="flex gap-8 my-10">
-        <Welcome
-          name={"Admin"}
-          guide={" Manage all users, books and material in uniVault"}
-        />
+      <div className="grid gap-2 sm:gap-6 my-10 grid-cols-2 lg:grid-cols-5">
+        <div className="sm:col-span-2 lg:col-span-1">
+          <Welcome
+              name={"Admin"}
+              guide={" Manage all users, books and material in uniVault"}
+          />
+        </div>
+
         <Stat title={"Users"} stat={24} />
         <Stat title={"Total Material"} stat={10} />
         <Stat title={"CBT Usage"} stat={19} />
@@ -50,11 +53,11 @@ const AdminDashboard = () => {
         <div className="w-full overflow-x-hidden">
           <div className="px-2 flex flex-col lg:flex-row gap-4">
             {/* Faculty Section */}
-            <div className="bg-white rounded-lg p-5 w-[95%] mx-auto md:mx-0 lg:w-[50%] mt-5 px-4">
+            <div className="bg-white dark:bg-gray-950 rounded-lg p-5 w-[95%] mx-auto md:mx-0 lg:w-[50%] mt-5 px-4">
               <div className="flex justify-between items-center mb-10">
-                <h3 className="font-open-sans font-semibold">Faculty</h3>
+                <h3 className="font-open-sans font-semibold dark:text-white">Faculty</h3>
                 <button
-                  className="flex gap-2 items-center font-medium font-poppins cursor-pointer rounded-lg px-3 py-2 text-xs border border-gray-200 bg-gray-50"
+                  className="flex gap-2 items-center font-medium font-poppins cursor-pointer rounded-full px-3 py-2 text-xs border border-gray-200 bg-gray-50 dark:bg-gray-800 dark:border-gray-800"
                   onClick={() => {
                     setType("faculty")
                     setOpen(true)
@@ -67,7 +70,7 @@ const AdminDashboard = () => {
               <div className="w-full overflow-x-auto">
                 <table className="table-auto min-w-[500px] border-collapse">
                   <thead className="text-left">
-                    <tr className="tracking-wider uppercase text-gray-400 text-xs font-karla border-b border-gray-200">
+                    <tr className="tracking-wider uppercase text-gray-400 text-xs font-karla border-b border-gray-200 dark:border-gray-700">
                       <th className="py-3">Name</th>
                       <th>Number of Members</th>
                     </tr>
@@ -114,11 +117,11 @@ const AdminDashboard = () => {
             </div>
 
             {/* Department Section */}
-            <div className="bg-white rounded-lg p-5 w-full lg:w-[50%] mt-5 px-4">
+            <div className="bg-white dark:bg-gray-950 rounded-lg p-5 w-full lg:w-[50%] mt-5 px-4">
               <div className="flex justify-between items-center mb-10">
                 <h3 className="font-open-sans font-semibold">Department</h3>
                 <button
-                  className="flex gap-2 items-center font-medium font-poppins cursor-pointer rounded-lg px-3 py-2 text-xs border border-gray-200 bg-gray-50"
+                  className="flex gap-2 items-center font-medium font-poppins cursor-pointer rounded-full px-3 py-2 text-xs border border-gray-200 bg-gray-50 dark:bg-gray-800 dark:border-gray-800"
                   onClick={() => {
                     setType("department")
                     setOpen(true)
@@ -130,7 +133,7 @@ const AdminDashboard = () => {
               <div className="w-full overflow-x-auto">
                 <table className="min-w-[500px] table-auto border-collapse">
                   <thead className="text-left">
-                    <tr className="tracking-wider uppercase text-gray-400 text-xs font-karla border-b border-gray-200">
+                    <tr className="tracking-wider uppercase text-gray-400 text-xs font-karla border-b border-gray-200 dark:border-gray-700">
                       <th className="py-3">Name</th>
                       <th>Number of Members</th>
                       <th>Actions</th>

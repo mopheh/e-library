@@ -20,7 +20,7 @@ const CustomList = ({
 }) => {
   const [open, setOpen] = useState(false)
   return (
-    <div className="bg-white dark:bg-gray-950 rounded-lg w-full md:w-1/2 p-3 py-5 h-fit px-8">
+    <div className="bg-white dark:bg-gray-950 rounded-lg w-full md:w-1/2 p-3 md:py-5 h-fit px-4 md:px-8">
       {open && (
         <div className="fixed inset-0 backdrop-blur-xs w-screen h-screen"></div>
       )}

@@ -25,17 +25,21 @@ export const bookSchema = z
             message: "Invalid file input",
           })
           .optional(),
-      link: z.string().url().optional(),
+      link: z.string().url().or(z.literal("")).optional(),
+
     })
     .refine(
-        (data) =>
-            (data.source === "file" && data.file instanceof File) ||
-            (data.source === "link" && !!data.link),
+        (data) => (data.source === "file" ? data.file instanceof File : true),
         {
-          message: "You must provide either a file or a link",
+          message: "File is required when source is file",
           path: ["file"],
         }
-    );
+    )
+    .refine((data) => (data.source === "link" ? !!data.link : true), {
+      message: "Link is required when source is link",
+      path: ["link"],
+    });
+
 
 type BookFormData = z.infer<typeof bookSchema>;
 
@@ -217,7 +221,7 @@ export function UploadBookForm({
                   >
                     {courses?.map((course) => (
                         <option key={course.id} value={course.id}>
-                          {course.title}
+                          {course.courseCode} - {course.title}
                         </option>
                     ))}
                   </select>

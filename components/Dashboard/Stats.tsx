@@ -27,7 +27,7 @@ const Stats = () => {
     }, [data])
 
     return (
-        <div className="grid gap-2 sm:gap-6 my-10 grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-2 sm:gap-6 my-10 grid-cols-2 lg:grid-cols-5">
             <div className="sm:col-span-2 lg:col-span-1">
                 <Welcome
                     name={user?.firstName}

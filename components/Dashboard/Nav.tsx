@@ -30,8 +30,8 @@ const Nav = () => {
                 <Image
                   src={user?.imageUrl}
                   alt={"user image"}
-                  height={40}
-                  width={40}
+                  height={35}
+                  width={35}
                   title="My profile"
                   className="rounded-full border-1 border-white cursor-pointer"
                 />
@@ -46,8 +46,8 @@ const Nav = () => {
                 <Image
                   src={"/icons/logout.svg"}
                   alt={"logout"}
-                  width={22}
-                  height={22}
+                  width={20}
+                  height={20}
                   className="cursor-pointer"
                   onClick={() => {
                     signOut()

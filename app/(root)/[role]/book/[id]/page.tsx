@@ -7,12 +7,7 @@ import { useBook } from "@/hooks/useBooks";
 const Page = () => {
   const { id } = useParams<{ id: string }>();
   const { data: book, isLoading } = useBook(id);
-    useEffect(() => {
-        document.body.classList.add("overflow-hidden");
-        return () => {
-            document.body.classList.remove("overflow-hidden");
-        };
-    }, []);
+
   if (isLoading || !book) {
     return (
         <div className="flex bg-white/80 h-screen w-full justify-center items-center animate-fade-in col-span-3">

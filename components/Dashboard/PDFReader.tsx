@@ -101,7 +101,7 @@ const PDFStudyView = ({ fileUrl, bookId }: PDFStudyViewProps) => {
     }, [pdfScrollContainer, bookId]);
 
     return (
-        <div className="h-[85vh] w-full">
+        <div className="h-[85vh] w-full overflow-hidden">
             {/* Desktop: Split view */}
             <div className="hidden md:flex h-full">
                 <div className="w-[60%] h-full border-r flex flex-col">

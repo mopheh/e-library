@@ -52,7 +52,7 @@ export const useMyBooks = () => {
       return response.json();
     },
     staleTime: 60 * 1000, // 1 minutes
-    cacheTime: 30 * 60 * 1000,
+    // cacheTime: 30 * 60 * 1000,
   });
 };
 export const useBook = (bookId: string) => {
@@ -64,7 +64,7 @@ export const useBook = (bookId: string) => {
     },
     enabled: !!bookId,
     staleTime: 1000 * 60 * 5, // 5 minutes (data is fresh for 5 mins)
-    cacheTime: 1000 * 60 * 30,
+    // cacheTime: 1000 * 60 * 30,
   });
 };
 

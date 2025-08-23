@@ -33,7 +33,7 @@ export default function AIChatAssistant({ pageText, title = "Study Assistant" }:
         e.preventDefault();
         if (!input.trim()) return;
 
-        const userMessage = { role: "user", content: input };
+        const userMessage: Message = { role: "user", content: input };
         setMessages((prev) => [...prev, userMessage]);
 
         const hasContent = pageText && pageText.trim().length > 0;

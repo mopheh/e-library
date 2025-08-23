@@ -1,6 +1,6 @@
 "use client";
 
-import { useForm, Controller } from "react-hook-form";
+import {useForm, Controller, SubmitHandler} from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
@@ -12,33 +12,29 @@ import { cn } from "@/lib/utils";
 
 // schema
 export const bookSchema = z
-  .object({
-    title: z.string().min(3),
-    description: z.string().min(10),
-    departmentId: z.string(),
-    type: z.string(),
-    courseIds: z.array(z.string()).nonempty(),
-    source: z.enum(["file", "link"]),
-    file: z
-      .custom<FileList>(
-        (val) => typeof FileList !== "undefined" && val instanceof FileList,
-        { message: "Invalid file input" }
-      )
-      .optional()
-      .refine((files) => !files || files.length > 0, {
-        message: "File is required",
-      }),
-    link: z.string().url().or(z.literal("")).optional(),
-  })
-  .refine(
-    (data) =>
-      (data.source === "file" && data.file && data.file.length > 0) ||
-      (data.source === "link" && data.link),
-    {
-      message: "You must provide either a file or a link",
-      path: ["file"],
-    }
-  );
+    .object({
+      title: z.string().min(3),
+      description: z.string().min(10),
+      departmentId: z.string(),
+      type: z.string(),
+      courseIds: z.array(z.string()).nonempty(),
+      source: z.enum(["file", "link"]),
+      file: z
+          .custom<File>((val) => val instanceof File, {
+            message: "Invalid file input",
+          })
+          .optional(),
+      link: z.string().url().optional(),
+    })
+    .refine(
+        (data) =>
+            (data.source === "file" && data.file instanceof File) ||
+            (data.source === "link" && !!data.link),
+        {
+          message: "You must provide either a file or a link",
+          path: ["file"],
+        }
+    );
 
 type BookFormData = z.infer<typeof bookSchema>;
 
@@ -70,7 +66,7 @@ export function UploadBookForm({
       type: "",
       courseIds: [],
       source: "file",
-      file: null,
+      file: undefined,
       link: "",
     },
   });
@@ -78,7 +74,7 @@ export function UploadBookForm({
   const { uploadFile } = useFileUpload();
   const source = watch("source");
 
-  const onSubmit = async (data: BookFormData) => {
+  const onSubmit: SubmitHandler<BookFormData> = async (data: BookFormData) => {
     setLoading(true);
     toast.info("Uploading...");
 
@@ -94,8 +90,8 @@ export function UploadBookForm({
         formData.append("courseIds[]", id);
       });
 
-      if (data.source === "file" && data.file && data.file.length > 0) {
-        formData.append("file", data.file[0]);
+      if (data.source === "file" && data.file ) {
+        formData.append("file", data.file);
       }
 
       if (data.source === "link" && data.link) {
@@ -261,6 +257,7 @@ export function UploadBookForm({
           <input
             type="file"
             {...register("file")}
+            onChange={(e) => setValue("file", e.target.files?.[0] ?? undefined)}
             className="w-full dark:bg-gray-900 dark:border-gray-700"
           />
           {errors.file && (

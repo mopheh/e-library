@@ -21,7 +21,7 @@ export default function Charts() {
 
   const { data } = useReadingSession()
   return (
-    <div className="w-full h-[90%]">
+    <div className="w-[450px] relative transform -translate-x-8 sm:translate-x-0 md:w-full h-[90%]">
       <ResponsiveContainer width="100%" height="100%">
         <AreaChart
           data={data}

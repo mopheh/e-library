@@ -9,7 +9,7 @@ const Welcome = ({
 }) => {
   return (
     <div className="flex flex-col px-2">
-      <h3 className="font-open-sans mb-1 text-2xl font-semibold">
+      <h3 className="font-open-sans mb-1 text-xl sm:text-2xl font-semibold">
         Welcome, {name}
       </h3>
       <span className="font-poppins text-xs text-gray-500 dark:text-gray-400">

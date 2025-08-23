@@ -37,7 +37,6 @@ const CustomList = ({
       <FormModal open={open} setOpen={setOpen}>
         {name === "Books" && (
           <UploadBookForm
-            courses={courses}
             department={department}
             setOpen={setOpen}
           />

@@ -1,7 +1,7 @@
 "use client"
 
 import React from "react"
-import { useForm } from "react-hook-form"
+import {Controller, useForm} from "react-hook-form"
 import { toast } from "sonner"
 import { useQueryClient } from "@tanstack/react-query"
 import { createCourses } from "@/actions/course"
@@ -27,6 +27,7 @@ interface Props {
 const AddCoursesForm: React.FC<Props> = ({ department, departmentId }) => {
   const {
     register,
+      control,
     handleSubmit,
     reset,
     watch,
@@ -105,21 +106,29 @@ const AddCoursesForm: React.FC<Props> = ({ department, departmentId }) => {
         <label className="text-sm font-medium font-poppins">
           Borrowing Departments
         </label>
-        <div className="flex flex-wrap gap-3 mt-1">
-          {departments?.map((dept) => (
-            <label
-              key={dept.id}
-              className="text-xs flex items-center gap-2 font-poppins"
-            >
-              <input
-                type="checkbox"
-                value={dept.id}
-                {...register("departments")}
-              />
-              {dept.name}
-            </label>
-          ))}
-        </div>
+        <Controller
+            control={control}
+            name="departments"
+            render={({ field }) => (
+                <select
+                    multiple
+                    value={field.value || []}
+                    onChange={(e) =>
+                        field.onChange(
+                            Array.from(e.target.selectedOptions, (opt) => opt.value)
+                        )
+                    }
+                    className="w-full border rounded p-2 text-xs dark:bg-gray-900 dark:border-gray-700"
+                >
+                  {departments?.map((dept) => (
+                      <option key={dept.id} value={dept.id}>
+                        {dept.name}
+                      </option>
+                  ))}
+                </select>
+            )}
+        />
+
       </div>
 
       {/* Title */}

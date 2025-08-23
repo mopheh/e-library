@@ -64,6 +64,48 @@
       "when": 1754143708000,
       "tag": "0008_wise_luke_cage",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1755509841690,
+      "tag": "0009_secret_juggernaut",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1755509932977,
+      "tag": "0010_illegal_jimmy_woo",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1755517010736,
+      "tag": "0011_faithful_slapstick",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1755527108110,
+      "tag": "0012_wealthy_warpath",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1755545884156,
+      "tag": "0013_icy_ser_duncan",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1755546429265,
+      "tag": "0014_watery_viper",
+      "breakpoints": true
     }
   ]
 }

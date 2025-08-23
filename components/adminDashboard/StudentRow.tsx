@@ -6,7 +6,7 @@ import { EditIcon } from "lucide-react"
 
 const StudentRow = ({ student }: { student: Credentials }) => {
   return (
-    <tr className="font-poppins text-xs py-3 text-gray-800 font-normal border-b border-gray-200">
+    <tr className="font-poppins text-xs py-3 text-gray-800 dark:text-gray-200 font-normal border-b border-gray-200 dark:border-gray-800">
       <td className=" py-4">{student.fullName}</td>
       <td className=" py-4">{student.matricNo}</td>
       <td className="py-4">{student.year}</td>

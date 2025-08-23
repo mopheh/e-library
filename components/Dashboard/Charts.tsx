@@ -1,4 +1,4 @@
-"use client";
+"use client"
 
 import {
   AreaChart,
@@ -8,15 +8,18 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-} from "recharts";
-import { useReadingSession } from "@/hooks/useUsers";
+} from "recharts"
+import { useReadingSession } from "@/hooks/useUsers"
+import { useIsDarkMode } from "../is-dark"
 
 interface Props {
-  data: { date: string; pagesRead: number }[];
+  data: { date: string; pagesRead: number }[]
 }
 
 export default function Charts() {
-  const { data } = useReadingSession();
+  const isDark = useIsDarkMode()
+
+  const { data } = useReadingSession()
   return (
     <div className="w-full h-[90%]">
       <ResponsiveContainer width="100%" height="100%">
@@ -27,8 +30,16 @@ export default function Charts() {
           {/* Gradient fill definition */}
           <defs>
             <linearGradient id="colorPages" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
-              <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+              <stop
+                offset="5%"
+                stopColor={isDark ? "#60a5fa" : "#3b82f6"}
+                stopOpacity={0.3}
+              />
+              <stop
+                offset="95%"
+                stopColor={isDark ? "#60a5fa" : "#3b82f6"}
+                stopOpacity={0}
+              />
             </linearGradient>
           </defs>
 
@@ -44,15 +55,23 @@ export default function Charts() {
             tickLine={false}
           />
           <Tooltip
-            contentStyle={{ backgroundColor: "#f9fafb", borderRadius: "8px" }}
-            labelStyle={{ fontSize: 12 }}
+            contentStyle={{
+              backgroundColor: isDark ? "#1f2937" : "#f9fafb", // slate-800 or gray-50
+              borderRadius: "8px",
+              border: "none",
+              color: isDark ? "#f9fafb" : "#111827", // gray-50 vs gray-900
+            }}
+            labelStyle={{
+              fontSize: 12,
+              color: isDark ? "#d1d5db" : "#4b5563", // gray-300 vs gray-600
+            }}
             formatter={(value: number) => [`${value} pages`, "Pages Read"]}
           />
 
           <Area
             type="monotone"
             dataKey="pagesRead"
-            stroke="#3b82f6"
+            stroke="#3b82f6" // You could also darken/lighten this for contrast
             strokeWidth={2}
             fill="url(#colorPages)"
             activeDot={{ r: 5 }}
@@ -60,5 +79,5 @@ export default function Charts() {
         </AreaChart>
       </ResponsiveContainer>
     </div>
-  );
+  )
 }

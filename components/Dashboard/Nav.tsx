@@ -22,7 +22,7 @@ const Nav = () => {
             type="text"
           />
         </div> */}
-        <div className="text-gray-500 flex items-center gap-3">
+        <div className="text-gray-500 dark:text-gray-400 flex items-center gap-3">
           {/* <BellIcon className="w-5 h-5" /> */}
           <div className="flex gap-2 items-center flex-wrap sm:flex-nowrap">
             {user && (
@@ -36,10 +36,10 @@ const Nav = () => {
                   className="rounded-full border-1 border-white cursor-pointer"
                 />
                 <div className=" text-[10px] sm:text-xs">
-                  <h3 className="text-gray-800 font-medium">
+                  <h3 className="text-gray-800 dark:text-gray-200 font-medium">
                     {user?.fullName}
                   </h3>
-                  <p className="text-gray-500">
+                  <p className="text-gray-500 dark:text-gray-400">
                     {user?.emailAddresses[0].emailAddress}
                   </p>
                 </div>

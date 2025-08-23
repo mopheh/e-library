@@ -13,6 +13,7 @@ import {
   MenuIcon,
   XIcon,
 } from "lucide-react"
+import { ModeToggle } from "../toggle"
 
 const menuItems = [
   {
@@ -42,7 +43,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggle }) => {
   const handleNavigation = (id: string, route: string) => {
     setActive(id)
     router.push(`/${role}/${route}`)
-    toggle() // Close drawer on mobile
+    toggle()
   }
 
   return (
@@ -50,8 +51,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggle }) => {
       {/* Mobile Hamburger */}
       <div className="sm:hidden fixed top-4 left-4 z-50">
         <button
-          onClick={() => toggle()}
-          className="p-2 bg-white rounded-full shadow-md"
+          onClick={toggle}
+          className="p-2 bg-white dark:bg-gray-900 text-gray-900  dark:text-white rounded-full shadow-md"
         >
           {isOpen ? (
             <XIcon className="w-6 h-6" />
@@ -63,7 +64,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggle }) => {
 
       {/* Sidebar */}
       <aside
-        className={`fixed top-0 left-0 h-full w-80 bg-[#f9f9fb] p-4 z-40 transition-transform duration-300
+        className={`fixed top-0 left-0  w-80 bg-[#f9f9fb] dark:bg-gray-900 h-screen p-4 z-40 transition-transform duration-300
         ${isOpen ? "translate-x-0" : "-translate-x-full"} sm:translate-x-0 md:static`}
       >
         <div className="flex flex-col gap-5 h-full relative">
@@ -78,8 +79,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggle }) => {
               priority
             />
           </div>
-
-          <hr className="border-t border-gray-300 opacity-30 my-2" />
+          <ModeToggle />
+          <hr className="border-t border-gray-300 dark:border-gray-700 opacity-30 my-2" />
 
           {/* Menu */}
           <nav className="flex flex-col gap-2">
@@ -91,22 +92,24 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggle }) => {
                   onClick={() => handleNavigation(id, path)}
                   className={`flex items-center gap-3 py-3 px-4 rounded-2xl cursor-pointer transition-all duration-300 ${
                     isActive
-                      ? "bg-white shadow-[2px_2px_4px_#f1f5f9,_-2px_-2px_4px_#ffffff]"
+                      ? "bg-white dark:bg-gray-800 shadow-[2px_2px_4px_#f1f5f9,_-2px_-2px_4px_#ffffff] dark:shadow-none"
                       : "rounded-full"
                   }`}
                 >
                   <div
                     className={`h-9 w-9 flex items-center justify-center rounded-full p-2 ${
                       isActive
-                        ? "bg-[#3b82f6] text-white"
-                        : "bg-white text-[#3b82f6] shadow-[4px_4px_8px_#e2e8f0,_-4px_-4px_8px_#ffffff]"
+                        ? "bg-[#3b82f6] text-white "
+                        : "bg-white dark:bg-gray-800 text-[#3b82f6] dark:text-blue-400 shadow-[4px_4px_8px_#e2e8f0,_-4px_-4px_8px_#ffffff] dark:shadow-none"
                     }`}
                   >
                     <Icon className="w-5 h-5" />
                   </div>
                   <span
                     className={`font-poppins text-sm ${
-                      isActive ? "text-gray-700 font-medium" : "text-gray-500"
+                      isActive
+                        ? "text-gray-700 dark:text-gray-100 font-medium"
+                        : "text-gray-500 dark:text-gray-400"
                     }`}
                   >
                     {name}
@@ -120,22 +123,22 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggle }) => {
           {role === "admin" && (
             <div
               onClick={() => router.push("/admin/data")}
-              className="flex gap-3 font-poppins text-xs items-center relative bottom-0 h-auto  cursor-pointer"
+              className="flex gap-3 font-poppins text-xs items-center cursor-pointer mt-auto"
             >
-              <div className="h-9 w-9 flex items-center justify-center rounded-full p-2 bg-white text-[#1E3A8A]">
+              <div className="h-9 w-9 flex items-center justify-center rounded-full p-2 bg-white dark:bg-gray-800 text-[#1E3A8A] dark:text-blue-300">
                 <SettingsIcon className="w-5 h-5" />
               </div>
-              <h3>Manage Data</h3>
+              <h3 className="text-gray-700 dark:text-gray-200">Manage Data</h3>
             </div>
           )}
         </div>
       </aside>
 
-      {/* Overlay when open on mobile */}
+      {/* Mobile Overlay */}
       {isOpen && (
         <div
           className="fixed inset-0 bg-black/40 z-30 sm:hidden"
-          onClick={() => toggle()}
+          onClick={toggle}
         />
       )}
     </>

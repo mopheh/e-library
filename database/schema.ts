@@ -4,6 +4,7 @@ import {
   pgEnum,
   pgTable,
   timestamp,
+  unique,
   uuid,
   varchar,
 } from "drizzle-orm/pg-core";
@@ -19,7 +20,12 @@ export const LEVEL_ENUM = pgEnum("level", [
   "500",
   "600",
 ]);
-
+export const parseStatusEnum = pgEnum("parse_status", [
+  "pending",
+  "processing",
+  "completed",
+  "failed",
+]);
 export const users = pgTable("users", {
   id: uuid("id").primaryKey().notNull().unique().defaultRandom(),
   clerkId: varchar("clerk_id", { length: 255 }).notNull().unique(),
@@ -87,7 +93,10 @@ export const books = pgTable("books", {
   departmentId: uuid("department_id")
     .notNull()
     .references(() => departments.id, { onDelete: "cascade" }),
+  parseStatus: parseStatusEnum("parse_status").default("pending"),
   fileUrl: varchar("file_url", { length: 1000 }),
+
+  pageCount: integer("page_count"),
   postedBy: uuid("user_id")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
@@ -142,3 +151,20 @@ export const readingSessions = pgTable("reading_sessions", {
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
 });
+export const bookPages = pgTable(
+  "book_pages",
+  {
+    id: uuid("id").primaryKey().unique().defaultRandom(),
+    bookId: uuid("book_id")
+      .notNull()
+      .references(() => books.id, { onDelete: "cascade" }),
+
+    pageNumber: integer("page_number").notNull(),
+    textChunk: varchar("text_chunk"),
+
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (t) => ({
+    uniq: unique().on(t.bookId, t.pageNumber),
+  })
+);

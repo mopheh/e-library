@@ -35,7 +35,7 @@ const Courses: React.FC<CoursesProps> = ({
       )}
 
       {/* Courses Table */}
-      <div className=" gap-4 bg-white px-8 py-5 rounded-md">
+      <div className={`gap-4 bg-white dark:bg-gray-950 px-8 py-5 rounded-md ${open && 'no-scrollbar'}`}>
         <div className="flex justify-between items-center mb-10">
           <h3 className="font-open-sans font-semibold ">List of Courses</h3>
           <button
@@ -47,7 +47,7 @@ const Courses: React.FC<CoursesProps> = ({
         </div>
 
         <div className="w-full overflow-x-auto">
-          <table className="table-auto min-w-[500px] border-collapse">
+          <table className="table-auto min-w-[500px] md:min-w-full border-collapse">
             <thead className="text-left">
               <tr className="tracking-wider uppercase text-gray-400 text-xs font-karla border-b border-gray-200">
                 <th className="py-3">Course Code</th>
@@ -61,7 +61,7 @@ const Courses: React.FC<CoursesProps> = ({
               {courses?.map((course) => (
                 <tr
                   key={course.id}
-                  className="font-poppins text-xs py-3 text-gray-800 font-normal border-b border-gray-200"
+                  className="font-poppins text-xs py-3 text-gray-800 dark:text-gray-200 font-normal border-b border-gray-200 dark:border-gray-800"
                 >
                   <td className="px-6 py-4 uppercase">{course.courseCode}</td>
                   <td>{course.title}</td>

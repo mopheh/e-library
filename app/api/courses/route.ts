@@ -28,6 +28,8 @@ export async function GET(req: NextRequest) {
         .limit(limit)
         .offset(skip)
 
+        console.log(result)
+
       return NextResponse.json(result)
     }
 

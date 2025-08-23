@@ -1,0 +1,1 @@
+ALTER TABLE "book_pages" ALTER COLUMN "book_id" SET DATA TYPE uuid;

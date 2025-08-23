@@ -28,7 +28,7 @@ type Department = {
 
 type Book = {
   id: string
-  fileUrl: string
+  fileUrl: string | Null
   title: string
   type: string
   createdAt: string

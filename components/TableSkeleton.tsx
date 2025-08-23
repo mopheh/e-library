@@ -1,5 +1,5 @@
-import React from "react";
-import { Skeleton } from "@/components/Skeleton";
+import React from "react"
+import { Skeleton } from "@/components/Skeleton"
 
 export const TableSkeleton = () => {
   return (
@@ -7,7 +7,7 @@ export const TableSkeleton = () => {
       {Array.from({ length: 5 }).map((_, i) => (
         <tr
           key={i}
-          className="font-poppins text-xs py-3 text-gray-800 font-normal border-b border-gray-200"
+          className="font-poppins text-xs py-3 text-gray-800 font-normal border-b border-gray-200 dark:border-gray-700"
         >
           <td className="py-4">
             <Skeleton width="w-24" />
@@ -28,5 +28,5 @@ export const TableSkeleton = () => {
         </tr>
       ))}
     </>
-  );
-};
+  )
+}

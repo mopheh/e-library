@@ -49,7 +49,7 @@ const Page = () => {
     }
   }, [user])
 
-  const { data: departments } = useDepartments(user?.facultyId)
+  const { data: departments } = useDepartments({ facultyId: user?.facultyId })
   const { data: books = { books: [], totalPages: 1 }, isLoading } = useBooks({
     departmentId: department,
     type,
@@ -82,7 +82,7 @@ const Page = () => {
   const pageRange = generatePageRange(currentPage, books.totalPages)
 
   return (
-    <div className="p-4 space-y-6">
+    <div className="p-4 space-y-6 bg-white dark:bg-gray-950 rounded-2xl dark:text-white">
       {userLoading || !user ? (
         <div className="flex justify-center items-center h-screen">
           <img

@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { askDeepSeek } from "@/actions/deepseek";
 export async function POST(req: NextRequest) {
   const body = await req.json();
+  console.log(body.messages)
   const response = await askDeepSeek(body.messages);
   const cleaned = response.replace(/<think>[\s\S]*?<\/think>/, "").trim();
   console.log(cleaned);

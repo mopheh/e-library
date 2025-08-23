@@ -24,7 +24,7 @@ export const BooksRow = ({ book }) => {
   }
 
   return (
-    <tr className="font-poppins text-xs py-3 text-gray-800 font-normal border-b border-gray-200">
+    <tr className="font-poppins text-xs py-3 text-gray-800 dark:text-slate-100 font-normal border-b border-gray-200 dark:border-gray-800">
       <td
         className="px-6 py-4 cursor-pointer"
         onClick={() => {

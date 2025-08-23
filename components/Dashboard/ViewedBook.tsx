@@ -11,7 +11,7 @@ import { useRouter } from "next/navigation"
 const ViewedBook = ({ book }: { book: any }) => {
   const router = useRouter()
   return (
-    <div className="flex flex-col bg-gray-50 p-5 rounded-lg ">
+    <div className="flex flex-col bg-gray-50 dark:bg-gray-900 p-5 rounded-lg ">
       <div className="flex justify-between items-start">
         <div className="flex gap-2">
           <FaBook size={40} className="text-gray-500" />
@@ -30,7 +30,7 @@ const ViewedBook = ({ book }: { book: any }) => {
           </div>
         </div>
         <div
-          className="cursor-pointer p-2 rounded-full bg-gray-100"
+          className="cursor-pointer p-2 rounded-full bg-gray-100 dark:bg-gray-950"
           onClick={() => {
             router.push(`/student/book/${book.id}`)
           }}
@@ -40,10 +40,10 @@ const ViewedBook = ({ book }: { book: any }) => {
       </div>
       <div>
         <div className="flex justify-between">
-          <span className="text-xs text-neutral-700 mb-2 block font-medium">
+          <span className="text-xs text-neutral-700 dark:text-neutral-300 mb-2 block font-medium">
             Progress
           </span>
-          <span className="text-xs text-neutral-700 mb-2 block font-rubik">
+          <span className="text-xs text-neutral-700 dark:text-neutral-300 mb-2 block font-rubik">
             {book.progress || 0}% of 100%
           </span>
         </div>

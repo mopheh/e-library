@@ -11,13 +11,13 @@ export default function AddedMaterials({
 }) {
   return (
     <div className="px-2">
-      <div className="bg-white rounded-lg p-5 w-full mt-5 px-8">
+      <div className="bg-white dark:bg-gray-950 rounded-lg p-5 w-full mt-5 px-8">
         <h3 className="font-open-sans font-semibold mb-10">
           Recently Added Materials
         </h3>
         <table className="table-auto w-full border-collapse">
           <thead className="text-left">
-            <tr className="tracking-wider !text-left uppercase text-gray-400 text-xs font-karla border-b border-gray-200">
+            <tr className="tracking-wider !text-left uppercase text-gray-400 dark:text-gray-300 text-xs font-karla border-b border-gray-200 dark:border-gray-600">
               <th className="!text-left py-3">Title</th>
               <th className="!text-left">Course</th>
               <th className="!text-left">Type</th>

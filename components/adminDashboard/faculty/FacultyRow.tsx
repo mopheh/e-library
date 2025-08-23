@@ -1,16 +1,16 @@
 // FacultyRow.tsx
-"use client";
-import { useUsers } from "@/hooks/useUsers";
+"use client"
+import { useUsers } from "@/hooks/useUsers"
 
 const FacultyRow = ({
   facultyId,
   name,
 }: {
-  facultyId: string;
-  name: string;
+  facultyId: string
+  name: string
 }) => {
   // @ts-ignore
-  const { data: users, isLoading, isError } = useUsers(facultyId);
+  const { data: users, isLoading, isError } = useUsers(facultyId)
 
   return (
     <tr className="font-poppins text-xs py-3 text-gray-800 font-normal border-b border-gray-200">
@@ -19,7 +19,7 @@ const FacultyRow = ({
         {isLoading ? "Loading..." : isError ? "Error" : (users?.length ?? 0)}
       </td>
     </tr>
-  );
-};
+  )
+}
 
-export default FacultyRow;
+export default FacultyRow

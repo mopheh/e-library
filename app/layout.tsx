@@ -4,6 +4,7 @@ import LocalFont from "next/font/local"
 import { ClerkProvider } from "@clerk/nextjs"
 import { Toaster } from "@/components/ui/sonner"
 import { Providers } from "@/app/provider"
+import { ThemeProvider } from "@/components/theme-provider"
 const poppinsSans = LocalFont({
   src: [
     { path: "/fonts/Poppins-Regular.ttf", weight: "400", style: "normal" },
@@ -27,8 +28,15 @@ export default function RootLayout({
     <ClerkProvider>
       <html lang="en">
         <body className={`antialiased !overflow-x-hidden`}>
-          <Providers>{children}</Providers>
-          <Toaster position="top-right" />
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
+            <Providers>{children}</Providers>
+            <Toaster position="top-right" />
+          </ThemeProvider>
         </body>
       </html>
     </ClerkProvider>

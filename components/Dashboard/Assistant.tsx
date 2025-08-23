@@ -1,163 +1,167 @@
 // components/AIChatAssistant.tsx
-"use client"
-import { useState } from "react"
-import AIResponse from "@/components/Dashboard/Response"
-import { FiSend } from "react-icons/fi"
-import { useRef, useEffect } from "react"
-import { convertToMarkdownMath } from "@/lib/utils"
+"use client";
+import { useState, useEffect, useRef } from "react";
+import AIResponse from "@/components/Dashboard/Response";
+import { FiSend } from "react-icons/fi";
+import { convertToMarkdownMath } from "@/lib/utils";
 
 interface AIChatAssistantProps {
-  pageText?: string
+    pageText?: string;
+    title?: string;
 }
+
 type Message = {
-  role: "user" | "assistant" | "system"
-  content: string
-}
-export default function AIChatAssistant({ pageText }: AIChatAssistantProps) {
-  const bottomRef = useRef<HTMLDivElement | null>(null)
+    role: "user" | "assistant" | "system";
+    content: string;
+};
 
-  const [messages, setMessages] = useState<Message[]>([])
-  const [input, setInput] = useState("")
-  const [loading, setLoading] = useState(false)
+export default function AIChatAssistant({ pageText, title = "Study Assistant" }: AIChatAssistantProps) {
+    const containerRef = useRef<HTMLDivElement>(null);
 
-  const containerRef = useRef<HTMLDivElement>(null)
+    const [messages, setMessages] = useState<Message[]>([]);
+    const [input, setInput] = useState("");
+    const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    if (containerRef.current) {
-      containerRef.current.scrollIntoView({ behavior: "smooth" })
-    }
-  }, [messages])
+    // Auto scroll to bottom on new message
+    useEffect(() => {
+        if (containerRef.current) {
+            containerRef.current.scrollIntoView({ behavior: "smooth" });
+        }
+    }, [messages, loading]);
 
-  const sendMessage = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    if (!input.trim()) return
+    const sendMessage = async (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        if (!input.trim()) return;
 
-    const userMessage = { role: "user", content: input }
-    // @ts-ignore
-    setMessages((prev) => [...prev, userMessage])
+        const userMessage = { role: "user", content: input };
+        setMessages((prev) => [...prev, userMessage]);
 
-    const hasContent = pageText && pageText.trim().length > 0
+        const hasContent = pageText && pageText.trim().length > 0;
 
-    const systemMessage = {
-      role: "system",
-      content: hasContent
-        ? `You are a helpful study assistant. The student is reading the following textbook content:\n\n"${pageText}".\n\nAnswer the student's question using only this content.`
-        : `You are a helpful study assistant, but the textbook page is currently empty. Politely ask the student to share a clearer page or rephrase their question.`,
-    }
+        const systemMessage = {
+            role: "system",
+            content: hasContent
+                ? `You are a helpful study assistant. The student is reading the following textbook content:\n\n"${pageText}".\n\nAnswer the student's question using only this content.`
+                : `You are a helpful study assistant, but the textbook page is currently empty. Politely ask the student to share a clearer page or rephrase their question or provide answer if you understand the context`,
+        };
 
-    const currentMessages = [systemMessage, ...messages, userMessage]
+        const currentMessages = [systemMessage, ...messages, userMessage];
 
-    setInput("")
-    setLoading(true)
+        setInput("");
+        setLoading(true);
 
-    try {
-      const res = await fetch("/api/ask", {
-        method: "POST",
-        body: JSON.stringify({ messages: currentMessages }),
-      })
+        try {
+            const res = await fetch("/api/ask", {
+                method: "POST",
+                body: JSON.stringify({ messages: currentMessages }),
+            });
 
-      const data = await res.json()
+            const data = await res.json();
 
-      // Add empty assistant message for typing effect
-      // @ts-ignore
-      setMessages((prev) => [...prev, { role: "assistant", content: "" }])
+            // Add empty assistant message for typing effect
+            setMessages((prev) => [...prev, { role: "assistant", content: "" }]);
 
-      // Simulate typing delay
-      let index = 0
-      const fullResponse = data.response
+            // Simulate typing effect
+            let index = 0;
+            const fullResponse = data.response;
 
-      const typeInterval = setInterval(() => {
-        // @ts-ignore
-        setMessages((prev) => {
-          const last = prev.at(-1)
-          const updated = [
-            ...prev.slice(0, -1),
-            {
-              // @ts-ignore
-              ...last!,
-              content: fullResponse.slice(0, index),
-            },
-          ]
-          return updated
-        })
+            const typeInterval = setInterval(() => {
+                setMessages((prev) => {
+                    const last = prev.at(-1);
+                    if (!last) return prev;
+                    const updated = [
+                        ...prev.slice(0, -1),
+                        { ...last, content: fullResponse.slice(0, index) },
+                    ];
+                    return updated;
+                });
 
-        index += 10
-        if (index > fullResponse.length) clearInterval(typeInterval)
-      }, 10)
-    } catch (error) {
-      console.error("Error sending message", error)
-    }
+                index += 3;
+                if (index > fullResponse.length) clearInterval(typeInterval);
+            }, 15);
+        } catch (error) {
+            console.error("Error sending message", error);
+        }
 
-    setLoading(false)
-  }
+        setLoading(false);
+    };
 
-  return (
-    <div className="w-[40%] h-full flex flex-col bg-white p-4">
-      <h2 className="text-lg font-bold mb-3 font-cabin">Study Assistant</h2>
-
-      {/* Chat container */}
-      <div className="flex-1 overflow-y-auto border rounded p-2 mb-2 space-y-2 text-xs">
-        {messages
-          .filter((m) => m.role !== "system")
-          .map((msg, i) => (
-            <div
-              key={i}
-              className={`flex items-start gap-2 ${
-                msg.role === "user" ? "justify-end" : "justify-start"
-              }`}
-            >
-              {msg.role === "assistant" && (
-                <div className="w-6 h-6 rounded-full bg-green-600 text-white flex items-center justify-center text-[10px] font-bold">
-                  A
+    return (
+        <div className="w-full h-full flex flex-col bg-[#ece5dd] dark:bg-[#0b141a]">
+            <div className="sticky top-0 z-10 flex items-center gap-3 px-3 py-2 bg-[#128C7E] dark:bg-[#202c33] text-white">
+                <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center font-bold">
+                    🤖
                 </div>
-              )}
-
-              <div
-                className={`p-2 my-1 rounded-md max-w-[80%] ${
-                  msg.role === "user"
-                    ? "bg-green-100 text-right"
-                    : "bg-white text-left"
-                }`}
-              >
-                <div className="font-poppins whitespace-pre-wrap break-words">
-                  <AIResponse markdown={convertToMarkdownMath(msg.content)} />
+                <div className="min-w-0">
+                    <h2 className="text-sm font-semibold truncate">{title}</h2>
+                    <p
+                        className="text-[11px] leading-3 text-white/80"
+                        aria-live="polite"
+                        aria-atomic="true"
+                    >
+                        {loading ? "typing…" : "online"}
+                    </p>
                 </div>
-              </div>
-
-              {msg.role === "user" && (
-                <div className="w-6 h-6 rounded-full bg-green-600 text-white flex items-center justify-center text-[10px] font-bold">
-                  U
-                </div>
-              )}
             </div>
-          ))}
-        {loading && (
-          <div className="flex items-center text-green-600 text-9xl animate-pulse">
-            <span>.</span>
-            <span>.</span>
-            <span>.</span>
-          </div>
-        )}
-        {/* Anchor for scroll-to-bottom */}
-        <div ref={containerRef} />
-      </div>
+            {/* Chat container */}
+            <div className="flex-1 overflow-y-auto p-3 space-y-2 text-sm">
+                {messages
+                    .filter((m) => m.role !== "system")
+                    .map((msg, i) => (
+                        <div
+                            key={i}
+                            className={`flex ${
+                                msg.role === "user" ? "justify-end" : "justify-start"
+                            }`}
+                        >
+                            <div
+                                className={`rounded-lg px-3 py-2 max-w-[75%] shadow text-[13px] leading-snug whitespace-pre-wrap break-words ${
+                                    msg.role === "user"
+                                        ? "bg-[#dcf8c6] dark:bg-emerald-800 dark:text-white text-black rounded-br-none"
+                                        : "bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100  rounded-bl-none"
+                                }`}
+                            >
+                                <AIResponse
+                                    markdown={
+                                        msg.role === "assistant"
+                                            ? convertToMarkdownMath(msg.content)
+                                            : msg.content
+                                    }
+                                />
+                            </div>
+                        </div>
+                    ))}
 
-      {/* Input bar */}
-      <form onSubmit={sendMessage} className="flex gap-2">
-        <input
-          type="text"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          className="border rounded-full px-4 py-2 flex-1 text-sm"
-          placeholder="Ask a question..."
-        />
-        <button
-          type="submit"
-          className="bg-green-600 text-white px-4 py-2 rounded-full text-base font-poppins"
-        >
-          <FiSend />
-        </button>
-      </form>
-    </div>
-  )
+                {loading && (
+                    <div className="flex justify-start">
+                        <div className="bg-white rounded-lg rounded-bl-none px-3 py-2 shadow text-gray-500 animate-pulse">
+                            typing...
+                        </div>
+                    </div>
+                )}
+
+                <div ref={containerRef} />
+            </div>
+
+            {/* Input bar (WhatsApp style) */}
+            <form
+                onSubmit={sendMessage}
+                className="flex items-center gap-2 bg-white px-3 py-2 border-t dark:bg-gray-800  dark:border-gray-700"
+            >
+                <input
+                    type="text"
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    className="flex-1 px-4 py-2 rounded-full bg-gray-100 focus:outline-none dark:bg-gray-700 dark:text-white text-sm"
+                    placeholder="Type a message"
+                />
+                <button
+                    type="submit"
+                    className="bg-green-500 text-white p-2 rounded-full"
+                >
+                    <FiSend size={18} />
+                </button>
+            </form>
+        </div>
+    );
 }

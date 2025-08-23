@@ -32,7 +32,7 @@ export default function FormModal({
             transition={{ duration: 0.25 }}
           >
             <motion.div
-              className="bg-white rounded-2xl shadow-2xl p-6 w-[90%] max-w-md"
+              className="bg-white dark:bg-gray-950 rounded-2xl shadow-2xl p-6 w-[90%] max-w-md"
               variants={zoomVariants}
             >
               <div className="flex justify-between items-center mb-4">

@@ -1,0 +1,1 @@
+ALTER TABLE "book_pages" ALTER COLUMN "text_chunk" DROP NOT NULL;

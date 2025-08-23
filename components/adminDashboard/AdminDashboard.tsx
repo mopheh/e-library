@@ -10,6 +10,7 @@ import { useFaculties } from "@/hooks/useFaculties"
 import { useDepartments } from "@/hooks/useDepartments"
 import DepartmentRow from "@/components/adminDashboard/department/DepartmentRow"
 import FacultyRow from "./faculty/FacultyRow"
+import MiniLoader from "../Loader"
 
 const AdminDashboard = () => {
   const [facultyPage, setFacultyPage] = useState(1)
@@ -35,8 +36,17 @@ const AdminDashboard = () => {
       {open && (
         <div className="fixed inset-0 backdrop-blur-xs w-screen h-screen"></div>
       )}
-
-      {departments && departments.length > 0 ? (
+      <div className="flex gap-8 my-10">
+        <Welcome
+          name={"Admin"}
+          guide={" Manage all users, books and material in uniVault"}
+        />
+        <Stat title={"Users"} stat={24} />
+        <Stat title={"Total Material"} stat={10} />
+        <Stat title={"CBT Usage"} stat={19} />
+        <Stat title={"Total Revenue"} stat={0} />
+      </div>
+      {departments ? (
         <div className="w-full overflow-x-hidden">
           <div className="px-2 flex flex-col lg:flex-row gap-4">
             {/* Faculty Section */}
@@ -63,14 +73,19 @@ const AdminDashboard = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {faculties &&
+                    {faculties ? (
                       faculties.map((faculty) => (
                         <FacultyRow
                           key={faculty.id}
                           facultyId={faculty.id}
                           name={faculty.name}
                         />
-                      ))}
+                      ))
+                    ) : (
+                      <>
+                        <MiniLoader />
+                      </>
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -163,12 +178,8 @@ const AdminDashboard = () => {
           </div>
         </div>
       ) : (
-        <div className="flex relative z-50 bg-white/80 h-screen w-full justify-center items-center animate-fade-in col-span-3">
-          <img
-            src="/univault.png"
-            alt="Loading UniVault..."
-            className="h-20 w-auto animate-pulse mb-4"
-          />
+        <div className="flex relative z-50 bg-white/80 dark:bg-gray-900/80 h-screen w-full justify-center items-center animate-fade-in col-span-3">
+          <MiniLoader />
         </div>
       )}
     </>

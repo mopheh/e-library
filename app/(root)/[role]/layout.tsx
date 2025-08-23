@@ -9,7 +9,7 @@ export default function layout({ children }: { children: React.ReactNode }) {
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen)
 
   return (
-    <div className="bg-gray-50 flex">
+    <div className="bg-gray-50 dark:bg-gray-900 flex">
       <Sidebar isOpen={isSidebarOpen} toggle={toggleSidebar} />
       <div
         className={`p-2 sm:p-4 sm:py-6 flex-1 sm:w-auto w-screen min-h-screen ${isSidebarOpen ? "!overflow-hidden" : ""}`}

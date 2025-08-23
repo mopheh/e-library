@@ -20,14 +20,14 @@ const CustomList = ({
 }) => {
   const [open, setOpen] = useState(false)
   return (
-    <div className="bg-white rounded-lg w-full md:w-1/2 p-3 py-5 h-fit px-8">
+    <div className="bg-white dark:bg-gray-950 rounded-lg w-full md:w-1/2 p-3 py-5 h-fit px-8">
       {open && (
         <div className="fixed inset-0 backdrop-blur-xs w-screen h-screen"></div>
       )}
       <div className="flex justify-between items-center mb-10">
         <h3 className="font-semibold  font-open-sans">{name}</h3>
         <button
-          className="flex gap-2 items-center font-medium font-poppins cursor-pointer rounded-full px-3 py-2 text-xs border border-gray-200 bg-gray-50"
+          className="flex gap-2 items-center font-medium font-poppins cursor-pointer rounded-full  px-3 py-2 text-xs border border-gray-200 dark:border-gray-600 dark:bg-gray-800 bg-gray-50"
           onClick={() => setOpen(true)}
         >
           <PlusIcon className="w-6 h-6" /> Add New

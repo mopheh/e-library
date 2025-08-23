@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { ClipboardPaste, CloudUpload, Link as LinkIcon } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
+import {useCourses} from "@/hooks/useCourses";
 
 // schema
 export const bookSchema = z
@@ -40,14 +41,15 @@ type BookFormData = z.infer<typeof bookSchema>;
 
 export function UploadBookForm({
                                  department,
-                                 courses,
                                  setOpen,
                                }: {
   department: Department[] | null;
-  courses: Course[] | undefined;
   setOpen: Function;
 }) {
   const [loading, setLoading] = useState(false);
+  const { data: courses } = useCourses({
+    limit: 2000,
+  })
 
   const {
     register,

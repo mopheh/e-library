@@ -11,7 +11,7 @@ const Nav = () => {
   const { user } = useUser();
   const { signOut } = useAuth();
   return (
-    <div className="flex w-full justify-between items-start sm:items-center mb-5 gap-2 sm:gap-4">
+    <div className="hidden sm:flex w-full justify-between items-start sm:items-center mb-0 sm:mb-5 gap-2 sm:gap-4">
       <Breadcrumbs />
       <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center font-poppins">
         {/* <div className="border-1 w-56 flex items-center bg-white border-gray-200 px-2 rounded-2xl">

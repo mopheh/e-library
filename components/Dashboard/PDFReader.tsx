@@ -175,7 +175,6 @@ const PDFStudyView = ({ fileUrl, bookId }: PDFStudyViewProps) => {
         </div>
       </div>
 
-      {/* Mobile: Tabs */}
       <div className="md:hidden h-full flex flex-col">
         <Tabs defaultValue="study" className="flex flex-col h-full">
           <div className="flex-1 overflow-hidden">
@@ -219,7 +218,7 @@ const PDFStudyView = ({ fileUrl, bookId }: PDFStudyViewProps) => {
             </TabsContent>
           </div>
 
-          <TabsList className="fixed bottom-0 left-0 w-full flex justify-around font-poppins text-xs border-t dark:bg-gray-900 text-gray-500 bg-neutral-200">
+          <TabsList className="fixed bottom-18 left-0 w-full flex justify-around font-poppins text-xs border-t dark:bg-gray-900 text-gray-500 bg-neutral-200">
             <TabsTrigger value="study" className="flex-1 py-3">
               <IoBookOutline /> Study
             </TabsTrigger>

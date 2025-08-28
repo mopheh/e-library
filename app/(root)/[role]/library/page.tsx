@@ -1,11 +1,11 @@
-"use client"
+"use client";
 
-import React, { useEffect, useState } from "react"
-import { useUserData } from "@/hooks/useUsers"
-import { useDepartments } from "@/hooks/useDepartments"
-import { useBooks } from "@/hooks/useBooks"
-import { BooksRow } from "@/components/Dashboard/BooksRow"
-import { TableSkeleton } from "@/components/TableSkeleton"
+import React, { useEffect, useState } from "react";
+import { useUserData } from "@/hooks/useUsers";
+import { useDepartments } from "@/hooks/useDepartments";
+import { useBooks } from "@/hooks/useBooks";
+import { BooksRow, downloadFile } from "@/components/Dashboard/BooksRow";
+import { TableSkeleton } from "@/components/TableSkeleton";
 import {
   Table,
   TableBody,
@@ -13,14 +13,14 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
+} from "@/components/ui/table";
 import {
   Select,
   SelectTrigger,
   SelectValue,
   SelectContent,
   SelectItem,
-} from "@/components/ui/select"
+} from "@/components/ui/select";
 import {
   Pagination,
   PaginationContent,
@@ -29,58 +29,98 @@ import {
   PaginationNext,
   PaginationPrevious,
   PaginationEllipsis,
-} from "@/components/ui/pagination"
-import { Card, CardContent, CardTitle } from "@/components/ui/card"
+} from "@/components/ui/pagination";
+import { Card, CardContent, CardTitle } from "@/components/ui/card";
+import { AiOutlineFilePdf } from "react-icons/ai";
+import { HiOutlineDownload } from "react-icons/hi";
 
 const Page = () => {
-  const { data: user, isLoading: userLoading } = useUserData()
+  const { data: user, isLoading: userLoading } = useUserData();
 
-  const [department, setDepartment] = useState<string | undefined>()
-  const [level, setLevel] = useState<string | undefined>()
-  const [type, setType] = useState("")
-  const [currentPage, setCurrentPage] = useState(1)
+  const [department, setDepartment] = useState<string | undefined>();
+  const [level, setLevel] = useState<string | undefined>();
+  const [type, setType] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
 
-  const pageSize = 12
+  const pageSize = 12;
 
   useEffect(() => {
     if (user && !department && !level) {
-      setDepartment(user.departmentId)
-      setLevel(user.level)
+      setDepartment(user.departmentId);
+      setLevel(user.level);
     }
-  }, [user])
+  }, [user]);
 
-  const { data: departments } = useDepartments({ facultyId: user?.facultyId })
+  const { data: departments } = useDepartments({ facultyId: user?.facultyId });
   const { data: books = { books: [], totalPages: 1 }, isLoading } = useBooks({
     departmentId: department,
     type,
     level,
     page: currentPage,
     pageSize,
-  })
+  });
 
   const generatePageRange = (current: number, total: number) => {
-    if (total <= 5) return Array.from({ length: total }, (_, i) => i + 1)
+    if (total <= 5) return Array.from({ length: total }, (_, i) => i + 1);
 
-    const range = []
-    if (current > 2) range.push(1)
-    if (current > 3) range.push("...")
+    const range = [];
+    if (current > 2) range.push(1);
+    if (current > 3) range.push("...");
 
     for (
       let i = Math.max(2, current - 1);
       i <= Math.min(total - 1, current + 1);
       i++
     ) {
-      range.push(i)
+      range.push(i);
     }
 
-    if (current < total - 2) range.push("...")
-    if (current < total) range.push(total)
+    if (current < total - 2) range.push("...");
+    if (current < total) range.push(total);
 
-    return range
+    return range;
+  };
+
+  const pageRange = generatePageRange(currentPage, books.totalPages);
+  function formatBytes(bytes: number) {
+    if (!bytes) return "0 B";
+    const k = 1024;
+    const sizes = ["B", "KB", "MB", "GB"];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
   }
+  const [sizes, setSizes] = useState<Record<string, string>>({});
 
-  const pageRange = generatePageRange(currentPage, books.totalPages)
-
+  useEffect(() => {
+    books.books.forEach(async (book: any) => {
+      if (book.fileUrl) {
+        try {
+          if (book.fileUrl.includes("backblazeb2.com")) {
+            const authResponse = await fetch(`/api/books/${book.id}/download`);
+            const data = await authResponse.json();
+            const url = data.url;
+            const res = await fetch(url, { method: "HEAD" });
+            const length = res.headers.get("content-length");
+            if (length)
+              setSizes((prev) => ({
+                ...prev,
+                [book.id]: formatBytes(+length),
+              }));
+          } else {
+            const res = await fetch(book.fileUrl, { method: "HEAD" });
+            const length = res.headers.get("content-length");
+            if (length)
+              setSizes((prev) => ({
+                ...prev,
+                [book.id]: formatBytes(+length),
+              }));
+          }
+        } catch (err) {
+          console.error("Failed to fetch file size for", book.title, err);
+        }
+      }
+    });
+  }, [books]);
   return (
     <div className="p-4 space-y-6 bg-white dark:bg-gray-950 rounded-2xl dark:text-white">
       {userLoading || !user ? (
@@ -140,23 +180,56 @@ const Page = () => {
 
           {/* Book Results */}
           {books.books.length === 0 && !isLoading ? (
-            <p className="text-center text-muted-foreground">No books found.</p>
+            <p className="text-center text-muted-foreground font-poppins font-normal">
+              No books found.
+            </p>
           ) : (
             <>
-              {/* 📱 Mobile View – Card */}
-              <div className="grid grid-cols-1 gap-4 md:hidden">
-                {books.books.map((book: any, idx: number) => (
-                  <Card key={idx}>
-                    <CardContent className="space-y-2 py-4">
-                      <CardTitle className="text-lg">{book.title}</CardTitle>
-                      <p className="text-sm text-muted-foreground">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 font-poppins">
+                {books.books.map((book: any) => (
+                  <Card
+                    key={book.id}
+                    className="relative p-4 hover:shadow-lg transition-shadow duration-200 dark:bg-gray-900 dark:border-gray-700 border border-gray-200 rounded-xl"
+                  >
+                    {/* <div className="absolute -top-4 -left-4 w-fit h-fit rounded-full bg-gray-950">
+                      <div className="  text-red-500 w-10 h-10 rounded-full flex items-center justify-center shadow-lg">
+                        <AiOutlineFilePdf className="text-2xl" />
+                      </div>
+                    </div> */}
+
+                    <div className=" sm:ml-10 font-light">
+                      <div className="flex justify-between items-start">
+                        <h3 className="text-sm my-1 font-josefin-sans uppercase sm:text-lg font-normal leading-none dark:text-white">
+                          {book.title}
+                        </h3>
+                        <button
+                          className="text-gray-500 dark:bg-gray-950 p-3 rounded-full dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
+                          onClick={() =>
+                            downloadFile(
+                              book.fileUrl,
+                              book.id,
+                              `${book.title}.pdf`
+                            )
+                          }
+                        >
+                          <HiOutlineDownload className="text-xl" />
+                        </button>
+                      </div>
+                      <p className="text-xs text-gray-500 dark:text-gray-200">
                         {book.course?.name}
                       </p>
-                      <p className="text-xs">{book.type}</p>
-                      <p className="text-xs">
+                      <p className="text-xs text-gray-400 dark:text-gray-200">
+                        {book.type}
+                      </p>
+                      <p className="text-xs text-gray-400 dark:text-gray-200">
                         {new Date(book.createdAt).toLocaleDateString()}
                       </p>
-                    </CardContent>
+                      {sizes[book.id] && (
+                        <p className="text-sm font-medium mt-2 dark:text-white">
+                          {sizes[book.id]}
+                        </p>
+                      )}
+                    </div>
                   </Card>
                 ))}
               </div>
@@ -238,7 +311,7 @@ const Page = () => {
         </>
       )}
     </div>
-  )
-}
+  );
+};
 
-export default Page
+export default Page;

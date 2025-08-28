@@ -1,5 +1,5 @@
 export const askDeepSeek = async (
-  messages: { role: string; content: string }[],
+  messages: { role: string; content: string }[]
 ) => {
   // const response = await fetch("https://api.together.xyz/v1/chat/completions", {
   //   method: "POST",
@@ -17,16 +17,17 @@ export const askDeepSeek = async (
   const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
     method: "POST",
     headers: {
-      "Authorization": `Bearer ${process.env.OPENROUTER_API_KEY}`,
+      Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
       model: "moonshotai/kimi-k2:free", // or "moonshot-v1-32k" if you want bigger context
-      messages
+      messages,
     }),
   });
 
   const data = await res.json();
+  console.log(data);
   console.log(data.choices[0].message.content);
   //
   return data.choices?.[0]?.message?.content || "No response.";

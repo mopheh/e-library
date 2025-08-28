@@ -1,8 +1,10 @@
 import {
+  boolean,
   date,
   integer,
   pgEnum,
   pgTable,
+  text,
   timestamp,
   unique,
   uuid,
@@ -168,3 +170,35 @@ export const bookPages = pgTable(
     uniq: unique().on(t.bookId, t.pageNumber),
   })
 );
+
+export const questions = pgTable("questions", {
+  id: uuid("id").primaryKey().unique().defaultRandom(),
+  courseId: uuid("course_id").references(() => courses.id),
+  questionText: varchar("question_text").notNull(),
+  type: varchar("type").notNull().default("mcq"), // mcq, theory, true/false
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const options = pgTable("options", {
+  id: uuid("id").primaryKey().unique().defaultRandom(),
+  questionId: uuid("question_id").references(() => questions.id),
+  optionText: text("option_text").notNull(),
+  isCorrect: boolean("is_correct").default(false),
+});
+
+export const sessions = pgTable("sessions", {
+  id: uuid("id").primaryKey().unique().defaultRandom(),
+  userId: uuid("user_id").references(() => users.id),
+  courseId: uuid("course_id").references(() => courses.id),
+  startedAt: timestamp("started_at").defaultNow(),
+  completedAt: timestamp("completed_at"),
+  score: integer("score"),
+});
+
+export const answers = pgTable("answers", {
+  id: uuid("id").primaryKey().unique().defaultRandom(),
+  sessionId: uuid("session_id").references(() => sessions.id),
+  questionId: uuid("question_id").references(() => questions.id),
+  selectedOptionId: uuid("selected_option_id").references(() => options.id),
+  isCorrect: boolean("is_correct"),
+});

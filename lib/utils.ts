@@ -106,6 +106,7 @@ export const b2 = new B2({
 });
 
 export async function authorizeB2() {
+  //@ts-ignore
   if (!b2.authorizationToken) {
     await b2.authorize(); // gets auth + API URLs
   }

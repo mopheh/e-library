@@ -102,18 +102,9 @@ export async function GET(req: NextRequest) {
 
 // tell pdfjs to use worker-less mode (important for Next.js)
 pdfjsLib.GlobalWorkerOptions.workerSrc = require("pdfjs-dist/build/pdf.worker.min.js");
-import B2 from "backblaze-b2";
 import {parsePdfPages} from "@/actions/parseBook";
-export const b2 = new B2({
-    applicationKeyId: process.env.B2_KEY_ID!,   // from Backblaze
-    applicationKey: process.env.B2_APP_KEY!,    // from Backblaze
-});
+import { authorizeB2, b2 } from "@/lib/utils";
 
-export async function authorizeB2() {
-    if (!b2.authorizationToken) {
-        await b2.authorize(); // gets auth + API URLs
-    }
-}
 export const runtime = "nodejs";
 
 export async function POST(req: NextRequest) {

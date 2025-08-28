@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { eq } from "drizzle-orm";
 import { db } from "@/database/drizzle";
 import { books } from "@/database/schema";
-import { authorizeB2, b2 } from "@/app/api/books/route";
+import { authorizeB2, b2 } from "@/lib/utils";
 
 export async function GET(
   req: Request,

@@ -1,7 +1,7 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { getDocument } from "pdfjs-dist";
-
+import B2 from "backblaze-b2";
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
@@ -98,6 +98,15 @@ export function convertToMarkdownMath(input: string): string {
       .replace(/^( *[\(\)\d+\-\+\*\/=a-zA-Z\^\{\}\\ ]+ *)$/gm, (line) => {
         return `$$${line.trim()}$$`;
       })
-
   );
+}
+export const b2 = new B2({
+  applicationKeyId: process.env.B2_KEY_ID!, // from Backblaze
+  applicationKey: process.env.B2_APP_KEY!, // from Backblaze
+});
+
+export async function authorizeB2() {
+  if (!b2.authorizationToken) {
+    await b2.authorize(); // gets auth + API URLs
+  }
 }

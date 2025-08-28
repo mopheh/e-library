@@ -10,6 +10,7 @@ import { ClipboardPaste, CloudUpload, Link as LinkIcon } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import {useCourses} from "@/hooks/useCourses";
+import {useUploadBook} from "@/hooks/useBooks";
 
 // schema
 export const bookSchema = z
@@ -77,7 +78,6 @@ export function UploadBookForm({
     },
   });
 
-  const { uploadFile } = useFileUpload();
   const source = watch("source");
 
   const onSubmit: SubmitHandler<BookFormData> = async (data: BookFormData) => {
@@ -96,12 +96,12 @@ export function UploadBookForm({
         formData.append("courseIds[]", id);
       });
 
-      if (data.source === "file" && data.file ) {
+      if (data.source === "file" && data.file) {
         formData.append("file", data.file);
       }
 
       if (data.source === "link" && data.link) {
-        formData.append("link", data.link); // keep key consistent with server
+        formData.append("link", data.link);
       }
 
       console.log("Form: ", formData);
@@ -109,6 +109,7 @@ export function UploadBookForm({
         method: "POST",
         body: formData,
       });
+
       if (res.ok) {
         toast.success("Book uploaded!");
         reset();

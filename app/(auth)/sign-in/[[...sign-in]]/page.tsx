@@ -37,13 +37,13 @@ export default function Page() {
   useEffect(() => {
     const checkClerkLoaded = setTimeout(() => {
       setShowForm(true); // simulate delay for Clerk load
-    }, 400); // adjust if needed
+    }, 400);
     return () => clearTimeout(checkClerkLoaded);
   }, []);
 
   return (
-    <div className="relative min-h-screen w-full overflow-hidden bg-[#f9f6f1]">
-      {images.map((src, index) => (
+    <div className="relative min-h-screen w-full overflow-hidden bg-[#f9f6f1] dark:bg-gray-900">
+      {/* {images.map((src, index) => (
         <Image
           key={index}
           src={src}
@@ -51,13 +51,13 @@ export default function Page() {
           fill
           className={clsx(
             "object-cover transition-opacity duration-1000 ease-in-out",
-            index === currentImage ? "opacity-100" : "opacity-0",
+            index === currentImage ? "opacity-100" : "opacity-0"
           )}
           priority={index === 0}
         />
-      ))}
+      ))} */}
 
-      <div className="absolute inset-0 bg-black/40 z-10 backdrop-blur-sm" />
+      {/* <div className="absolute inset-0 bg-black/50 dark:bg-black/50 z-10" /> */}
 
       <div className="relative z-20 flex items-center justify-center min-h-screen">
         {isLoaded ? (
@@ -71,13 +71,13 @@ export default function Page() {
               mass: 0.75,
               delay: 0.1,
             }}
-            className="bg-white/10 backdrop-blur-md border border-white/20 shadow-xl rounded-xl p-8 w-fit mx-4"
+            className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-xl rounded-xl p-8 w-fit mx-4"
           >
             <SignIn
               appearance={{
                 variables: {
-                  colorPrimary: "#016630", // Deep blue for buttons
-                  colorText: "#ffffff", // Light text for contrast
+                  colorPrimary: "#016630",
+                  colorText: "#111111",
                   borderRadius: "12px",
                   colorBackground: "transparent",
                 },
@@ -86,22 +86,22 @@ export default function Page() {
                   footerTitle: "hidden",
                   logoBox: "flex justify-center my-4",
                   logoImage: "h-56 w-auto",
-                  card: "bg-white/10 backdrop-blur-md shadow-none border-none rounded-xl",
+                  card: "bg-transparent shadow-none border-none rounded-xl",
                   formFieldInput:
-                    "bg-white/10 backdrop-blur-sm border border-white/20 text-white placeholder-white/60",
+                    "bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-black dark:text-white placeholder-gray-400 dark:placeholder-gray-300",
                   formButtonPrimary:
                     "bg-[#064E3B] hover:bg-emerald-950 text-white font-semibold",
                   headerSubtitle:
-                    "font-poppins font-medium text-xs text-white/80 font-medium mb-2",
-                  footerActionText: "text-white/70",
+                    "font-poppins font-medium text-xs text-gray-700 dark:text-gray-300 mb-2",
+                  footerActionText: "text-gray-600 dark:text-gray-400",
                   footerActionLink:
-                    "text-emerald-300 hover:text-white underline",
+                    "text-emerald-600 dark:text-emerald-400 hover:text-emerald-800 dark:hover:text-emerald-200 underline",
                 },
               }}
             />
           </motion.div>
         ) : (
-          <div className="flex bg-white/80 h-screen w-full justify-center items-center animate-fade-in col-span-3">
+          <div className="flex bg-white dark:bg-gray-800 h-screen w-full justify-center items-center animate-fade-in col-span-3">
             <img
               src="/univault.png"
               alt="Loading UniVault..."
@@ -111,7 +111,7 @@ export default function Page() {
         )}
       </div>
 
-      <footer className="absolute bottom-6 font-poppins w-full text-center text-xs text-white/60 z-20">
+      <footer className="absolute bottom-6 font-poppins w-full text-center text-xs text-gray-600 dark:text-gray-400 z-20">
         © {new Date().getFullYear()} UniVault. All rights reserved.
       </footer>
     </div>

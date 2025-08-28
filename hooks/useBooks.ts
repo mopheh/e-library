@@ -80,3 +80,47 @@ export const useBookPages = (bookId: string) => {
     staleTime: 1000 * 60 * 5, // cache 5 minutes
   });
 };
+import { useMutation } from "@tanstack/react-query";
+
+async function uploadBook(file: File): Promise<string> {
+
+  // const res = await fetch("/api/upload/signature");
+  // if (!res.ok) throw new Error("Failed to get upload signature");
+  //
+  // const { timestamp, signature, apiKey, cloudName } = await res.json();
+  // console.log({ timestamp, signature, apiKey, cloudName })
+  //   console.log(file, file.size, file.type);
+
+    // 2. Prepare form data
+  const formData = new FormData();
+
+  formData.append("file", file);
+  // formData.append("api_key", apiKey);
+  // formData.append("timestamp", timestamp);
+  // formData.append("signature", signature);
+  // formData.append("resource_type", "raw");
+
+  // 3. Upload to Cloudinary
+  for (const [key, value] of formData.entries()) {
+    console.log(key, value);
+  }
+  const uploadRes = await fetch(
+      `/api/books/upload`,
+      {
+        method: "POST",
+        body: formData,
+      }
+  );
+  const data1 = await uploadRes.json()
+  console.log(data1)
+  if (!uploadRes.ok) throw new Error("Cloudinary upload failed");
+
+  const data = await uploadRes.json();
+  return data.secure_url as string;
+}
+
+export function useUploadBook() {
+  return useMutation({
+    mutationFn: uploadBook,
+  });
+}

@@ -1,6 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import * as pdfjsLib from "pdfjs-dist";
+import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+const s3 = new S3Client({
+    region: "us-east-005", // backblaze default region
+    endpoint: process.env.B2_ENDPOINT,
+    credentials: {
+        accessKeyId: process.env.B2_KEY_ID!,
+        secretAccessKey: process.env.B2_APP_KEY!,
+    },
+});
+
 // import { bookSchema } from "@/components/AddBook";
 import {
   bookCourses,
@@ -87,154 +97,23 @@ export async function GET(req: NextRequest) {
     );
   }
 }
-// export async function POST(req: NextRequest) {
-//   try {
-//     const { userId } = await auth();
-//     if (!userId) {
-//       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-//     }
 
-//     const [user] = await db
-//       .select()
-//       .from(users)
-//       .where(eq(users.clerkId, userId));
-//     console.log(user);
-//     const body = await req.json();
-//     // const validated = bookSchema.safeParse(body);
-//     // if (!validated.success) {
-//     //   return NextResponse.json(
-//     //     { error: "Invalid Data", details: validated.error.flatten() },
-//     //     { status: 400 },
-//     //   );
-//     // }
 
-//     const { title, description, departmentId, courseIds, fileUrl, type } = body;
-
-//     const [createdBook] = await db
-//       .insert(books)
-//       .values({
-//         title,
-//         description,
-//         departmentId,
-//         type,
-//         fileUrl,
-//         postedBy: user.id,
-//       })
-//       .returning();
-
-//     const courseLinks = courseIds.map((courseId: any) => ({
-//       bookId: createdBook.id,
-//       courseId: courseId,
-//     }));
-
-//     await db.insert(bookCourses).values(courseLinks);
-//     return NextResponse.json(createdBook, { status: 201 });
-//   } catch (error) {
-//     console.error("[POST /api/books]", error);
-//     return NextResponse.json(
-//       { error: "Failed to create book" },
-//       { status: 500 }
-//     );
-//   }
-// }
-// export async function POST(req: Request) {
-//   try {
-//     const { userId } = await auth();
-//     if (!userId) {
-//       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-//     }
-//     const [user] = await db
-//       .select()
-//       .from(users)
-//       .where(eq(users.clerkId, userId));
-//     const formData = await req.formData();
-
-//     const title = formData.get("title") as string;
-//     const description = formData.get("description") as string;
-//     const departmentId = formData.get("departmentId") as string;
-//     const courseIds = formData.getAll("courseIds[]") as string[];
-//     const type = formData.get("type") as string;
-//     const file = formData.get("file") as File;
-
-//     if (!file) {
-//       return NextResponse.json({ error: "No file uploaded" }, { status: 400 });
-//     }
-
-//     // Step 1: Save file temporarily to disk (needed for pdf-parse)
-//     const tempFilePath = path.join("/tmp", `${uuidv4()}.pdf`);
-//     const buffer = Buffer.from(await file.arrayBuffer());
-//     fs.writeFileSync(tempFilePath, buffer);
-
-//     // Step 2: Upload to Supabase storage
-//     const { data: uploadData, error: uploadError } = await supabase.storage
-//       .from("books")
-//       .upload(`${uuidv4()}.pdf`, buffer, {
-//         contentType: "application/pdf",
-//         upsert: true,
-//       });
-
-//     if (uploadError) {
-//       return NextResponse.json({ error: uploadError.message }, { status: 500 });
-//     }
-
-//     const { data: publicUrlData } = supabase.storage
-//       .from("books")
-//       .getPublicUrl(uploadData.path);
-
-//     const fileUrl = publicUrlData.publicUrl;
-
-//     // Step 3: Parse PDF into chunks
-//     const chunks = await parsePdfToChunks(tempFilePath);
-
-//     // Step 4: Insert book metadata
-//     const [createdBook] = await db
-//       .insert(books)
-//       .values({
-//         title,
-//         description,
-//         departmentId,
-//         type,
-//         fileUrl,
-//         postedBy: user.id, // from auth
-//       })
-//       .returning();
-//     const courseLinks = courseIds.map((courseId: any) => ({
-//       bookId: createdBook.id,
-//       courseId: courseId,
-//     }));
-
-//     await db.insert(bookCourses).values(courseLinks);
-//     // Step 5: Insert pages in bulk
-//     await db.insert(bookPages).values(
-//       //@ts
-//       chunks.map((c: { pageNumber: any; textChunk: any }) => ({
-//         bookId: createdBook.id,
-//         pageNumber: c.pageNumber,
-//         textContent: c.textChunk,
-//       }))
-//     );
-
-//     // Step 6: Cleanup temp file
-//     fs.unlinkSync(tempFilePath);
-
-//     return NextResponse.json({
-//       message: "Book uploaded successfully",
-//       book: createdBook,
-//       pagesCount: chunks.length,
-//     });
-//   } catch (err: any) {
-//     console.error("Error uploading book:", err);
-//     return NextResponse.json(
-//       { error: err.message || "Something went wrong" },
-//       { status: 500 }
-//     );
-//   }
-// }
-// app/api/books/route.ts
 
 // tell pdfjs to use worker-less mode (important for Next.js)
 pdfjsLib.GlobalWorkerOptions.workerSrc = require("pdfjs-dist/build/pdf.worker.min.js");
+import B2 from "backblaze-b2";
+import {parsePdfPages} from "@/actions/parseBook";
+export const b2 = new B2({
+    applicationKeyId: process.env.B2_KEY_ID!,   // from Backblaze
+    applicationKey: process.env.B2_APP_KEY!,    // from Backblaze
+});
 
+export async function authorizeB2() {
+    if (!b2.authorizationToken) {
+        await b2.authorize(); // gets auth + API URLs
+    }
+}
 export const runtime = "nodejs";
 
 export async function POST(req: NextRequest) {
@@ -262,100 +141,193 @@ export async function POST(req: NextRequest) {
     const courseIds = (formData.getAll("courseIds[]") as string[]) || [];
     const type = formData.get("type") as string;
     const file = formData.get("file") as File;
+    const link = formData.get('link') as string;
 
-    if (!file) {
+    if (!file && !link) {
       return NextResponse.json({ error: "No file uploaded" }, { status: 400 });
     }
+    if (((file.size / (1024 * 1024)) > 50)) {
+        await authorizeB2();
 
-    // ---- Upload to Supabase ----
-    const buffer = Buffer.from(await file.arrayBuffer());
-    const ext = file.name.split(".").pop() || "pdf";
-    const objectName = `books/${uuidv4()}.${ext}`;
+        const arrayBuffer = await file.arrayBuffer();
+        const buffer = Buffer.from(arrayBuffer);
 
-    const { data: uploaded, error: uploadError } = await supabase.storage
-      .from("books")
-      .upload(objectName, buffer, {
-        contentType: "application/pdf",
-        upsert: false,
-      });
+        const { data: uploadAuth } = await b2.getUploadUrl({
+            bucketId: process.env.B2_BUCKET_ID!,
+        });
 
-    if (uploadError) {
-      console.error("Supabase upload error:", uploadError);
-      return NextResponse.json({ error: "Upload failed" }, { status: 500 });
+        const { data: uploaded } = await b2.uploadFile({
+            uploadUrl: uploadAuth.uploadUrl,
+            uploadAuthToken: uploadAuth.authorizationToken,
+            fileName: file.name,
+            data: buffer,
+        });
+
+        // Construct file URL
+        const fileUrl = `https://${process.env.B2_ENDPOINT}/file/${process.env.B2_BUCKET}/${uploaded.fileName}`;
+        const ext = file.name.split(".").pop() || "pdf";
+
+
+        // ---- Insert book record ----
+        const [createdBook] = await db
+            .insert(books)
+            .values({
+                title,
+                description,
+                departmentId,
+                type,
+                fileUrl,
+                postedBy: user.id,
+                parseStatus: "processing" as any,
+            } as any)
+            .returning();
+
+        // ---- Link courses ----
+        if (courseIds?.length) {
+            const courseLinks = courseIds.map((courseId) => ({
+                bookId: createdBook.id,
+                courseId,
+            }));
+            await db.insert(bookCourses).values(courseLinks);
+        }
+        // const pages: { pageNumber: number; text: string }[] = [];
+        // // ---- Parse PDF into pages ----
+        // const uint8Array = new Uint8Array(buffer);
+        // const pdf = await pdfjsLib.getDocument({ data: uint8Array }).promise;
+        // const numPages = pdf.numPages;
+        //
+        // for (let i = 1; i <= numPages; i++) {
+        //     const page = await pdf.getPage(i);
+        //     const content = await page.getTextContent();
+        //     // const text = content.items.map((item: any) => item.str).join(" ");
+        //     // const text = content.items
+        //     //   .map((item: any) => ("str" in item ? item.str : ""))
+        //     //   .join(" ");
+        //     //@ts-ignore
+        //     // Collect all text strings
+        //     const strings = content.items
+        //         .map((item: any) => ("str" in item ? item.str : ""))
+        //         .filter(Boolean);
+        //
+        //     // Join them with space or newline
+        //     const pageText = strings.join(" ");
+        //
+        //     pages.push({
+        //         pageNumber: i,
+        //         text: pageText.trim(),
+        //     });
+        // }
+        // const bookWithTexts = await db.insert(bookPages).values(
+        //     pages.map((p) => ({
+        //         bookId: createdBook.id,
+        //         pageNumber: p.pageNumber,
+        //         textChunk: p.text,
+        //     }))
+        // );
+        // console.log(bookWithTexts);
+
+        // ---- Mark parsing complete ----
+        const numPages = await parsePdfPages(buffer, createdBook.id);
+        await db.update(books).set({ parseStatus: "completed", pageCount: numPages }).where(eq(books.id, createdBook.id));
+
+
+        return NextResponse.json(
+            { ...createdBook, pageCount: numPages },
+            { status: 201 }
+        );
+
+    } else {
+        // ---- Upload to Supabase ----
+        const buffer = Buffer.from(await file.arrayBuffer());
+        const ext = file.name.split(".").pop() || "pdf";
+        const objectName = `books/${uuidv4()}.${ext}`;
+
+        const { data: uploaded, error: uploadError } = await supabase.storage
+            .from("books")
+            .upload(objectName, buffer, {
+                contentType: "application/pdf",
+                upsert: false,
+            });
+
+        if (uploadError) {
+            console.error("Supabase upload error:", uploadError);
+            return NextResponse.json({ error: "Upload failed" }, { status: 500 });
+        }
+
+        const {
+            data: { publicUrl },
+        } = supabase.storage.from("books").getPublicUrl(uploaded.path);
+
+        // ---- Insert book record ----
+        const [createdBook] = await db
+            .insert(books)
+            .values({
+                title,
+                description,
+                departmentId,
+                type,
+                fileUrl: publicUrl,
+                postedBy: user.id,
+                parseStatus: "processing" as any,
+            } as any)
+            .returning();
+
+        // ---- Link courses ----
+        if (courseIds?.length) {
+            const courseLinks = courseIds.map((courseId) => ({
+                bookId: createdBook.id,
+                courseId,
+            }));
+            await db.insert(bookCourses).values(courseLinks);
+        }
+        const pages: { pageNumber: number; text: string }[] = [];
+        // ---- Parse PDF into pages ----
+        const uint8Array = new Uint8Array(buffer);
+        const pdf = await pdfjsLib.getDocument({ data: uint8Array }).promise;
+        const numPages = pdf.numPages;
+
+        for (let i = 1; i <= numPages; i++) {
+            const page = await pdf.getPage(i);
+            const content = await page.getTextContent();
+            // const text = content.items.map((item: any) => item.str).join(" ");
+            // const text = content.items
+            //   .map((item: any) => ("str" in item ? item.str : ""))
+            //   .join(" ");
+            //@ts-ignore
+            // Collect all text strings
+            const strings = content.items
+                .map((item: any) => ("str" in item ? item.str : ""))
+                .filter(Boolean);
+
+            // Join them with space or newline
+            const pageText = strings.join(" ");
+
+            pages.push({
+                pageNumber: i,
+                text: pageText.trim(),
+            });
+        }
+        const bookWithTexts = await db.insert(bookPages).values(
+            pages.map((p) => ({
+                bookId: createdBook.id,
+                pageNumber: p.pageNumber,
+                textChunk: p.text,
+            }))
+        );
+        console.log(bookWithTexts);
+
+        // ---- Mark parsing complete ----
+        await db
+            .update(books)
+            .set({ parseStatus: "completed" as any, pageCount: numPages })
+            .where(eq(books.id, createdBook.id));
+
+        return NextResponse.json(
+            { ...createdBook, pageCount: numPages },
+            { status: 201 }
+        );
     }
 
-    const {
-      data: { publicUrl },
-    } = supabase.storage.from("books").getPublicUrl(uploaded.path);
-
-    // ---- Insert book record ----
-    const [createdBook] = await db
-      .insert(books)
-      .values({
-        title,
-        description,
-        departmentId,
-        type,
-        fileUrl: publicUrl,
-        postedBy: user.id,
-        parseStatus: "processing" as any,
-      } as any)
-      .returning();
-
-    // ---- Link courses ----
-    if (courseIds?.length) {
-      const courseLinks = courseIds.map((courseId) => ({
-        bookId: createdBook.id,
-        courseId,
-      }));
-      await db.insert(bookCourses).values(courseLinks);
-    }
-    const pages: { pageNumber: number; text: string }[] = [];
-    // ---- Parse PDF into pages ----
-    const uint8Array = new Uint8Array(buffer);
-    const pdf = await pdfjsLib.getDocument({ data: uint8Array }).promise;
-    const numPages = pdf.numPages;
-
-    for (let i = 1; i <= numPages; i++) {
-      const page = await pdf.getPage(i);
-      const content = await page.getTextContent();
-      // const text = content.items.map((item: any) => item.str).join(" ");
-      // const text = content.items
-      //   .map((item: any) => ("str" in item ? item.str : ""))
-      //   .join(" ");
-      //@ts-ignore
-      // Collect all text strings
-      const strings = content.items
-        .map((item: any) => ("str" in item ? item.str : ""))
-        .filter(Boolean);
-
-      // Join them with space or newline
-      const pageText = strings.join(" ");
-
-      pages.push({
-        pageNumber: i,
-        text: pageText.trim(),
-      });
-    }
-    const bookWithTexts = await db.insert(bookPages).values(
-      pages.map((p) => ({
-        bookId: createdBook.id,
-        pageNumber: p.pageNumber,
-        textChunk: p.text,
-      }))
-    );
-    console.log(bookWithTexts);
-
-    // ---- Mark parsing complete ----
-    await db
-      .update(books)
-      .set({ parseStatus: "completed" as any, pageCount: numPages })
-      .where(eq(books.id, createdBook.id));
-
-    return NextResponse.json(
-      { ...createdBook, pageCount: numPages },
-      { status: 201 }
-    );
   } catch (error: any) {
     console.error("[POST /api/books]", error);
     return NextResponse.json(
@@ -364,3 +336,165 @@ export async function POST(req: NextRequest) {
     );
   }
 }
+// export async function POST(req: NextRequest) {
+//   try {
+//     // ---- Auth ----
+//     const { userId } = await auth();
+//     if (!userId) {
+//       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+//     }
+//
+//     const [user] = await db
+//         .select()
+//         .from(users)
+//         .where(eq(users.clerkId, userId));
+//
+//     if (!user) {
+//       return NextResponse.json({ error: "User not found" }, { status: 401 });
+//     }
+//
+//     // ---- Extract FormData ----
+//     const formData = await req.formData();
+//     const title = formData.get("title") as string;
+//     const description = formData.get("description") as string;
+//     const departmentId = formData.get("departmentId") as string;
+//     const courseIds = (formData.getAll("courseIds[]") as string[]) || [];
+//     const type = formData.get("type") as string;
+//     const file = formData.get("file") as File | null;
+//     const link = formData.get("link") as string | null;
+//
+//     if (!file && !link) {
+//       return NextResponse.json(
+//           { error: "No file or link provided" },
+//           { status: 400 }
+//       );
+//     }
+//
+//     let fileUrl: string | null = null;
+//     let pageCount = 0;
+//     let parsedPages: { pageNumber: number; text: string }[] = [];
+//
+//     // ---- If File Provided ----
+//     if (file) {
+//       const buffer = Buffer.from(await file.arrayBuffer());
+//       const ext = file.name.split(".").pop() || "pdf";
+//       const objectName = `books/${uuidv4()}.${ext}`;
+//
+//       const { data: uploaded, error: uploadError } = await supabase.storage
+//           .from("books")
+//           .upload(objectName, buffer, {
+//             contentType: file.type || "application/pdf",
+//             upsert: false,
+//           });
+//
+//       if (uploadError) {
+//         console.error("Supabase upload error:", uploadError);
+//         return NextResponse.json({ error: "Upload failed" }, { status: 500 });
+//       }
+//
+//       const {
+//         data: { publicUrl },
+//       } = supabase.storage.from("books").getPublicUrl(uploaded.path);
+//
+//       fileUrl = publicUrl;
+//
+//       if (ext === "pdf") {
+//         const uint8Array = new Uint8Array(buffer);
+//         const pdf = await pdfjsLib.getDocument({ data: uint8Array }).promise;
+//         pageCount = pdf.numPages;
+//
+//         for (let i = 1; i <= pageCount; i++) {
+//           const page = await pdf.getPage(i);
+//           const content = await page.getTextContent();
+//           const strings = content.items
+//               .map((item: any) => ("str" in item ? item.str : ""))
+//               .filter(Boolean);
+//
+//           parsedPages.push({
+//             pageNumber: i,
+//             text: strings.join(" ").trim(),
+//           });
+//         }
+//       }
+//     }
+//
+//     // ---- If Link Provided ----
+//     if (link && !file) {
+//       fileUrl = link;
+//
+//       if (link.endsWith(".pdf")) {
+//         const res = await fetch(link);
+//         const buffer = Buffer.from(await res.arrayBuffer());
+//         const uint8Array = new Uint8Array(buffer);
+//         const pdf = await pdfjsLib.getDocument({ data: uint8Array }).promise;
+//         pageCount = pdf.numPages;
+//
+//         for (let i = 1; i <= pageCount; i++) {
+//           const page = await pdf.getPage(i);
+//           const content = await page.getTextContent();
+//           const strings = content.items
+//               .map((item: any) => ("str" in item ? item.str : ""))
+//               .filter(Boolean);
+//
+//           parsedPages.push({
+//             pageNumber: i,
+//             text: strings.join(" ").trim(),
+//           });
+//         }
+//       }
+//     }
+//
+//     // ---- Insert book record first ----
+//     const [createdBook] = await db
+//         .insert(books)
+//         .values({
+//           title,
+//           description,
+//           departmentId,
+//           type,
+//           fileUrl,
+//           postedBy: user.id,
+//           parseStatus: parsedPages.length ? "processing" : "skipped",
+//           pageCount: pageCount || null,
+//         } as any)
+//         .returning();
+//
+//     // ---- Link courses ----
+//     if (courseIds?.length) {
+//       const courseLinks = courseIds.map((courseId) => ({
+//         bookId: createdBook.id,
+//         courseId,
+//       }));
+//       await db.insert(bookCourses).values(courseLinks);
+//     }
+//
+//     // ---- Insert parsed pages with real bookId ----
+//     if (parsedPages.length) {
+//       await db.insert(bookPages).values(
+//           parsedPages.map((p) => ({
+//             bookId: createdBook.id,
+//             pageNumber: p.pageNumber,
+//             textChunk: p.text,
+//           }))
+//       );
+//
+//       // Mark parsing complete
+//       await db
+//           .update(books)
+//           .set({ parseStatus: "completed" as any, pageCount })
+//           .where(eq(books.id, createdBook.id));
+//     }
+//
+//     return NextResponse.json(
+//         { ...createdBook, pageCount },
+//         { status: 201 }
+//     );
+//   } catch (error: any) {
+//     console.error("[POST /api/books]", error);
+//     return NextResponse.json(
+//         { error: error?.message || "Failed to create book" },
+//         { status: 500 }
+//     );
+//   }
+// }
+

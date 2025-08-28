@@ -1,15 +1,15 @@
-"use client"
-import React from "react"
-import Breadcrumbs from "@/components/Breadcrumbs"
-import { SearchIcon } from "lucide-react"
-import { BellIcon } from "@heroicons/react/20/solid"
-import Image from "next/image"
-import { useAuth, useUser } from "@clerk/nextjs"
-import { STORAGE_KEY } from "@/lib/utils"
+"use client";
+import React from "react";
+import Breadcrumbs from "@/components/Breadcrumbs";
+import { SearchIcon } from "lucide-react";
+import { BellIcon } from "@heroicons/react/20/solid";
+import Image from "next/image";
+import { useAuth, useUser } from "@clerk/nextjs";
+import { STORAGE_KEY } from "@/lib/utils";
 
 const Nav = () => {
-  const { user } = useUser()
-  const { signOut } = useAuth()
+  const { user } = useUser();
+  const { signOut } = useAuth();
   return (
     <div className="flex w-full justify-between items-start sm:items-center mb-5 gap-2 sm:gap-4">
       <Breadcrumbs />
@@ -22,7 +22,7 @@ const Nav = () => {
             type="text"
           />
         </div> */}
-        <div className="text-gray-500 dark:text-gray-400 flex items-center gap-3">
+        <div className="text-gray-500 hidden dark:text-gray-400 sm:flex items-center gap-3">
           {/* <BellIcon className="w-5 h-5" /> */}
           <div className="flex gap-2 items-center flex-wrap sm:flex-nowrap">
             {user && (
@@ -50,8 +50,8 @@ const Nav = () => {
                   height={20}
                   className="cursor-pointer"
                   onClick={() => {
-                    signOut()
-                    localStorage.setItem(STORAGE_KEY, "[]")
+                    signOut();
+                    localStorage.setItem(STORAGE_KEY, "[]");
                   }}
                 />
               </>
@@ -60,6 +60,6 @@ const Nav = () => {
         </div>
       </div>
     </div>
-  )
-}
-export default Nav
+  );
+};
+export default Nav;

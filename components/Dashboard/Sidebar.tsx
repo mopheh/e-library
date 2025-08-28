@@ -1,9 +1,9 @@
-"use client"
+"use client";
 
-import React, { useState } from "react"
-import Image from "next/image"
-import { useParams, useRouter } from "next/navigation"
-import { BookmarkIcon } from "@heroicons/react/24/solid"
+import React, { useState } from "react";
+import Image from "next/image";
+import { useParams, useRouter } from "next/navigation";
+import { BookmarkIcon } from "@heroicons/react/24/solid";
 import {
   BookOpenIcon,
   ClipboardIcon,
@@ -12,8 +12,10 @@ import {
   UserIcon,
   MenuIcon,
   XIcon,
-} from "lucide-react"
-import { ModeToggle } from "../toggle"
+} from "lucide-react";
+import { ModeToggle } from "../toggle";
+import { useAuth, useUser } from "@clerk/nextjs";
+import { STORAGE_KEY } from "@/lib/utils";
 
 const menuItems = [
   {
@@ -23,33 +25,36 @@ const menuItems = [
     id: "dashboard",
   },
   { name: "Library", path: "/library", icon: BookOpenIcon, id: "library" },
-  { name: "Saved Books", path: "/saved", icon: BookmarkIcon, id: "saved" },
-  { name: "CBT Test", path: "/cbt", icon: ClipboardIcon, id: "cbt" },
+  { name: "Saved", path: "/saved", icon: BookmarkIcon, id: "saved" },
+  { name: "CBT", path: "/cbt", icon: ClipboardIcon, id: "cbt" },
   { name: "Profile", path: "/profile", icon: UserIcon, id: "profile" },
   { name: "Settings", path: "/settings", icon: SettingsIcon, id: "settings" },
-]
+];
 
 interface SidebarProps {
-  role?: string
-  isOpen?: boolean
-  toggle: () => void
+  role?: string;
+  isOpen?: boolean;
+  toggle: () => void;
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggle }) => {
-  const { role } = useParams()
-  const router = useRouter()
-  const [active, setActive] = useState("dashboard")
+  const { user } = useUser();
+  const { signOut } = useAuth();
+  const { role } = useParams();
+  const router = useRouter();
+  const [active, setActive] = useState("dashboard");
+
+  const [dropdownOpen, setDropdownOpen] = useState(false);
 
   const handleNavigation = (id: string, route: string) => {
-    setActive(id)
-    router.push(`/${role}/${route}`)
-    toggle()
-  }
+    setActive(id);
+    router.push(`/${role}/${route}`);
+    // toggle();
+  };
 
   return (
     <>
-      {/* Mobile Hamburger */}
-      <div className="sm:hidden fixed top-4 left-4 z-50">
+      <div className="hidden fixed top-4 left-4 z-50">
         <button
           onClick={toggle}
           className="p-2 bg-white dark:bg-gray-900 text-gray-900  dark:text-white rounded-full shadow-md"
@@ -62,9 +67,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggle }) => {
         </button>
       </div>
 
-      {/* Sidebar */}
       <aside
-        className={`fixed top-0 left-0  w-80 bg-[#f9f9fb] dark:bg-gray-900 h-screen p-4 z-40 transition-transform duration-300
+        className={`fixed top-0 left-0 w-80 bg-[#f9f9fb] dark:bg-gray-900 h-screen p-4 z-40 transition-transform duration-300
         ${isOpen ? "translate-x-0" : "-translate-x-full"} sm:translate-x-0 md:static`}
       >
         <div className="flex flex-col gap-5 h-full relative">
@@ -82,25 +86,25 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggle }) => {
           <ModeToggle />
           <hr className="border-t border-gray-300 dark:border-gray-700 opacity-30 my-2" />
 
-          {/* Menu */}
+          {/* Menu Items */}
           <nav className="flex flex-col gap-2">
             {menuItems.map(({ name, icon: Icon, id, path }) => {
-              const isActive = active === id
+              const isActive = active === id;
               return (
                 <div
                   key={id}
                   onClick={() => handleNavigation(id, path)}
                   className={`flex items-center gap-3 py-3 px-4 rounded-2xl cursor-pointer transition-all duration-300 ${
                     isActive
-                      ? "bg-white dark:bg-gray-800 shadow-[2px_2px_4px_#f1f5f9,_-2px_-2px_4px_#ffffff] dark:shadow-none"
+                      ? "bg-white dark:bg-gray-800 shadow"
                       : "rounded-full"
                   }`}
                 >
                   <div
                     className={`h-9 w-9 flex items-center justify-center rounded-full p-2 ${
                       isActive
-                        ? "bg-[#3b82f6] text-white "
-                        : "bg-white dark:bg-gray-800 text-[#3b82f6] dark:text-blue-400 shadow-[4px_4px_8px_#e2e8f0,_-4px_-4px_8px_#ffffff] dark:shadow-none"
+                        ? "bg-[#3b82f6] text-white"
+                        : "bg-white dark:bg-gray-800 text-[#3b82f6] dark:text-blue-400 shadow"
                     }`}
                   >
                     <Icon className="w-5 h-5" />
@@ -115,7 +119,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggle }) => {
                     {name}
                   </span>
                 </div>
-              )
+              );
             })}
           </nav>
 
@@ -134,15 +138,62 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggle }) => {
         </div>
       </aside>
 
-      {/* Mobile Overlay */}
       {isOpen && (
         <div
           className="fixed inset-0 bg-black/40 z-30 sm:hidden"
           onClick={toggle}
         />
       )}
-    </>
-  )
-}
 
-export default Sidebar
+      <nav className="sm:hidden fixed bottom-0 left-0 w-full bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 flex justify-around items-center py-5 z-50">
+        {menuItems.slice(0, 4).map(({ id, icon: Icon, path }) => {
+          const isActive = active === id;
+          return (
+            <button
+              key={id}
+              onClick={() => handleNavigation(id, path)}
+              className="flex flex-col items-center text-xs"
+            >
+              <Icon
+                className={`w-5 h-5 ${
+                  isActive
+                    ? "text-blue-500"
+                    : "text-gray-500 dark:text-gray-400"
+                }`}
+              />
+            </button>
+          );
+        })}
+        {user && (
+          <Image
+            src={user.imageUrl}
+            alt={"user image"}
+            height={35}
+            width={35}
+            title="My profile"
+            onClick={() => setDropdownOpen(!dropdownOpen)}
+            className="rounded-full border-1 border-white cursor-pointer"
+          />
+        )}
+      </nav>
+      {dropdownOpen && (
+        <div className="sm:hidden fixed bottom-16 left-0 w-full bg-white dark:bg-gray-900 shadow-lg rounded-t-xl p-4 z-50">
+          {" "}
+          <Image
+            src={"/icons/logout.svg"}
+            alt="logout"
+            width={20}
+            height={20}
+            className="cursor-pointer ml-auto"
+            onClick={() => {
+              signOut();
+              localStorage.setItem(STORAGE_KEY, "[]");
+            }}
+          />
+        </div>
+      )}
+    </>
+  );
+};
+
+export default Sidebar;

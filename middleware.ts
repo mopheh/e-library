@@ -1,51 +1,56 @@
 // middleware.ts
-import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server"
-import { NextResponse } from "next/server"
+import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
+import { NextResponse } from "next/server";
 
 // Set which routes you want Clerk to run on
-const isProtectedRoute = createRouteMatcher(["/(.*)/dashboard", "/"])
+const isProtectedRoute = createRouteMatcher([
+  "/(.*)/dashboard",
+  "/student(.*)",
+  "/admin(.*)",
+  "/",
+]);
 
 export default clerkMiddleware(async (auth, req) => {
-  if (!isProtectedRoute(req)) return NextResponse.next()
+  if (!isProtectedRoute(req)) return NextResponse.next();
 
-  const authData = await auth() // capture Clerk auth data
+  const authData = await auth(); // capture Clerk auth data
 
-  const { userId } = authData
+  const { userId } = authData;
   if (!userId) {
-    return NextResponse.redirect(new URL("/sign-in", req.url))
+    return NextResponse.redirect(new URL("/sign-in", req.url));
   }
   // Fetch user data from Clerk backend to access metadata
   const userRes = await fetch(`https://api.clerk.dev/v1/users/${userId}`, {
     headers: {
       Authorization: `Bearer ${process.env.CLERK_SECRET_KEY}`,
     },
-  })
+  });
 
-  const user = await userRes.json()
-  const role = user.unsafe_metadata?.role || "student"
-  const isOnboarded = user.unsafe_metadata?.onboarded === true
+  const user = await userRes.json();
+  const role = user.unsafe_metadata?.role || "student";
+  const isOnboarded = user.unsafe_metadata?.onboarded === true;
 
   // Redirect to onboarding page if metadata not complete
   if (!isOnboarded) {
-    return NextResponse.redirect(new URL("/onboarding", req.url))
+    return NextResponse.redirect(new URL("/onboarding", req.url));
   }
 
   if (req.nextUrl.pathname === "/") {
-    return NextResponse.redirect(new URL(`/${role}/dashboard`, req.url))
+    return NextResponse.redirect(new URL(`/${role}/dashboard`, req.url));
   }
 
-  const path = req.nextUrl.pathname
+  const path = req.nextUrl.pathname;
 
   // 🔒 Strict protection for /dashboard/admin/data
   if (path === "/dashboard/admin/data" && role !== "admin") {
-    return NextResponse.redirect(new URL(`/${role}/dashboard`, req.url))
+    return NextResponse.redirect(new URL(`/${role}/dashboard`, req.url));
   }
   if (path === "/dashboard/admin" && role !== "admin") {
-    return NextResponse.redirect(new URL(`/${role}/dashboard`, req.url))
+    return NextResponse.redirect(new URL(`/${role}/dashboard`, req.url));
   }
 
-  return NextResponse.next()
-})
+  return NextResponse.next();
+});
 
 export const config = {
   matcher: [
@@ -56,7 +61,7 @@ export const config = {
     "/:path*",
     "/",
   ],
-}
+};
 // middleware.ts
 // import { clerkMiddleware } from "@clerk/nextjs/server"
 // import { NextResponse } from "next/server"

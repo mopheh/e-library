@@ -180,12 +180,12 @@ const Page = () => {
 
           {/* Book Results */}
           {books.books.length === 0 && !isLoading ? (
-            <p className="text-center text-muted-foreground font-poppins font-normal">
+            <p className="text-center text-muted-foreground font-poppins font-light">
               No books found.
             </p>
           ) : (
             <>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 font-poppins">
+              <div className="grid  sm:hidden grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 font-poppins">
                 {books.books.map((book: any) => (
                   <Card
                     key={book.id}

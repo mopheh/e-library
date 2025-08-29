@@ -93,7 +93,7 @@ export default function Page() {
                     "bg-[#064E3B] hover:bg-emerald-950 text-white font-semibold",
                   headerSubtitle:
                     "font-poppins font-medium text-xs text-gray-700 dark:text-gray-300 mb-2",
-                  footerActionText: "text-gray-600 dark:text-gray-400",
+                  footerActionText: "!text-gray-400",
                   footerActionLink:
                     "text-emerald-600 dark:text-emerald-400 hover:text-emerald-800 dark:hover:text-emerald-200 underline",
                 },

@@ -8,6 +8,17 @@ export const createUser = async (params: Credentials) => {
   if (!params.email) {
     throw new Error("Missing email");
   }
+  const existingMatNo = await db
+    .select()
+    .from(users)
+    .where(eq(users.matricNo, params.matricNo))
+    .limit(1);
+
+  if (existingMatNo.length > 0) {
+    console.log("Matric Number is taken!!!");
+    console.error("Failed to insert user");
+    throw new Error("Matric Number is already taken!!!");
+  }
 
   try {
     const existingUser = await db
@@ -18,7 +29,8 @@ export const createUser = async (params: Credentials) => {
 
     if (existingUser.length > 0) {
       console.log("User Exists already!!!");
-      return existingUser[0];
+      console.error("Failed to insert user");
+      throw new Error("User Exists already!!!");
     }
     //@ts-ignore
     await db.insert(users).values(params);

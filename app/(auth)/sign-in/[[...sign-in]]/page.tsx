@@ -71,7 +71,7 @@ export default function Page() {
               mass: 0.75,
               delay: 0.1,
             }}
-            className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-xl rounded-xl p-8 w-fit mx-4"
+            className="shadow-xl rounded-xl p-8 w-fit mx-4"
           >
             <SignIn
               appearance={{
@@ -87,15 +87,19 @@ export default function Page() {
                   logoBox: "flex justify-center my-4",
                   logoImage: "h-56 w-auto",
                   card: "bg-transparent shadow-none border-none rounded-xl",
+                  socialButtonsBlockButton: "dark:!text-white",
+                  dividerText: "dark:!text-white font-poppins",
+                  dividerLine: "dark:!bg-gray-200",
+                  formFieldLabel: "dark:!text-white",
                   formFieldInput:
-                    "bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-black dark:text-white placeholder-gray-400 dark:placeholder-gray-300",
+                    "!bg-gray-100 dark:!bg-gray-700 border !border-gray-300 dark:!border-gray-600 !text-black dark:!text-white !placeholder-gray-400 dark:!placeholder-gray-400",
                   formButtonPrimary:
                     "bg-[#064E3B] hover:bg-emerald-950 text-white font-semibold",
                   headerSubtitle:
-                    "font-poppins font-medium text-xs text-gray-700 dark:text-gray-300 mb-2",
+                    "font-poppins font-medium text-xs !text-gray-700 dark:!text-gray-300 mb-2",
                   footerActionText: "!text-gray-400",
                   footerActionLink:
-                    "text-emerald-600 dark:text-emerald-400 hover:text-emerald-800 dark:hover:text-emerald-200 underline",
+                    "!text-emerald-600 dark:!text-emerald-400 hover:!text-emerald-800 dark:hover:!text-emerald-200 underline",
                 },
               }}
             />

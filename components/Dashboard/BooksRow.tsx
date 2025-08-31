@@ -43,7 +43,7 @@ export const BooksRow = ({ book }) => {
   return (
     <tr className="font-poppins text-xs py-3 text-gray-800 dark:text-slate-100 font-normal border-b border-gray-200 dark:border-gray-800">
       <td
-        className="px-6 py-4 cursor-pointer"
+        className="py-4 cursor-pointer"
         onClick={() => {
           router.push(`/student/book/${book.id}`);
           addRecentlyViewedBook({ ...book, progress: 0 });

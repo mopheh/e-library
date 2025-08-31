@@ -1,46 +1,46 @@
-"use client"
-import React, { useEffect, useState } from "react"
-import Courses from "@/components/adminDashboard/Courses"
-import CustomList from "@/components/adminDashboard/CustomList"
-import { useCourses } from "@/hooks/useCourses"
-import { getDepartmentWithFaculty } from "@/actions/department"
-import { useDepartmentUsers } from "@/hooks/useUsers"
-import StudentRow from "@/components/adminDashboard/StudentRow"
-import { useBooks } from "@/hooks/useBooks"
-import { BooksRow } from "@/components/Dashboard/BooksRow"
-import { useParams } from "next/navigation"
+"use client";
+import React, { useEffect, useState } from "react";
+import Courses from "@/components/adminDashboard/Courses";
+import CustomList from "@/components/adminDashboard/CustomList";
+import { useCourses } from "@/hooks/useCourses";
+import { getDepartmentWithFaculty } from "@/actions/department";
+import { useDepartmentUsers } from "@/hooks/useUsers";
+import StudentRow from "@/components/adminDashboard/StudentRow";
+import { useBooks } from "@/hooks/useBooks";
+import { BooksRow } from "@/components/Dashboard/BooksRow";
+import { useParams } from "next/navigation";
 
 const Page = () => {
-  const department = useParams().department as string
+  const department = useParams().department as string;
 
-  const { data: students } = useDepartmentUsers(department)
-  const [coursePage, setCoursePage] = useState(1)
-  const [bookPage, setBookPage] = useState(1)
+  const { data: students } = useDepartmentUsers(department);
+  const [coursePage, setCoursePage] = useState(1);
+  const [bookPage, setBookPage] = useState(1);
   const [departmentInfo, setDepartmentInfo] = useState<{
-    facultyName: string
-    departmentName: string
-  } | null>(null)
+    facultyName: string;
+    departmentName: string;
+  } | null>(null);
 
   useEffect(() => {
     const fetchInfo = async () => {
-      const data = await getDepartmentWithFaculty(department)
-      setDepartmentInfo(data)
-    }
+      const data = await getDepartmentWithFaculty(department);
+      setDepartmentInfo(data);
+    };
 
-    if (department) fetchInfo()
-  }, [department])
+    if (department) fetchInfo();
+  }, [department]);
 
   const { data: courses } = useCourses({
     departmentId: department,
     page: coursePage,
     limit: 5,
-  })
+  });
 
   const {
     data: books = { books: [], totalPages: 1 },
     isLoading: booksLoading,
     error: booksError,
-  } = useBooks({ departmentId: department, page: bookPage })
+  } = useBooks({ departmentId: department, page: bookPage });
 
   return (
     <>
@@ -81,7 +81,7 @@ const Page = () => {
             department={[{ ...departmentInfo, id: department }]}
           >
             <div className="w-full overflow-x-auto">
-              <table className="table-auto min-w-[500px] border-collapse">
+              <table className="table-auto min-w-[500px] sm:min-w-full border-collapse">
                 <thead className="text-left">
                   <tr className="tracking-wider uppercase font-normal text-gray-400 text-xs font-karla border-b border-gray-200">
                     <th className="py-3">Title</th>
@@ -136,6 +136,6 @@ const Page = () => {
         />
       </div>
     </>
-  )
-}
-export default Page
+  );
+};
+export default Page;

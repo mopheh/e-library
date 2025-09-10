@@ -32,16 +32,24 @@ export const downloadFile = async (
   link.download = filename;
   document.body.appendChild(link);
   link.click();
+  fetch("/api/activity", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      type: "DOWNLOAD",
+      targetId: id,
+    }),
+  });
   document.body.removeChild(link);
 
-  URL.revokeObjectURL(blobUrl); // cleanup
+  URL.revokeObjectURL(blobUrl);
 };
 // @ts-ignore
 export const BooksRow = ({ book }) => {
   const router = useRouter();
 
   return (
-    <tr className="font-poppins text-xs py-3 text-gray-800 dark:text-slate-100 font-normal border-b border-gray-200 dark:border-gray-800">
+    <tr className="font-poppins text-xs py-3 text-zinc-800 dark:text-slate-100 font-normal border-b border-zinc-200 dark:border-zinc-800">
       <td
         className="py-4 cursor-pointer"
         onClick={() => {

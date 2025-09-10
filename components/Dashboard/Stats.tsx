@@ -27,8 +27,8 @@ const Stats = () => {
   }, [data]);
 
   return (
-    <div className="hidden sm:grid gap-2 sm:gap-6 my-10 grid-cols-2 lg:grid-cols-5">
-      <div className="sm:col-span-2 lg:col-span-1">
+    <div className="grid sm:flex gap-2 sm:gap-6 my-10 grid-cols-2">
+      <div className="col-span-2 lg:col-span-2">
         <Welcome
           name={user?.firstName}
           guide="Monitor all books and material in your library"

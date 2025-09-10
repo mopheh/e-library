@@ -1,7 +1,7 @@
 "use client";
 import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { useUser } from "@clerk/nextjs";
+import { useAuth, useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { createUser } from "@/actions/auth";
 import { useFaculties } from "@/hooks/useFaculties";
@@ -10,7 +10,6 @@ import { useDepartments } from "@/hooks/useDepartments";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 
-// 🔹 Validation schema
 const onboardingSchema = z.object({
   matric: z
     .string()
@@ -34,7 +33,20 @@ type FormData = z.infer<typeof onboardingSchema>;
 
 const Onboarding = () => {
   const { data: faculties, isError, error } = useFaculties(1, 1000);
+  const { userId } = useAuth();
 
+  useEffect(() => {
+    if (userId) {
+      fetch("/api/activity", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: "LOGIN",
+          meta: { action: "User logged in" },
+        }),
+      });
+    }
+  }, [userId]);
   useEffect(() => {
     if (isError) {
       console.log(error.message);
@@ -121,13 +133,20 @@ const Onboarding = () => {
         onboarded: true,
       },
     });
-
+    fetch("/api/activity", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        type: "ONBOARDING",
+        meta: { action: "Onboarding Completed" },
+      }),
+    });
     router.push("/student/dashboard");
   };
 
   return (
-    <div className="w-full max-w-4xl py-5 px-6 sm:px-8 bg-white dark:bg-gray-900 shadow-xl rounded-lg">
-      <h1 className="text-xl font-bold mb-4 font-karla text-gray-900 dark:text-gray-100">
+    <div className="w-full max-w-4xl py-5 px-6 sm:px-8 bg-white dark:bg-zinc-900 shadow-xl rounded-lg">
+      <h1 className="text-xl font-bold mb-4 font-karla text-zinc-900 dark:text-zinc-100">
         Complete Your Profile
       </h1>
 
@@ -139,12 +158,12 @@ const Onboarding = () => {
           <input
             {...register("matric")}
             type="text"
-            className="border-0 focus:outline font-rubik text-sm focus:outline-sky-500 rounded-xl w-full bg-[#f7f7f9] dark:bg-gray-700 text-gray-900 dark:text-white p-2"
+            className="border-0 focus:outline font-rubik text-sm focus:outline-sky-500 rounded-xl w-full bg-[#f7f7f9] dark:bg-zinc-700 text-zinc-900 dark:text-white p-2"
           />
           {errors.matric && (
             <p className="text-red-500 text-xs">{errors.matric.message}</p>
           )}
-          <label className="text-sm text-gray-600 dark:text-gray-400">
+          <label className="text-sm text-zinc-600 dark:text-zinc-400">
             Matric ID
           </label>
         </div>
@@ -152,7 +171,7 @@ const Onboarding = () => {
         <div className="mb-2 font-poppins">
           <select
             {...register("faculty")}
-            className="border-0 focus:outline focus:outline-sky-500 font-rubik text-sm rounded-xl w-full bg-[#f7f7f9] dark:bg-gray-700 text-gray-900 dark:text-white p-2"
+            className="border-0 focus:outline focus:outline-sky-500 font-rubik text-sm rounded-xl w-full bg-[#f7f7f9] dark:bg-zinc-700 text-zinc-900 dark:text-white p-2"
           >
             <option value="">-- Choose Faculty --</option>
             {faculties?.map((faculty) => (
@@ -164,7 +183,7 @@ const Onboarding = () => {
           {errors.faculty && (
             <p className="text-red-500 text-xs">{errors.faculty.message}</p>
           )}
-          <label className="text-sm text-gray-600 dark:text-gray-400">
+          <label className="text-sm text-zinc-600 dark:text-zinc-400">
             Faculty
           </label>
         </div>
@@ -172,7 +191,7 @@ const Onboarding = () => {
         <div className="mb-2 font-poppins">
           <select
             {...register("department")}
-            className="border-0 focus:outline focus:outline-sky-500 font-rubik text-sm rounded-xl w-full bg-[#f7f7f9] dark:bg-gray-700 text-gray-900 dark:text-white p-2"
+            className="border-0 focus:outline focus:outline-sky-500 font-rubik text-sm rounded-xl w-full bg-[#f7f7f9] dark:bg-zinc-700 text-zinc-900 dark:text-white p-2"
           >
             {loadingDepartments ? (
               <option>Loading...</option>
@@ -190,7 +209,7 @@ const Onboarding = () => {
           {errors.department && (
             <p className="text-red-500 text-xs">{errors.department.message}</p>
           )}
-          <label className="text-sm text-gray-600 dark:text-gray-400">
+          <label className="text-sm text-zinc-600 dark:text-zinc-400">
             Department
           </label>
         </div>
@@ -200,12 +219,12 @@ const Onboarding = () => {
             {...register("level")}
             type="text"
             placeholder="100, 200, 300..."
-            className="border-0 focus:outline font-rubik text-sm focus:outline-sky-500 rounded-xl w-full bg-[#f7f7f9] dark:bg-gray-700 text-gray-900 dark:text-white p-2"
+            className="border-0 focus:outline font-rubik text-sm focus:outline-sky-500 rounded-xl w-full bg-[#f7f7f9] dark:bg-zinc-700 text-zinc-900 dark:text-white p-2"
           />
           {errors.level && (
             <p className="text-red-500 text-xs">{errors.level.message}</p>
           )}
-          <label className="text-sm text-gray-600 dark:text-gray-400">
+          <label className="text-sm text-zinc-600 dark:text-zinc-400">
             Level
           </label>
         </div>
@@ -215,12 +234,12 @@ const Onboarding = () => {
             {...register("tel")}
             type="tel"
             placeholder="+2348012345678"
-            className="border-0 focus:outline font-rubik text-sm focus:outline-sky-500 rounded-xl w-full bg-[#f7f7f9] dark:bg-gray-700 text-gray-900 dark:text-white p-2"
+            className="border-0 focus:outline font-rubik text-sm focus:outline-sky-500 rounded-xl w-full bg-[#f7f7f9] dark:bg-zinc-700 text-zinc-900 dark:text-white p-2"
           />
           {errors.tel && (
             <p className="text-red-500 text-xs">{errors.tel.message}</p>
           )}
-          <label className="text-sm text-gray-600 dark:text-gray-400">
+          <label className="text-sm text-zinc-600 dark:text-zinc-400">
             Phone Number
           </label>
         </div>
@@ -228,7 +247,7 @@ const Onboarding = () => {
         <div className="mb-2 font-poppins">
           <select
             {...register("gender")}
-            className="border-0 focus:outline focus:outline-sky-500 font-rubik text-sm rounded-xl w-full bg-[#f7f7f9] dark:bg-gray-700 text-gray-900 dark:text-white p-2"
+            className="border-0 focus:outline focus:outline-sky-500 font-rubik text-sm rounded-xl w-full bg-[#f7f7f9] dark:bg-zinc-700 text-zinc-900 dark:text-white p-2"
           >
             <option value="">-- Select Gender --</option>
             <option value="MALE">Male</option>
@@ -237,7 +256,7 @@ const Onboarding = () => {
           {errors.gender && (
             <p className="text-red-500 text-xs">{errors.gender.message}</p>
           )}
-          <label className="text-sm text-gray-600 dark:text-gray-400">
+          <label className="text-sm text-zinc-600 dark:text-zinc-400">
             Gender
           </label>
         </div>
@@ -246,19 +265,19 @@ const Onboarding = () => {
           <textarea
             {...register("address")}
             rows={3}
-            className="border-0 focus:outline font-rubik text-sm focus:outline-sky-500 rounded-xl w-full resize-none bg-[#f7f7f9] dark:bg-gray-700 text-gray-900 dark:text-white p-2"
+            className="border-0 focus:outline font-rubik text-sm focus:outline-sky-500 rounded-xl w-full resize-none bg-[#f7f7f9] dark:bg-zinc-700 text-zinc-900 dark:text-white p-2"
           />
           {errors.address && (
             <p className="text-red-500 text-xs">{errors.address.message}</p>
           )}
-          <label className="text-sm text-gray-600 dark:text-gray-400">
+          <label className="text-sm text-zinc-600 dark:text-zinc-400">
             Address
           </label>
         </div>
 
         <button
           type="submit"
-          className="p-3 btn btn-black cursor-pointer h-fit hover:bg-gray-900 dark:hover:bg-gray-700 bg-gray-950 dark:bg-gray-600 text-sm font-open-sans uppercase rounded-3xl text-white font-semibold"
+          className="p-3 btn btn-black cursor-pointer h-fit hover:bg-zinc-900 dark:hover:bg-zinc-700 bg-zinc-950 dark:bg-zinc-600 text-sm font-open-sans uppercase rounded-3xl text-white font-semibold"
         >
           Continue to Dashboard
         </button>

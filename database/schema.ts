@@ -1,7 +1,9 @@
+import { relations } from "drizzle-orm";
 import {
   boolean,
   date,
   integer,
+  jsonb,
   pgEnum,
   pgTable,
   text,
@@ -202,3 +204,25 @@ export const answers = pgTable("answers", {
   selectedOptionId: uuid("selected_option_id").references(() => options.id),
   isCorrect: boolean("is_correct"),
 });
+
+export const activities = pgTable("activities", {
+  id: uuid("id").unique().defaultRandom().primaryKey(),
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  type: text("type").notNull(),
+  targetId: uuid("target_id"), // could be bookId, cbtId, etc.
+  meta: jsonb("meta"), // extra info like page, score, duration
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+export const activitiesRelations = relations(activities, ({ one }) => ({
+  user: one(users, {
+    fields: [activities.userId],
+    references: [users.id],
+  }),
+  book: one(books, {
+    fields: [activities.targetId],
+    references: [books.id],
+  }),
+  // later: add CBT relation the same way
+}));

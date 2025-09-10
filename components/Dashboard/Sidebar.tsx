@@ -57,7 +57,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggle }) => {
       <div className="hidden fixed top-4 left-4 z-50">
         <button
           onClick={toggle}
-          className="p-2 bg-white dark:bg-gray-900 text-gray-900  dark:text-white rounded-full shadow-md"
+          className="p-2 bg-white dark:bg-zinc-900 text-zinc-900  dark:text-white rounded-full shadow-md"
         >
           {isOpen ? (
             <XIcon className="w-6 h-6" />
@@ -68,11 +68,10 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggle }) => {
       </div>
 
       <aside
-        className={`fixed top-0 left-0 w-80 bg-[#f9f9fb] dark:bg-gray-900 h-screen p-4 z-40 transition-transform duration-300
+        className={`fixed top-0 left-0 w-80 bg-[#f9f9fb] dark:bg-zinc-900 h-screen p-4 z-40 transition-transform duration-300
         ${isOpen ? "translate-x-0" : "-translate-x-full"} sm:translate-x-0 md:static`}
       >
         <div className="flex flex-col gap-5 h-full relative">
-          {/* Logo */}
           <div className="w-full">
             <Image
               src="/univault.png"
@@ -84,9 +83,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggle }) => {
             />
           </div>
           <ModeToggle />
-          <hr className="border-t border-gray-300 dark:border-gray-700 opacity-30 my-2" />
+          <hr className="border-t border-zinc-300 dark:border-zinc-700 opacity-30 my-2" />
 
-          {/* Menu Items */}
           <nav className="flex flex-col gap-2">
             {menuItems.map(({ name, icon: Icon, id, path }) => {
               const isActive = active === id;
@@ -96,24 +94,24 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggle }) => {
                   onClick={() => handleNavigation(id, path)}
                   className={`flex items-center gap-3 py-3 px-4 rounded-2xl cursor-pointer transition-all duration-300 ${
                     isActive
-                      ? "bg-white dark:bg-gray-800 shadow"
+                      ? "bg-white dark:bg-zinc-800 shadow"
                       : "rounded-full"
                   }`}
                 >
                   <div
-                    className={`h-9 w-9 flex items-center justify-center rounded-full p-2 ${
+                    className={`h-8 w-8 flex items-center justify-center rounded-full p-2 ${
                       isActive
                         ? "bg-[#3b82f6] text-white"
-                        : "bg-white dark:bg-gray-800 text-[#3b82f6] dark:text-blue-400 shadow"
+                        : "bg-white dark:bg-zinc-800 text-[#3b82f6] dark:text-blue-400 shadow"
                     }`}
                   >
                     <Icon className="w-5 h-5" />
                   </div>
                   <span
-                    className={`font-poppins text-sm ${
+                    className={`font-poppins text-xs ${
                       isActive
-                        ? "text-gray-700 dark:text-gray-100 font-medium"
-                        : "text-gray-500 dark:text-gray-400"
+                        ? "text-zinc-700 dark:text-zinc-100 font-medium"
+                        : "text-zinc-500 dark:text-zinc-400"
                     }`}
                   >
                     {name}
@@ -129,10 +127,10 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggle }) => {
               onClick={() => router.push("/admin/data")}
               className="flex gap-3 font-poppins text-xs items-center cursor-pointer mt-auto"
             >
-              <div className="h-9 w-9 flex items-center justify-center rounded-full p-2 bg-white dark:bg-gray-800 text-[#1E3A8A] dark:text-blue-300">
+              <div className="h-9 w-9 flex items-center justify-center rounded-full p-2 bg-white dark:bg-zinc-800 text-[#1E3A8A] dark:text-blue-300">
                 <SettingsIcon className="w-5 h-5" />
               </div>
-              <h3 className="text-gray-700 dark:text-gray-200">Manage Data</h3>
+              <h3 className="text-zinc-700 dark:text-zinc-200">Manage Data</h3>
             </div>
           )}
         </div>
@@ -145,7 +143,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggle }) => {
         />
       )}
 
-      <nav className="sm:hidden fixed bottom-0 left-0 w-full bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 flex justify-around items-center py-5 z-50">
+      <nav className="sm:hidden fixed bottom-0 left-0 w-full bg-white dark:bg-zinc-900 border-t border-zinc-200 dark:border-zinc-700 flex justify-around items-center py-5 !z-100">
         {menuItems.slice(0, 4).map(({ id, icon: Icon, path }) => {
           const isActive = active === id;
           return (
@@ -158,7 +156,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggle }) => {
                 className={`w-5 h-5 ${
                   isActive
                     ? "text-blue-500"
-                    : "text-gray-500 dark:text-gray-400"
+                    : "text-zinc-500 dark:text-zinc-400"
                 }`}
               />
             </button>
@@ -177,7 +175,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggle }) => {
         )}
       </nav>
       {dropdownOpen && (
-        <div className="sm:hidden fixed bottom-16 left-0 w-full bg-white dark:bg-gray-900 shadow-lg rounded-t-xl p-4 z-50">
+        <div className="sm:hidden fixed bottom-16 left-0 w-full bg-white dark:bg-zinc-900 shadow-lg rounded-t-xl p-4 z-50">
           {" "}
           <Image
             src={"/icons/logout.svg"}

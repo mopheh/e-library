@@ -42,7 +42,7 @@ export default function Page() {
   }, []);
 
   return (
-    <div className="relative min-h-screen w-full overflow-hidden bg-[#f9f6f1] dark:bg-gray-900">
+    <div className="relative min-h-screen w-full overflow-hidden bg-[#f9f6f1] dark:bg-zinc-900">
       {/* {images.map((src, index) => (
         <Image
           key={index}
@@ -89,15 +89,15 @@ export default function Page() {
                   card: "bg-transparent shadow-none border-none rounded-xl",
                   socialButtonsBlockButton: "dark:!text-white",
                   dividerText: "dark:!text-white font-poppins",
-                  dividerLine: "dark:!bg-gray-200",
+                  dividerLine: "dark:!bg-zinc-200",
                   formFieldLabel: "dark:!text-white",
                   formFieldInput:
-                    "!bg-gray-100 dark:!bg-gray-700 border !border-gray-300 dark:!border-gray-600 !text-black dark:!text-white !placeholder-gray-400 dark:!placeholder-gray-400",
+                    "!bg-zinc-100 dark:!bg-zinc-700 border !border-zinc-300 dark:!border-zinc-600 !text-black dark:!text-white !placeholder-zinc-400 dark:!placeholder-zinc-400",
                   formButtonPrimary:
                     "bg-[#064E3B] hover:bg-emerald-950 text-white font-semibold",
                   headerSubtitle:
-                    "font-poppins font-medium text-xs !text-gray-700 dark:!text-gray-300 mb-2",
-                  footerActionText: "!text-gray-400",
+                    "font-poppins font-medium text-xs !text-zinc-700 dark:!text-zinc-300 mb-2",
+                  footerActionText: "!text-zinc-400",
                   footerActionLink:
                     "!text-emerald-600 dark:!text-emerald-400 hover:!text-emerald-800 dark:hover:!text-emerald-200 underline",
                 },
@@ -105,7 +105,7 @@ export default function Page() {
             />
           </motion.div>
         ) : (
-          <div className="flex bg-white dark:bg-gray-800 h-screen w-full justify-center items-center animate-fade-in col-span-3">
+          <div className="flex bg-white dark:bg-zinc-800 h-screen w-full justify-center items-center animate-fade-in col-span-3">
             <img
               src="/univault.png"
               alt="Loading UniVault..."
@@ -115,7 +115,7 @@ export default function Page() {
         )}
       </div>
 
-      <footer className="absolute bottom-6 font-poppins w-full text-center text-xs text-gray-600 dark:text-gray-400 z-20">
+      <footer className="absolute bottom-6 font-poppins w-full text-center text-xs text-zinc-600 dark:text-zinc-400 z-20">
         © {new Date().getFullYear()} UniVault. All rights reserved.
       </footer>
     </div>

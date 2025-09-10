@@ -1,46 +1,46 @@
-"use client"
+"use client";
 
-import React from "react"
-import {Controller, useForm} from "react-hook-form"
-import { toast } from "sonner"
-import { useQueryClient } from "@tanstack/react-query"
-import { createCourses } from "@/actions/course"
-import { useFaculties } from "@/hooks/useFaculties"
-import { useDepartments } from "@/hooks/useDepartments"
+import React from "react";
+import { Controller, useForm } from "react-hook-form";
+import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
+import { createCourses } from "@/actions/course";
+import { useFaculties } from "@/hooks/useFaculties";
+import { useDepartments } from "@/hooks/useDepartments";
 
 type FormData = {
-  faculty: string
-  departmentId: string
-  title: string
-  level: string
-  semester: string
-  unitLoad: number
-  courseCode: string
-  departments: string[] // borrowing departments
-}
+  faculty: string;
+  departmentId: string;
+  title: string;
+  level: string;
+  semester: string;
+  unitLoad: number;
+  courseCode: string;
+  departments: string[]; // borrowing departments
+};
 
 interface Props {
-  department: Department[]
-  departmentId: string
+  department: Department[];
+  departmentId: string;
 }
 
 const AddCoursesForm: React.FC<Props> = ({ department, departmentId }) => {
   const {
     register,
-      control,
+    control,
     handleSubmit,
     reset,
     watch,
     formState: { errors },
-  } = useForm<FormData>()
+  } = useForm<FormData>();
 
-  const queryClient = useQueryClient()
-  const selectedFaculty = watch("faculty")
-  const { data: departments } = useDepartments({ facultyId: selectedFaculty })
-  const { isError, error } = useFaculties(1)
+  const queryClient = useQueryClient();
+  const selectedFaculty = watch("faculty");
+  const { data: departments } = useDepartments({ facultyId: selectedFaculty });
+  const { isError, error } = useFaculties(1);
 
   const onSubmit = async (data: FormData) => {
-    const promise = createCourses(data)
+    const promise = createCourses(data);
 
     toast.promise(promise, {
       loading: "Adding Course to departments...",
@@ -58,18 +58,18 @@ const AddCoursesForm: React.FC<Props> = ({ department, departmentId }) => {
           fontWeight: "bold",
         },
       }),
-    })
+    });
 
     try {
-      await promise
-      await queryClient.invalidateQueries({ queryKey: ["courses"] })
-      reset()
+      await promise;
+      await queryClient.invalidateQueries({ queryKey: ["courses"] });
+      reset();
     } catch (err) {
-      console.error("Failed to create course:", err)
+      console.error("Failed to create course:", err);
     }
-  }
+  };
 
-  const isDisabled = !selectedFaculty
+  const isDisabled = !selectedFaculty;
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -107,28 +107,27 @@ const AddCoursesForm: React.FC<Props> = ({ department, departmentId }) => {
           Borrowing Departments
         </label>
         <Controller
-            control={control}
-            name="departments"
-            render={({ field }) => (
-                <select
-                    multiple
-                    value={field.value || []}
-                    onChange={(e) =>
-                        field.onChange(
-                            Array.from(e.target.selectedOptions, (opt) => opt.value)
-                        )
-                    }
-                    className="w-full border rounded p-2 text-xs dark:bg-gray-900 dark:border-gray-700"
-                >
-                  {departments?.map((dept) => (
-                      <option key={dept.id} value={dept.id}>
-                        {dept.name}
-                      </option>
-                  ))}
-                </select>
-            )}
+          control={control}
+          name="departments"
+          render={({ field }) => (
+            <select
+              multiple
+              value={field.value || []}
+              onChange={(e) =>
+                field.onChange(
+                  Array.from(e.target.selectedOptions, (opt) => opt.value)
+                )
+              }
+              className="w-full border rounded p-2 text-xs dark:bg-zinc-900 dark:border-zinc-700"
+            >
+              {departments?.map((dept) => (
+                <option key={dept.id} value={dept.id}>
+                  {dept.name}
+                </option>
+              ))}
+            </select>
+          )}
         />
-
       </div>
 
       {/* Title */}
@@ -212,7 +211,7 @@ const AddCoursesForm: React.FC<Props> = ({ department, departmentId }) => {
         Submit
       </button>
     </form>
-  )
-}
+  );
+};
 
-export default AddCoursesForm
+export default AddCoursesForm;

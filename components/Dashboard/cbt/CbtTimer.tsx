@@ -15,7 +15,7 @@ export default function CbtTimer() {
   const seconds = timeLeft % 60;
 
   return (
-    <div className="sticky font-rubik top-0 p-3 bg-gray-100 border rounded-lg text-center font-normal dark:border-gray-50 dark:text-gray-50 dark:bg-slate-900">
+    <div className="sticky font-rubik top-0 p-3 bg-zinc-100 border rounded-lg text-center font-normal dark:border-zinc-50 dark:text-zinc-50 dark:bg-slate-900">
       Time Left: {minutes}:{seconds.toString().padStart(2, "0")}
     </div>
   );

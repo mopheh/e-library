@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import {
   AreaChart,
@@ -8,18 +8,18 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-} from "recharts"
-import { useReadingSession } from "@/hooks/useUsers"
-import { useIsDarkMode } from "../is-dark"
+} from "recharts";
+import { useReadingSession } from "@/hooks/useUsers";
+import { useIsDarkMode } from "../is-dark";
 
 interface Props {
-  data: { date: string; pagesRead: number }[]
+  data: { date: string; pagesRead: number }[];
 }
 
 export default function Charts() {
-  const isDark = useIsDarkMode()
+  const isDark = useIsDarkMode();
 
-  const { data } = useReadingSession()
+  const { data } = useReadingSession();
   return (
     <div className="w-[445px] relative transform -translate-x-10 sm:translate-x-0 md:w-full h-[90%]">
       <ResponsiveContainer width="100%" height="100%">
@@ -56,14 +56,14 @@ export default function Charts() {
           />
           <Tooltip
             contentStyle={{
-              backgroundColor: isDark ? "#1f2937" : "#f9fafb", // slate-800 or gray-50
+              backgroundColor: isDark ? "#1f2937" : "#f9fafb", // slate-800 or zinc-50
               borderRadius: "8px",
               border: "none",
-              color: isDark ? "#f9fafb" : "#111827", // gray-50 vs gray-900
+              color: isDark ? "#f9fafb" : "#111827", // zinc-50 vs zinc-900
             }}
             labelStyle={{
               fontSize: 12,
-              color: isDark ? "#d1d5db" : "#4b5563", // gray-300 vs gray-600
+              color: isDark ? "#d1d5db" : "#4b5563", // zinc-300 vs zinc-600
             }}
             formatter={(value: number) => [`${value} pages`, "Pages Read"]}
           />
@@ -79,5 +79,5 @@ export default function Charts() {
         </AreaChart>
       </ResponsiveContainer>
     </div>
-  )
+  );
 }

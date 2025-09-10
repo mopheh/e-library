@@ -9,7 +9,7 @@ export default function CbtSidebar({
 }: any) {
   return (
     <div className="space-y-3">
-      <h2 className="font-normal text-lg font-cabin dark:text-gray-200">
+      <h2 className="font-normal text-lg font-cabin dark:text-zinc-200">
         Questions
       </h2>
       <div className="grid grid-cols-5 gap-2">
@@ -23,7 +23,7 @@ export default function CbtSidebar({
                 ? "bg-blue-500 text-white"
                 : answers[q.id]
                   ? "bg-green-500 text-white"
-                  : "bg-gray-200 dark:bg-gray-700 dark:text-gray-200"
+                  : "bg-zinc-200 dark:bg-zinc-700 dark:text-zinc-200"
             )}
           >
             {i + 1}

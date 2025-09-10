@@ -54,9 +54,9 @@ const Page = () => {
             students={students}
           >
             <div className="w-full overflow-x-auto">
-              <table className="table-auto min-w-[500px] border-collapse">
+              <table className="table-auto min-w-[500px] sm:min-w-full border-collapse">
                 <thead className="text-left">
-                  <tr className="tracking-wider uppercase font-normal text-gray-400 text-xs font-karla border-b border-gray-200">
+                  <tr className="tracking-wider uppercase font-normal text-zinc-400 text-xs font-karla border-b border-zinc-200">
                     <th className="py-3">Name</th>
                     <th>Matric Number</th>
                     <th>Level</th>
@@ -83,7 +83,7 @@ const Page = () => {
             <div className="w-full overflow-x-auto">
               <table className="table-auto min-w-[500px] sm:min-w-full border-collapse">
                 <thead className="text-left">
-                  <tr className="tracking-wider uppercase font-normal text-gray-400 text-xs font-karla border-b border-gray-200">
+                  <tr className="tracking-wider uppercase font-normal text-zinc-400 text-xs font-karla border-b border-zinc-200">
                     <th className="py-3">Title</th>
                     <th>Course</th>
                     <th>Type</th>
@@ -99,7 +99,6 @@ const Page = () => {
                           new Date(b.createdAt).getTime() -
                           new Date(a.createdAt).getTime()
                       )
-                      .slice(0, 5)
                       .map((book: Book, idx: React.Key | null | undefined) => (
                         <BooksRow key={idx} book={book} />
                       ))}
@@ -111,11 +110,11 @@ const Page = () => {
               <button
                 onClick={() => setBookPage((prev) => Math.max(prev - 1, 1))}
                 disabled={bookPage === 1}
-                className="text-xs text-gray-500 hover:underline"
+                className="text-xs text-zinc-500 hover:underline"
               >
                 Previous
               </button>
-              <span className="text-xs text-gray-600">Page {bookPage}</span>
+              <span className="text-xs text-zinc-600">Page {bookPage}</span>
               <button
                 onClick={() => setBookPage((prev) => prev + 1)}
                 className="text-xs text-green-500 hover:underline"

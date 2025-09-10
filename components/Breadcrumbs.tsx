@@ -4,7 +4,7 @@ const Breadcrumbs = () => {
   return (
     <div>
       <div className="flex gap-2 font-poppins text-xs font-medium">
-        <span className="text-gray-400">Pages</span>
+        <span className="text-zinc-400">Pages</span>
         <span>/</span>
         <span>Home</span>
       </div>

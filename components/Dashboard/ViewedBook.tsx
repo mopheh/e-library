@@ -1,38 +1,38 @@
-import React from "react"
+import React from "react";
 import {
   FaArrowRight,
   FaBook,
   FaGraduationCap,
   FaRegFileAlt,
-} from "react-icons/fa"
-import { ProgressBar } from "@/components/Dashboard/ProgressBar"
-import { useRouter } from "next/navigation"
+} from "react-icons/fa";
+import { ProgressBar } from "@/components/Dashboard/ProgressBar";
+import { useRouter } from "next/navigation";
 
 const ViewedBook = ({ book }: { book: any }) => {
-  const router = useRouter()
+  const router = useRouter();
   return (
-    <div className="flex flex-col bg-gray-50 dark:bg-gray-900 p-5 rounded-lg ">
+    <div className="flex flex-col bg-zinc-50 dark:bg-zinc-900 p-5 rounded-lg ">
       <div className="flex justify-between items-start">
         <div className="flex gap-2">
-          <FaBook size={40} className="text-gray-500" />
+          <FaBook size={40} className="text-zinc-500" />
           <div className="flex flex-col gap-2">
             <h2 className="text-sm font-cabin font-medium">{book.title}</h2>
             <div className="flex gap-3 text-xs items-center font-poppins">
               <div className="text-xs flex gap-2 items-center">
-                <FaGraduationCap className="text-gray-500" />
+                <FaGraduationCap className="text-zinc-500" />
                 <span className="font-normal">{book.course}</span>
               </div>
               <div className="text-xs flex gap-2 items-center">
-                <FaRegFileAlt className="text-gray-500" />
+                <FaRegFileAlt className="text-zinc-500" />
                 <span className="font-normal">{book.type}</span>
               </div>
             </div>
           </div>
         </div>
         <div
-          className="cursor-pointer p-2 rounded-full bg-gray-100 dark:bg-gray-950"
+          className="cursor-pointer p-2 rounded-full bg-zinc-100 dark:bg-zinc-950"
           onClick={() => {
-            router.push(`/student/book/${book.id}`)
+            router.push(`/student/book/${book.id}`);
           }}
         >
           <FaArrowRight />
@@ -50,6 +50,6 @@ const ViewedBook = ({ book }: { book: any }) => {
         <ProgressBar value={book.progress || 0} />
       </div>
     </div>
-  )
-}
-export default ViewedBook
+  );
+};
+export default ViewedBook;

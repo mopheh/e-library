@@ -42,9 +42,7 @@ export default function Page() {
   }, [isLoaded]);
 
   return (
-    <div className="relative min-h-screen w-full overflow-hidden  bg-[#f9f6f1] dark:bg-gray-900">
-      {/* <div className="absolute inset-0 bg-black/40 z-10 backdrop-blur-sm" /> */}
-
+    <div className="relative min-h-screen w-full overflow-hidden  bg-[#f9f6f1] dark:bg-zinc-900">
       <div className="relative z-20 flex items-center justify-center min-h-screen">
         {isLoaded ? (
           <motion.div
@@ -75,15 +73,15 @@ export default function Page() {
                   card: "bg-transparent shadow-none border-none rounded-xl",
                   socialButtonsBlockButton: "dark:!text-white",
                   dividerText: "dark:!text-white font-poppins",
-                  dividerLine: "dark:!bg-gray-200",
+                  dividerLine: "dark:!bg-zinc-200",
                   formFieldLabel: "dark:!text-white",
                   formFieldInput:
-                    "!bg-gray-100 dark:!bg-gray-700 border !border-gray-300 dark:!border-gray-600 !text-black dark:!text-white !placeholder-gray-400 dark:!placeholder-gray-400",
+                    "!bg-zinc-100 dark:!bg-zinc-700 border !border-zinc-300 dark:!border-zinc-600 !text-black dark:!text-white !placeholder-zinc-400 dark:!placeholder-zinc-400",
                   formButtonPrimary:
                     "bg-[#064E3B] hover:bg-emerald-950 text-white font-semibold",
                   headerSubtitle:
-                    "font-poppins font-medium text-xs !text-gray-700 dark:!text-gray-300 mb-2",
-                  footerActionText: "!text-gray-400",
+                    "font-poppins font-medium text-xs !text-zinc-700 dark:!text-zinc-300 mb-2",
+                  footerActionText: "!text-zinc-400",
                   footerActionLink:
                     "!text-emerald-600 dark:!text-emerald-400 hover:!text-emerald-800 dark:hover:!text-emerald-200 underline",
                 },

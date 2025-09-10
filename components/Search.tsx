@@ -23,7 +23,7 @@ export default function SearchBar({ onSearch }: SearchBarProps) {
         value={term}
         onChange={(e) => setTerm(e.target.value)}
         placeholder="Search by title, course, or keyword"
-        className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+        className="w-full border border-zinc-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
       />
       <button
         type="submit"

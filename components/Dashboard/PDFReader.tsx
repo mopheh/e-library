@@ -41,7 +41,17 @@ const PDFStudyView = ({ fileUrl, bookId }: PDFStudyViewProps) => {
   const pageNavPluginInstance = pageNavigationPlugin();
   const { CurrentPageLabel, GoToNextPage, GoToPreviousPage } =
     pageNavPluginInstance;
-
+  useEffect(() => {
+    fetch("/api/activity", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        type: "READ",
+        targetId: bookId,
+        meta: { action: "OPENED" },
+      }),
+    });
+  }, [bookId]);
   // Detect PDF scroll container
   useEffect(() => {
     const interval = setInterval(() => {
@@ -117,6 +127,16 @@ const PDFStudyView = ({ fileUrl, bookId }: PDFStudyViewProps) => {
           }),
         });
 
+        fetch("/api/activity", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            type: "READ",
+            targetId: bookId,
+            meta: { pagesRead, duration, currentPage },
+          }),
+        });
+
         sessionStart.current = now;
         viewedPages.current.clear();
       }
@@ -143,7 +163,7 @@ const PDFStudyView = ({ fileUrl, bookId }: PDFStudyViewProps) => {
     <div className="h-[85vh] w-full overflow-hidden">
       <div className="hidden md:flex h-full">
         <div className="w-[60%] h-full border-r flex flex-col">
-          <div className="flex items-center justify-between gap-2 p-2 bg-gray-100 border-b">
+          <div className="flex items-center justify-between gap-2 p-2 bg-zinc-100 border-b">
             <div className="flex items-center gap-2 text-xs">
               <ZoomOutButton />
               <ZoomPopover />
@@ -154,7 +174,7 @@ const PDFStudyView = ({ fileUrl, bookId }: PDFStudyViewProps) => {
               <CurrentPageLabel />
               <GoToNextPage />
             </div>
-            <div className="text-sm text-gray-500">
+            <div className="text-sm text-zinc-500">
               {Math.round(scrollPercent)}%
             </div>
           </div>
@@ -184,7 +204,7 @@ const PDFStudyView = ({ fileUrl, bookId }: PDFStudyViewProps) => {
               className="h-full data-[state=inactive]:hidden"
             >
               <div className="flex flex-col h-full">
-                <div className="flex items-center justify-between gap-2 p-2 bg-gray-100 border-b">
+                <div className="flex items-center justify-between gap-2 p-2 bg-zinc-100 border-b">
                   <div className="flex items-center gap-2 text-xs">
                     <ZoomOutButton />
                     <ZoomPopover />
@@ -218,7 +238,7 @@ const PDFStudyView = ({ fileUrl, bookId }: PDFStudyViewProps) => {
             </TabsContent>
           </div>
 
-          <TabsList className="fixed bottom-18 left-0 w-full flex justify-around font-poppins text-xs border-t dark:bg-gray-900 text-gray-500 bg-neutral-200">
+          <TabsList className="fixed bottom-18 left-0 w-full flex justify-around font-poppins text-xs border-t dark:bg-zinc-900 text-zinc-500 bg-neutral-200">
             <TabsTrigger value="study" className="flex-1 py-3">
               <IoBookOutline /> Study
             </TabsTrigger>

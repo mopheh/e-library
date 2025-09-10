@@ -1,6 +1,6 @@
 "use client";
 
-import {useForm, Controller, SubmitHandler} from "react-hook-form";
+import { useForm, Controller, SubmitHandler } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
@@ -9,52 +9,50 @@ import { toast } from "sonner";
 import { ClipboardPaste, CloudUpload, Link as LinkIcon } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
-import {useCourses} from "@/hooks/useCourses";
-import {useUploadBook} from "@/hooks/useBooks";
+import { useCourses } from "@/hooks/useCourses";
+import { useUploadBook } from "@/hooks/useBooks";
 
 // schema
 export const bookSchema = z
-    .object({
-      title: z.string().min(3),
-      description: z.string().min(10),
-      departmentId: z.string(),
-      type: z.string(),
-      courseIds: z.array(z.string()).nonempty(),
-      source: z.enum(["file", "link"]),
-      file: z
-          .custom<File>((val) => val instanceof File, {
-            message: "Invalid file input",
-          })
-          .optional(),
-      link: z.string().url().or(z.literal("")).optional(),
-
-    })
-    .refine(
-        (data) => (data.source === "file" ? data.file instanceof File : true),
-        {
-          message: "File is required when source is file",
-          path: ["file"],
-        }
-    )
-    .refine((data) => (data.source === "link" ? !!data.link : true), {
-      message: "Link is required when source is link",
-      path: ["link"],
-    });
-
+  .object({
+    title: z.string().min(3),
+    description: z.string().min(10),
+    departmentId: z.string(),
+    type: z.string(),
+    courseIds: z.array(z.string()).nonempty(),
+    source: z.enum(["file", "link"]),
+    file: z
+      .custom<File>((val) => val instanceof File, {
+        message: "Invalid file input",
+      })
+      .optional(),
+    link: z.string().url().or(z.literal("")).optional(),
+  })
+  .refine(
+    (data) => (data.source === "file" ? data.file instanceof File : true),
+    {
+      message: "File is required when source is file",
+      path: ["file"],
+    }
+  )
+  .refine((data) => (data.source === "link" ? !!data.link : true), {
+    message: "Link is required when source is link",
+    path: ["link"],
+  });
 
 type BookFormData = z.infer<typeof bookSchema>;
 
 export function UploadBookForm({
-                                 department,
-                                 setOpen,
-                               }: {
+  department,
+  setOpen,
+}: {
   department: Department[] | null;
   setOpen: Function;
 }) {
   const [loading, setLoading] = useState(false);
   const { data: courses } = useCourses({
     limit: 2000,
-  })
+  });
 
   const {
     register,
@@ -142,173 +140,175 @@ export function UploadBookForm({
   };
 
   return (
-      <form
-          onSubmit={handleSubmit(onSubmit, onError)}
-          className="font-poppins text-sm space-y-6"
-      >
-        {/* Title */}
-        <div>
-          <label className="block font-medium">Title</label>
-          <input
-              type="text"
-              {...register("title")}
-              className="w-full border rounded p-2 text-xs dark:bg-gray-900 dark:border-gray-700"
-          />
-          {errors.title && (
-              <p className="text-red-500 text-xs">{errors.title.message}</p>
-          )}
-        </div>
+    <form
+      onSubmit={handleSubmit(onSubmit, onError)}
+      className="font-poppins text-sm space-y-6"
+    >
+      {/* Title */}
+      <div>
+        <label className="block font-medium">Title</label>
+        <input
+          type="text"
+          {...register("title")}
+          className="w-full border rounded p-2 text-xs dark:bg-zinc-900 dark:border-zinc-700"
+        />
+        {errors.title && (
+          <p className="text-red-500 text-xs">{errors.title.message}</p>
+        )}
+      </div>
 
-        {/* Description */}
-        <div>
-          <label className="block font-medium">Description</label>
-          <textarea
-              {...register("description")}
-              className="w-full border rounded p-2 text-xs dark:bg-gray-900 dark:border-gray-700"
-          />
-          {errors.description && (
-              <p className="text-red-500 text-xs">{errors.description.message}</p>
-          )}
-        </div>
+      {/* Description */}
+      <div>
+        <label className="block font-medium">Description</label>
+        <textarea
+          {...register("description")}
+          className="w-full border rounded p-2 text-xs dark:bg-zinc-900 dark:border-zinc-700"
+        />
+        {errors.description && (
+          <p className="text-red-500 text-xs">{errors.description.message}</p>
+        )}
+      </div>
 
-        {/* Type */}
-        <div>
-          <label className="block font-medium">Type</label>
-          <input
-              {...register("type")}
-              className="w-full border rounded p-2 text-xs dark:bg-gray-900 dark:border-gray-700"
-              placeholder="e.g Past Question or Text Book or Material"
-          />
-          {errors.type && (
-              <p className="text-red-500 text-xs">{errors.type.message}</p>
-          )}
-        </div>
+      {/* Type */}
+      <div>
+        <label className="block font-medium">Type</label>
+        <input
+          {...register("type")}
+          className="w-full border rounded p-2 text-xs dark:bg-zinc-900 dark:border-zinc-700"
+          placeholder="e.g Past Question or Text Book or Material"
+        />
+        {errors.type && (
+          <p className="text-red-500 text-xs">{errors.type.message}</p>
+        )}
+      </div>
 
-        {/* Department */}
-        <div>
-          <label className="block font-medium">Department</label>
-          <select
-              {...register("departmentId")}
-              className="w-full border rounded p-2 text-xs dark:bg-gray-900 dark:border-gray-700"
-          >
-            <option value="">Select department</option>
-            {department?.map((dept) => (
-                <option key={dept.id} value={dept.id}>
-                  {dept.departmentName}
+      {/* Department */}
+      <div>
+        <label className="block font-medium">Department</label>
+        <select
+          {...register("departmentId")}
+          className="w-full border rounded p-2 text-xs dark:bg-zinc-900 dark:border-zinc-700"
+        >
+          <option value="">Select department</option>
+          {department?.map((dept) => (
+            <option key={dept.id} value={dept.id}>
+              {dept.departmentName}
+            </option>
+          ))}
+        </select>
+        {errors.departmentId && (
+          <p className="text-red-500 text-xs">{errors.departmentId.message}</p>
+        )}
+      </div>
+
+      {/* Courses */}
+      <div>
+        <label className="block font-medium">Courses</label>
+        <Controller
+          control={control}
+          name="courseIds"
+          render={({ field }) => (
+            <select
+              multiple
+              value={field.value}
+              onChange={(e) =>
+                field.onChange(
+                  Array.from(e.target.selectedOptions, (opt) => opt.value)
+                )
+              }
+              className="w-full border rounded p-2 text-xs dark:bg-zinc-900 dark:border-zinc-700"
+            >
+              {courses?.map((course) => (
+                <option key={course.id} value={course.id}>
+                  {course.courseCode} - {course.title}
                 </option>
-            ))}
-          </select>
-          {errors.departmentId && (
-              <p className="text-red-500 text-xs">{errors.departmentId.message}</p>
+              ))}
+            </select>
           )}
-        </div>
+        />
+        {errors.courseIds && (
+          <p className="text-red-500 text-xs">{errors.courseIds.message}</p>
+        )}
+      </div>
 
-        {/* Courses */}
-        <div>
-          <label className="block font-medium">Courses</label>
+      {/* Source Toggle (Tabs instead of radios) */}
+      <Tabs
+        value={source}
+        onValueChange={(val) => setValue("source", val as "file" | "link")}
+        className="w-full"
+      >
+        <TabsList className="grid grid-cols-2 w-full rounded-2xl bg-zinc-100 dark:bg-zinc-800">
+          <TabsTrigger
+            value="file"
+            className={cn(
+              "flex items-center gap-2 data-[state=active]:bg-white dark:data-[state=active]:bg-zinc-900 rounded-xl"
+            )}
+          >
+            <CloudUpload className="w-4 h-4" /> Upload File
+          </TabsTrigger>
+          <TabsTrigger
+            value="link"
+            className={cn(
+              "flex items-center gap-2 data-[state=active]:bg-white dark:data-[state=active]:bg-zinc-900 rounded-xl"
+            )}
+          >
+            <LinkIcon className="w-4 h-4" /> Paste Link
+          </TabsTrigger>
+        </TabsList>
+
+        {/* File Upload */}
+        <TabsContent value="file" className="mt-4">
+          <label className="block font-medium">Book File</label>
           <Controller
-              control={control}
-              name="courseIds"
-              render={({ field }) => (
-                  <select
-                      multiple
-                      value={field.value}
-                      onChange={(e) =>
-                          field.onChange(
-                              Array.from(e.target.selectedOptions, (opt) => opt.value)
-                          )
-                      }
-                      className="w-full border rounded p-2 text-xs dark:bg-gray-900 dark:border-gray-700"
-                  >
-                    {courses?.map((course) => (
-                        <option key={course.id} value={course.id}>
-                          {course.courseCode} - {course.title}
-                        </option>
-                    ))}
-                  </select>
-              )}
-          />
-          {errors.courseIds && (
-              <p className="text-red-500 text-xs">{errors.courseIds.message}</p>
-          )}
-        </div>
-
-        {/* Source Toggle (Tabs instead of radios) */}
-        <Tabs
-            value={source}
-            onValueChange={(val) => setValue("source", val as "file" | "link")}
-            className="w-full"
-        >
-          <TabsList className="grid grid-cols-2 w-full rounded-2xl bg-gray-100 dark:bg-gray-800">
-            <TabsTrigger
-                value="file"
-                className={cn(
-                    "flex items-center gap-2 data-[state=active]:bg-white dark:data-[state=active]:bg-gray-900 rounded-xl"
-                )}
-            >
-              <CloudUpload className="w-4 h-4" /> Upload File
-            </TabsTrigger>
-            <TabsTrigger
-                value="link"
-                className={cn(
-                    "flex items-center gap-2 data-[state=active]:bg-white dark:data-[state=active]:bg-gray-900 rounded-xl"
-                )}
-            >
-              <LinkIcon className="w-4 h-4" /> Paste Link
-            </TabsTrigger>
-          </TabsList>
-
-          {/* File Upload */}
-          <TabsContent value="file" className="mt-4">
-            <label className="block font-medium">Book File</label>
-            <Controller
-                control={control}
-                name="file"
-                render={({ field }) => (
-                    <input
-                        type="file"
-                        onChange={(e) => field.onChange(e.target.files?.[0] ?? undefined)}
-                        className="w-full dark:bg-gray-900 dark:border-gray-700"
-                    />
-                )}
-            />
-            {errors.file && (
-                <p className="text-red-500 text-xs">{errors.file.message}</p>
-            )}
-          </TabsContent>
-
-          {/* Link Upload */}
-          <TabsContent value="link" className="mt-4">
-            <label className="block font-medium">Google Drive Link</label>
-            <div className="flex items-center gap-2">
+            control={control}
+            name="file"
+            render={({ field }) => (
               <input
-                  type="url"
-                  {...register("link")}
-                  placeholder="https://drive.google.com/..."
-                  className="w-full border rounded p-2 text-xs dark:bg-gray-900 dark:border-gray-700"
+                type="file"
+                onChange={(e) =>
+                  field.onChange(e.target.files?.[0] ?? undefined)
+                }
+                className="w-full dark:bg-zinc-900 dark:border-zinc-700"
               />
-              <button
-                  type="button"
-                  onClick={handlePaste}
-                  className="p-2 bg-gray-200 hover:bg-gray-300 rounded dark:bg-gray-700 dark:hover:bg-gray-600"
-              >
-                <ClipboardPaste size={16} />
-              </button>
-            </div>
-            {errors.link && (
-                <p className="text-red-500 text-xs">{errors.link.message}</p>
             )}
-          </TabsContent>
-        </Tabs>
+          />
+          {errors.file && (
+            <p className="text-red-500 text-xs">{errors.file.message}</p>
+          )}
+        </TabsContent>
 
-        {/* Submit */}
-        <button
-            type="submit"
-            disabled={loading}
-            className="text-xs bg-green-600 cursor-pointer text-white px-4 py-2 rounded-full w-fit mx-auto hover:bg-green-700 disabled:opacity-50"
-        >
-          {loading ? "Uploading..." : "Upload Book"}
-        </button>
-      </form>
+        {/* Link Upload */}
+        <TabsContent value="link" className="mt-4">
+          <label className="block font-medium">Google Drive Link</label>
+          <div className="flex items-center gap-2">
+            <input
+              type="url"
+              {...register("link")}
+              placeholder="https://drive.google.com/..."
+              className="w-full border rounded p-2 text-xs dark:bg-zinc-900 dark:border-zinc-700"
+            />
+            <button
+              type="button"
+              onClick={handlePaste}
+              className="p-2 bg-zinc-200 hover:bg-zinc-300 rounded dark:bg-zinc-700 dark:hover:bg-zinc-600"
+            >
+              <ClipboardPaste size={16} />
+            </button>
+          </div>
+          {errors.link && (
+            <p className="text-red-500 text-xs">{errors.link.message}</p>
+          )}
+        </TabsContent>
+      </Tabs>
+
+      {/* Submit */}
+      <button
+        type="submit"
+        disabled={loading}
+        className="text-xs bg-green-600 cursor-pointer text-white px-4 py-2 rounded-full w-fit mx-auto hover:bg-green-700 disabled:opacity-50"
+      >
+        {loading ? "Uploading..." : "Upload Book"}
+      </button>
+    </form>
   );
 }

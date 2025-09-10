@@ -10,7 +10,7 @@ function NoBookWrap({ name, title, message }: NoBookWrapProps) {
     <div className="bg-white rounded-lg w-1/2 p-3 h-[400px]">
       <div className="flex justify-between items-center">
         <h3 className="font-semibold  font-open-sans">{name}</h3>
-        <button className="bg-gray-50 text-xs cursor-pointer text-green-500 px-3 py-2 text-open-sans font-poppins rounded-lg">
+        <button className="bg-zinc-50 text-xs cursor-pointer text-green-500 px-3 py-2 text-open-sans font-poppins rounded-lg">
           View All
         </button>
       </div>
@@ -22,10 +22,10 @@ function NoBookWrap({ name, title, message }: NoBookWrapProps) {
           height={200}
         />
         <div className="font-poppins">
-          <h4 className="text-center mb-1 font-open-sans font-semibold text-gray-800">
+          <h4 className="text-center mb-1 font-open-sans font-semibold text-zinc-800">
             {title}
           </h4>
-          <p className="text-center text-xs text-gray-500 mt-1">{message}</p>
+          <p className="text-center text-xs text-zinc-500 mt-1">{message}</p>
         </div>
         <div className="w-full h-full">
           <Image

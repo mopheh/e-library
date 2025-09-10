@@ -122,7 +122,7 @@ const Page = () => {
     });
   }, [books]);
   return (
-    <div className="p-4 space-y-6 bg-white dark:bg-gray-950 rounded-2xl dark:text-white">
+    <div className="p-4 space-y-6 bg-white dark:bg-zinc-950 rounded-2xl dark:text-white">
       {userLoading || !user ? (
         <div className="flex justify-center items-center h-screen">
           <img
@@ -189,9 +189,9 @@ const Page = () => {
                 {books.books.map((book: any) => (
                   <Card
                     key={book.id}
-                    className="relative p-4 hover:shadow-lg transition-shadow duration-200 dark:bg-gray-900 dark:border-gray-700 border border-gray-200 rounded-xl"
+                    className="relative p-4 hover:shadow-lg transition-shadow duration-200 dark:bg-zinc-900 dark:border-zinc-700 border border-zinc-200 rounded-xl"
                   >
-                    {/* <div className="absolute -top-4 -left-4 w-fit h-fit rounded-full bg-gray-950">
+                    {/* <div className="absolute -top-4 -left-4 w-fit h-fit rounded-full bg-zinc-950">
                       <div className="  text-red-500 w-10 h-10 rounded-full flex items-center justify-center shadow-lg">
                         <AiOutlineFilePdf className="text-2xl" />
                       </div>
@@ -203,7 +203,7 @@ const Page = () => {
                           {book.title}
                         </h3>
                         <button
-                          className="text-gray-500 dark:bg-gray-950 p-3 rounded-full dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
+                          className="text-zinc-500 dark:bg-zinc-950 p-3 rounded-full dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white"
                           onClick={() =>
                             downloadFile(
                               book.fileUrl,
@@ -215,13 +215,13 @@ const Page = () => {
                           <HiOutlineDownload className="text-xl" />
                         </button>
                       </div>
-                      <p className="text-xs text-gray-500 dark:text-gray-200">
+                      <p className="text-xs text-zinc-500 dark:text-zinc-200">
                         {book.course?.name}
                       </p>
-                      <p className="text-xs text-gray-400 dark:text-gray-200">
+                      <p className="text-xs text-zinc-400 dark:text-zinc-200">
                         {book.type}
                       </p>
-                      <p className="text-xs text-gray-400 dark:text-gray-200">
+                      <p className="text-xs text-zinc-400 dark:text-zinc-200">
                         {new Date(book.createdAt).toLocaleDateString()}
                       </p>
                       {sizes[book.id] && (

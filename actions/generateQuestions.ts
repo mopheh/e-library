@@ -39,7 +39,7 @@ You are an exam question generator for a textbook. Your task is to create 2–3 
 
 Instructions:
 1. Avoid using content from appendix or table of contents.
-2. Each question must be self-contained.
+2. Each question must be self-contained, questions based on the book content.
 3. Format output as strict JSON:
 [
   {

@@ -19,10 +19,6 @@ export const useCourses = ({
     ? ["courses", departmentId, currentPage, currentLimit]
     : ["courses"]
 
-  console.log({
-    limit,
-    page,
-  })
   return useQuery({
     queryKey,
     queryFn: async (): Promise<Course[]> => {
@@ -38,4 +34,16 @@ export const useCourses = ({
     staleTime: 5 * 60 * 1000,
     enabled: !departmentId || !!departmentId,
   })
+}
+async function fetchCbtCourses() {
+  const res = await fetch("/api/cbt/courses");
+  if (!res.ok) throw new Error("Failed to fetch courses");
+  return res.json();
+}
+
+export function useCbtCourses() {
+  return useQuery({
+    queryKey: ["cbt-courses"],
+    queryFn: fetchCbtCourses,
+  });
 }

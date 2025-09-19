@@ -35,6 +35,8 @@ export const users = pgTable("users", {
   clerkId: varchar("clerk_id", { length: 255 }).notNull().unique(),
   fullName: varchar("full_name", { length: 255 }).notNull(),
   email: varchar("email", { length: 255 }).notNull().unique(),
+
+  phoneNumber: varchar("phone_number", { length: 20 }),
   year: LEVEL_ENUM("level").notNull(),
   facultyId: uuid("faculty_id")
     .notNull()

@@ -82,7 +82,6 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggle }) => {
               priority
             />
           </div>
-          <ModeToggle />
           <hr className="border-t border-zinc-300 dark:border-zinc-700 opacity-30 my-2" />
 
           <nav className="flex flex-col gap-2">

@@ -86,17 +86,16 @@ export default function ActivityFeed() {
   }, []);
 
   return (
-    <div className="bg-white mt-5 dark:bg-zinc-950 rounded-lg w-full lg:w-1/3 p-3 h-[350px] overflow-y-auto">
+    <div className="bg-white mt-5 dark:bg-zinc-950 rounded-lg w-full lg:w-1/3 p-3 h-[300px] overflow-y-auto">
       <div className="flex justify-between items-center mb-3">
         <h3 className="font-semibold font-open-sans">Recent Activities</h3>
       </div>
       <div className="relative">
-        {loading && (
+        {loading ? (
           <div className="flex justify-center py-6">
             <Loader2 className="animate-spin h-6 w-6 text-muted-foreground" />
           </div>
-        )}
-        {activities.length > 0 ? (
+        ) : activities.length > 0 ? (
           activities.map((a) => (
             <ActivityItem
               key={a.id}
@@ -118,7 +117,7 @@ export default function ActivityFeed() {
             />
           ))
         ) : (
-          <div className="text-center text-muted-foreground py-6 font-poppins">
+          <div className="text-center font-light text-xs text-muted-foreground py-6 font-poppins">
             No recent activities yet.
           </div>
         )}

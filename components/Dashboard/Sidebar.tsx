@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import Image from "next/image";
-import { useParams, useRouter } from "next/navigation";
+import {useParams, usePathname, useRouter} from "next/navigation";
 import { BookmarkIcon } from "@heroicons/react/24/solid";
 import {
   BookOpenIcon,
@@ -17,19 +17,7 @@ import { ModeToggle } from "../toggle";
 import { useAuth, useUser } from "@clerk/nextjs";
 import { STORAGE_KEY } from "@/lib/utils";
 
-const menuItems = [
-  {
-    name: "Dashboard",
-    path: "/dashboard",
-    icon: LayoutDashboardIcon,
-    id: "dashboard",
-  },
-  { name: "Library", path: "/library", icon: BookOpenIcon, id: "library" },
-  { name: "Saved", path: "/saved", icon: BookmarkIcon, id: "saved" },
-  { name: "CBT", path: "/cbt", icon: ClipboardIcon, id: "cbt" },
-  { name: "Profile", path: "/profile", icon: UserIcon, id: "profile" },
-  { name: "Settings", path: "/settings", icon: SettingsIcon, id: "settings" },
-];
+
 
 interface SidebarProps {
   role?: string;
@@ -41,8 +29,9 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggle }) => {
   const { user } = useUser();
   const { signOut } = useAuth();
   const { role } = useParams();
+  const pathname = usePathname();
   const router = useRouter();
-  const [active, setActive] = useState("dashboard");
+  const [active, setActive] = useState(pathname);
 
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
@@ -51,7 +40,18 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggle }) => {
     router.push(`/${role}/${route}`);
     // toggle();
   };
-
+  const menuItems = [
+    {
+      name: "Dashboard",
+      path: "/dashboard",
+      icon: LayoutDashboardIcon,
+      id: "dashboard",
+    },
+    { name: "Library", path: "/library", icon: BookOpenIcon, id: `/${role}/library` },
+    { name: "Saved", path: "/saved", icon: BookmarkIcon, id: `/${role}/saved"` },
+    { name: "CBT", path: "/cbt", icon: ClipboardIcon, id: `/${role}/cbt` },
+    { name: "Profile", path: "/profile", icon: UserIcon, id: `/${role}/profile` },
+  ];
   return (
     <>
       <div className="hidden fixed top-4 left-4 z-50">

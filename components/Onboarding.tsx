@@ -88,7 +88,8 @@ const Onboarding = () => {
       fullName: `${user?.firstName} ${user?.lastName}`,
       facultyId: data?.faculty,
       departmentId: data?.department,
-      level: data?.level,
+      year: data?.level,
+      phoneNumber: data?.tel,
       matricNo: data?.matric,
       gender: data?.gender,
       address: data?.address,
@@ -117,7 +118,7 @@ const Onboarding = () => {
           description,
           style: {
             color: "#ef4444",
-            fontFamily: "Josefin Sans",
+            fontFamily: "Cabin",
             fontWeight: "bold",
           },
         };

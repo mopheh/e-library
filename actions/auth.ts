@@ -1,43 +1,25 @@
-"use server";
 
-import { db } from "@/database/drizzle";
-import { users } from "@/database/schema";
-import { eq } from "drizzle-orm";
 
 export const createUser = async (params: Credentials) => {
-  if (!params.email) {
-    throw new Error("Missing email");
-  }
-  const existingMatNo = await db
-    .select()
-    .from(users)
-    .where(eq(users.matricNo, params.matricNo))
-    .limit(1);
+  const res = await fetch("/api/users", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(params),
+  });
 
-  if (existingMatNo.length > 0) {
-    console.log("Matric Number is taken!!!");
-    console.error("Failed to insert user");
-    throw new Error("Matric Number is already taken!!!");
-  }
-
-  try {
-    const existingUser = await db
-      .select()
-      .from(users)
-      .where(eq(users.email, params.email))
-      .limit(1);
-
-    if (existingUser.length > 0) {
-      console.log("User Exists already!!!");
-      console.error("Failed to insert user");
-      throw new Error("User Exists already!!!");
+  if (!res.ok) {
+    // Try to read the error body
+    let errorMsg = `Request failed with status ${res.status}`;
+    try {
+      const data = await res.json();
+      console.log(data)
+      errorMsg = data?.message || errorMsg;
+    } catch(e) {
+      console.log(e)
     }
-    //@ts-ignore
-    await db.insert(users).values(params);
-    console.log("user created");
-    return true;
-  } catch (e) {
-    console.error("Failed to insert user:", e);
-    throw new Error("Database insert failed");
+
+    throw new Error(errorMsg);
   }
+
+  return res.json(); // success
 };

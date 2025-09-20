@@ -105,11 +105,11 @@ export default function Page() {
             />
           </motion.div>
         ) : (
-          <div className="flex bg-white dark:bg-zinc-800 h-screen w-full justify-center items-center animate-fade-in col-span-3">
+          <div className="flex bg-white/50 backdrop-blur-2xl  h-screen w-full justify-center items-center animate-fade-in col-span-3">
             <img
-              src="/univault.png"
+              src="/icons/univault_icon.png"
               alt="Loading UniVault..."
-              className="h-20 w-auto animate-pulse mb-4"
+              className="h-20 w-auto animate-spin mb-4"
             />
           </div>
         )}

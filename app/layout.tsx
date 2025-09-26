@@ -36,9 +36,9 @@ export default function RootLayout({
             disableTransitionOnChange
           >
             <Providers>{children}</Providers>
-            <Toaster position="top-right" />
+            <Toaster position="top-right" /><ServiceWorkerRegister />
           </ThemeProvider>
-          <ServiceWorkerRegister />
+
         </body>
       </html>
     </ClerkProvider>

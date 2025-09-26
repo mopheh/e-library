@@ -5,6 +5,7 @@ import { ClerkProvider } from "@clerk/nextjs";
 import { Toaster } from "@/components/ui/sonner";
 import { Providers } from "@/app/provider";
 import { ThemeProvider } from "@/components/theme-provider";
+import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
 const poppinsSans = LocalFont({
   src: [
     { path: "/fonts/Poppins-Regular.ttf", weight: "400", style: "normal" },
@@ -37,6 +38,7 @@ export default function RootLayout({
             <Providers>{children}</Providers>
             <Toaster position="top-right" />
           </ThemeProvider>
+          <ServiceWorkerRegister />
         </body>
       </html>
     </ClerkProvider>

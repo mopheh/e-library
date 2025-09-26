@@ -30,8 +30,8 @@ const Nav = () => {
                 <Image
                   src={user?.imageUrl}
                   alt={"user image"}
-                  height={35}
-                  width={35}
+                  height={30}
+                  width={30}
                   title="My profile"
                   className="rounded-full border-1 border-white cursor-pointer"
                 />

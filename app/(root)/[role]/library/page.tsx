@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import { useUserData } from "@/hooks/useUsers";
 import { useDepartments } from "@/hooks/useDepartments";
 import { useBooks } from "@/hooks/useBooks";
-import { BooksRow, downloadFile } from "@/components/Dashboard/BooksRow";
+import { BooksRow } from "@/components/Dashboard/BooksRow";
 import { TableSkeleton } from "@/components/TableSkeleton";
 import {
   Table,
@@ -33,6 +33,7 @@ import {
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { AiOutlineFilePdf } from "react-icons/ai";
 import { HiOutlineDownload } from "react-icons/hi";
+import { downloadFile } from "@/lib/utils";
 
 const Page = () => {
   const { data: user, isLoading: userLoading } = useUserData();

@@ -7,11 +7,22 @@ import AddedMaterials from "@/components/Dashboard/AddedMaterials";
 import { useBooks, useMyBooks } from "@/hooks/useBooks";
 import { useDepartmentId, useUserData } from "@/hooks/useUsers";
 import Activity from "./Activity";
+import UserStats from "./UserStats";
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
+import { Calendar } from "../ui/calendar";
+import { CalendarDays } from "lucide-react";
 
 const HomeDashboard = () => {
   const { data: myData } = useUserData();
   const [department, setDepartment] = useState<string | undefined>();
   const [level, setLevel] = useState<string | undefined>();
+  const today = new Date();
+  const resumptionDate = new Date(2025, 2, 3); // March 3, 2025
+  const examDate = new Date(2025, 9, 14);
+  const daysToExam = Math.max(
+    0,
+    Math.ceil((examDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
+  );
 
   useEffect(() => {
     if (myData) {
@@ -37,6 +48,7 @@ const HomeDashboard = () => {
 
   return (
     <>
+      {/* <UserStats /> */}
       <Stats />
       <BookWrap />
       <div className="flex sm:flex-row flex-col-reverse gap-2 sm:px-2">

@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import Image from "next/image";
-import {useParams, usePathname, useRouter} from "next/navigation";
+import { useParams, usePathname, useRouter } from "next/navigation";
 import { BookmarkIcon } from "@heroicons/react/24/solid";
 import {
   BookOpenIcon,
@@ -16,8 +16,6 @@ import {
 import { ModeToggle } from "../toggle";
 import { useAuth, useUser } from "@clerk/nextjs";
 import { STORAGE_KEY } from "@/lib/utils";
-
-
 
 interface SidebarProps {
   role?: string;
@@ -47,10 +45,25 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggle }) => {
       icon: LayoutDashboardIcon,
       id: "dashboard",
     },
-    { name: "Library", path: "/library", icon: BookOpenIcon, id: `/${role}/library` },
-    { name: "Saved", path: "/saved", icon: BookmarkIcon, id: `/${role}/saved"` },
+    {
+      name: "Library",
+      path: "/library",
+      icon: BookOpenIcon,
+      id: `/${role}/library`,
+    },
+    {
+      name: "Saved",
+      path: "/saved",
+      icon: BookmarkIcon,
+      id: `/${role}/saved"`,
+    },
     { name: "CBT", path: "/cbt", icon: ClipboardIcon, id: `/${role}/cbt` },
-    { name: "Profile", path: "/profile", icon: UserIcon, id: `/${role}/profile` },
+    {
+      name: "Profile",
+      path: "/profile",
+      icon: UserIcon,
+      id: `/${role}/profile`,
+    },
   ];
   return (
     <>
@@ -162,15 +175,16 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggle }) => {
           );
         })}
         {user && (
-          <Image
-            src={user.imageUrl}
-            alt={"user image"}
-            height={35}
-            width={35}
-            title="My profile"
-            onClick={() => setDropdownOpen(!dropdownOpen)}
-            className="rounded-full border-1 border-white cursor-pointer"
-          />
+          <div className="relative w-10 h-10 rounded-full overflow-hidden border border-gray-200">
+            <Image
+              src={user.imageUrl}
+              alt={"user image"}
+              title="My profile"
+              onClick={() => setDropdownOpen(!dropdownOpen)}
+              fill
+              className="object-cover"
+            />
+          </div>
         )}
       </nav>
       {dropdownOpen && (

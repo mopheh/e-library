@@ -10,7 +10,7 @@ export default function layout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="bg-zinc-50 dark:bg-zinc-900 flex h-screen">
-      <div className="h-screen sticky top-0">
+      <div className="h-screen sticky top-0 z-50">
         <Sidebar isOpen={isSidebarOpen} toggle={toggleSidebar} />
       </div>
 

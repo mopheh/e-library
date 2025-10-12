@@ -1,12 +1,28 @@
 import React from "react";
 import { BooksRow } from "@/components/Dashboard/BooksRow";
 import { TableSkeleton } from "@/components/TableSkeleton";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+
+type Book = {
+  id: string;
+  title: string;
+  course: string;
+  type: string;
+  createdAt: string;
+};
 
 export default function AddedMaterials({
   books,
   loading,
 }: {
-  books: any;
+  books: Book[];
   loading: boolean;
 }) {
   return (
@@ -17,31 +33,29 @@ export default function AddedMaterials({
         </h3>
 
         <div className="overflow-x-auto">
-          <table className="table-auto w-full border-collapse min-w-[600px]">
-            <thead className="text-left">
-              <tr className="tracking-wider uppercase text-zinc-400 dark:text-zinc-300 text-xs font-karla border-b border-zinc-200 dark:border-zinc-600">
-                <th className="text-left py-3 px-2">Title</th>
-                <th className="text-left px-2">Course</th>
-                <th className="text-left px-2">Type</th>
-                <th className="text-left px-2">Date</th>
-                <th className="text-left px-2">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
+          <Table>
+            <TableHeader>
+              <TableRow className="tracking-wider uppercase text-zinc-400 dark:text-zinc-300 text-xs font-karla">
+                <TableHead>Title</TableHead>
+                <TableHead>Course</TableHead>
+                <TableHead>Type</TableHead>
+                <TableHead>Date</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {books &&
                 books
                   .sort(
-                    (a: Book, b: Book) =>
+                    (a, b) =>
                       new Date(b.createdAt).getTime() -
                       new Date(a.createdAt).getTime()
                   )
                   .slice(0, 5)
-                  .map((book: unknown, idx: React.Key | null | undefined) => (
-                    <BooksRow key={idx} book={book} />
-                  ))}
+                  .map((book) => <BooksRow key={book.id} book={book} />)}
               {loading && <TableSkeleton />}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
         </div>
       </div>
     </div>

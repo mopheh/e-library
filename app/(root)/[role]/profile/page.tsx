@@ -1,7 +1,6 @@
-
 "use client";
 
-import React, {useEffect, useRef, useState} from "react";
+import React, { useEffect, useRef, useState } from "react";
 import axios from "axios";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -27,9 +26,9 @@ import { useTheme } from "next-themes";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useFaculties } from "@/hooks/useFaculties";
 import { useDepartments } from "@/hooks/useDepartments";
-import {Loader2Icon} from "lucide-react";
-import {useFileUpload} from "@/hooks/useFileUpload";
-import {useUser} from "@clerk/nextjs";
+import { Loader2Icon } from "lucide-react";
+import { useFileUpload } from "@/hooks/useFileUpload";
+import { useUser } from "@clerk/nextjs";
 
 const ProfileSchema = z.object({
   firstName: z.string().min(1, "First name required"),
@@ -73,16 +72,18 @@ function computeBMI(heightCm?: string, weightKg?: string) {
 
 export default function ProfilePage() {
   const { theme, setTheme } = useTheme();
-  const {user} = useUser()
-  console.log(user)
-  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const { user } = useUser();
+  console.log(user);
+  const [avatarPreview, setAvatarPreview] = useState<string | undefined>(
+    user?.imageUrl
+  );
   const [loading, setLoading] = useState(false);
   const [gender, setGender] = useState<string | null>(null);
   const [role, setRole] = useState<string | null>(null);
   const [savedAt, setSavedAt] = useState<string | null>(null);
   const { data: faculties, isError, error } = useFaculties(1, 1000);
-    const fileInputRef = useRef<HTMLInputElement | null>(null);
-  const [uploading, setUploading] = useState<boolean>(false)
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [uploading, setUploading] = useState<boolean>(false);
   const {
     register,
     handleSubmit,
@@ -133,9 +134,9 @@ export default function ProfilePage() {
           setValue("faculty", data.faculty?.id ?? "");
           setValue("department", data.department?.id ?? "");
         }
-        if (data.gender) setGender(data.gender)
-        if (data.role) setRole(data.role)
-        if (data.avatarUrl) setAvatarPreview(data.avatarUrl);
+        if (data.gender) setGender(data.gender);
+        if (data.role) setRole(data.role);
+        // if (data.avatarUrl) setAvatarPreview(data.avatarUrl);
       } catch (err) {
         console.error("Failed to load profile", err);
       } finally {
@@ -159,24 +160,26 @@ export default function ProfilePage() {
   }
 
   async function handleAvatarChange(file?: File) {
-    setUploading(true)
+    setUploading(true);
 
     if (!file) return;
     await user?.setProfileImage({ file });
     user && setAvatarPreview(user?.imageUrl);
-    setUploading(false)
+    setUploading(false);
   }
 
   return (
     <div className="relative max-w-6xl mx-auto p-6 font-poppins">
-        {loading && <div className="flex fixed inset-0 bg-black/30 backdrop-blur-xs z-50 h-screen w-full justify-center items-center animate-fade-in col-span-3">
-            <img
-                src="/icons/univault_icon.png"
-                alt="Loading UniVault..."
-                className="h-20 w-auto animate-spin mb-4"
-                style={{animationDuration: '3s'}}
-            />
-        </div>}
+      {loading && (
+        <div className="flex fixed inset-0 bg-black/30 backdrop-blur-xs z-50 h-screen w-full justify-center items-center animate-fade-in col-span-3">
+          <img
+            src="/icons/univault_icon.png"
+            alt="Loading UniVault..."
+            className="h-20 w-auto animate-spin mb-4"
+            style={{ animationDuration: "3s" }}
+          />
+        </div>
+      )}
       <motion.h1
         initial={{ opacity: 0, y: -8 }}
         animate={{ opacity: 1, y: 0 }}
@@ -199,7 +202,11 @@ export default function ProfilePage() {
             <CardContent className="p-4">
               <div className="flex items-center gap-4">
                 <div className="w-24 h-24 relative rounded-xl bg-muted overflow-hidden flex items-center justify-center">
-                    {uploading && <div className="absolute w-full h-full items-center flex justify-center bg-black/30 backdrop-blur-xs z-50"><Loader2Icon className="animate-spin text-blue-500" /></div>}
+                  {uploading && (
+                    <div className="absolute w-full h-full items-center flex justify-center bg-black/30 backdrop-blur-xs z-50">
+                      <Loader2Icon className="animate-spin text-blue-500" />
+                    </div>
+                  )}
                   {avatarPreview ? (
                     <img
                       src={avatarPreview}
@@ -220,16 +227,21 @@ export default function ProfilePage() {
                   <div className="mt-3 flex gap-2">
                     <Label htmlFor="avatar-upload" className="cursor-pointer">
                       <Input
-                          id="avatar-upload"
-                          ref={fileInputRef}
-                          type="file"
-                          accept="image/*"
-                          className="hidden"
-                          onChange={(e) =>
-                              handleAvatarChange(e.target.files?.[0] ?? undefined)
-                          }
+                        id="avatar-upload"
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) =>
+                          handleAvatarChange(e.target.files?.[0] ?? undefined)
+                        }
                       />
-                      <Button type="button" variant="secondary" size="sm" onClick={() => fileInputRef.current?.click()}>
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => fileInputRef.current?.click()}
+                      >
                         Upload
                       </Button>
                     </Label>
@@ -238,7 +250,7 @@ export default function ProfilePage() {
                       type="button"
                       variant="destructive"
                       size="sm"
-                      onClick={() => setAvatarPreview(null)}
+                      onClick={() => setAvatarPreview(undefined)}
                     >
                       Remove
                     </Button>
@@ -257,14 +269,13 @@ export default function ProfilePage() {
                 </div>
                 <div className="flex items-center justify-between">
                   <div>Gender:</div>
-                  <div className="text-muted-foreground text-xs">
-                    {gender}
-                  </div>
+                  <div className="text-muted-foreground text-xs">{gender}</div>
                 </div>
                 <div className="flex items-center justify-between">
                   <div>Role:</div>
                   <div className="text-muted-foreground text-xs flex gap-1 items-center">
-                    <div className="w-[5px] h-[5px] bg-emerald-500 rounded-full"></div> {role}
+                    <div className="w-[5px] h-[5px] bg-emerald-500 rounded-full"></div>{" "}
+                    {role}
                   </div>
                 </div>
                 <div className="flex gap-2 mt-3">
@@ -376,7 +387,6 @@ export default function ProfilePage() {
           </Card>
         </motion.div>
 
-
         <motion.div
           initial={{ opacity: 0, x: 12 }}
           animate={{ opacity: 1, x: 0 }}
@@ -420,61 +430,61 @@ export default function ProfilePage() {
             <CardHeader>
               <CardTitle className="font-cairo">Academic Details</CardTitle>
             </CardHeader>
-              <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4 font-light text-sm">
-                      <Select
-                          value={watch("faculty")}
-                          onValueChange={(val: any) => setValue("faculty", val)}
-                      >
-                          <SelectTrigger className="max-w-full w-full">
-                              <SelectValue placeholder="Select Faculty" />
-                          </SelectTrigger>
-                          <SelectContent>
-                              {faculties?.map((faculty: { id: any; name: any }) => (
-                                  <SelectItem key={faculty.id} value={faculty.id}>
-                                      {faculty.name}
-                                  </SelectItem>
-                              ))}
-                          </SelectContent>
-                      </Select>
-                      <Select
-                          value={watch("department")}
-                          onValueChange={(val: any) => setValue("department", val)}
-                          disabled={!departments?.length}
-                      >
-                          <SelectTrigger className="max-w-full w-full">
-                              <SelectValue placeholder="Select Department" />
-                          </SelectTrigger>
-                          <SelectContent>
-                              {departments?.map((dept: { id: string; name: string }) => (
-                                  <SelectItem key={dept.id} value={dept.id}>
-                                      {dept.name}
-                                  </SelectItem>
-                              ))}
-                          </SelectContent>
-                      </Select>
-                      <Input placeholder="Year" {...register("year")} className="font-light text-sm" />
+            <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4 font-light text-sm">
+              <Select
+                value={watch("faculty")}
+                onValueChange={(val: any) => setValue("faculty", val)}
+              >
+                <SelectTrigger className="max-w-full w-full">
+                  <SelectValue placeholder="Select Faculty" />
+                </SelectTrigger>
+                <SelectContent>
+                  {faculties?.map((faculty: { id: any; name: any }) => (
+                    <SelectItem key={faculty.id} value={faculty.id}>
+                      {faculty.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select
+                value={watch("department")}
+                onValueChange={(val: any) => setValue("department", val)}
+                disabled={!departments?.length}
+              >
+                <SelectTrigger className="max-w-full w-full">
+                  <SelectValue placeholder="Select Department" />
+                </SelectTrigger>
+                <SelectContent>
+                  {departments?.map((dept: { id: string; name: string }) => (
+                    <SelectItem key={dept.id} value={dept.id}>
+                      {dept.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Input
+                placeholder="Year"
+                {...register("year")}
+                className="font-light text-sm"
+              />
 
+              <div className="col-span-1 md:col-span-2">
+                <Input
+                  placeholder="Matriculation number"
+                  {...register("matricNumber")}
+                  className="font-light text-sm"
+                />
+              </div>
 
-
-                  <div className="col-span-1 md:col-span-2">
-                      <Input
-                          placeholder="Matriculation number"
-                          {...register("matricNumber")}
-                          className="font-light text-sm"
-                      />
-                  </div>
-
-
-                  <div className="col-span-1">
-                      <Input
-                          type="date"
-                          placeholder="Date of birth"
-                          {...register("dob")}
-                          className="font-light text-sm"
-                      />
-                  </div>
-              </CardContent>
-
+              <div className="col-span-1">
+                <Input
+                  type="date"
+                  placeholder="Date of birth"
+                  {...register("dob")}
+                  className="font-light text-sm"
+                />
+              </div>
+            </CardContent>
           </Card>
 
           <Card>
@@ -581,7 +591,7 @@ function startVoice() {
   if (typeof window === "undefined") return;
   // @ts-ignore
   const SpeechRecognition =
-      //@ts-ignore
+    //@ts-ignore
     window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SpeechRecognition)
     return alert("Web Speech API not supported in this browser");

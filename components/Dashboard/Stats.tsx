@@ -9,6 +9,7 @@ import {
   HiOutlineDocumentText,
   HiOutlineCalendar,
 } from "react-icons/hi";
+import UserStats from "./UserStats";
 
 const Stats = () => {
   const { user } = useUser();
@@ -27,37 +28,8 @@ const Stats = () => {
   }, [data]);
 
   return (
-    <div className="grid sm:flex gap-2 sm:gap-6 my-10 grid-cols-2">
-      <div className="col-span-2 lg:col-span-2">
-        <Welcome
-          name={user?.firstName}
-          guide="Monitor all books and material in your library"
-        />
-      </div>
-
-      <Stat
-        title="Books Read"
-        stat={myBooks}
-        icon={<HiOutlineBookOpen />}
-        color="text-green-600"
-        bgColor="bg-green-50"
-      />
-
-      <Stat
-        title="Pages Covered"
-        stat={pagesRead}
-        icon={<HiOutlineDocumentText />}
-        color="text-purple-600"
-        bgColor="bg-purple-50"
-      />
-
-      <Stat
-        title="Days to Exam"
-        stat={20}
-        icon={<HiOutlineCalendar />}
-        color="text-red-600"
-        bgColor="bg-red-50"
-      />
+    <div className="sm:flex gap-2 sm:gap-6 my-10">
+      <UserStats />
     </div>
   );
 };

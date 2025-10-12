@@ -1,82 +1,124 @@
 "use client";
-import React from "react";
-import { DownloadIcon } from "lucide-react";
+import React, { JSX } from "react";
 import { useRouter } from "next/navigation";
-import { addRecentlyViewedBook } from "@/lib/utils";
+import { addRecentlyViewedBook, downloadFile } from "@/lib/utils";
+import { TableRow, TableCell } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
-export const downloadFile = async (
-  url: string,
-  id: string,
-  filename: string
-) => {
-  let downloadUrl = url;
+// 🧩 Icons from react-icons
+import { FaBookOpen, FaFileAlt, FaGraduationCap } from "react-icons/fa";
+import { IoBookSharp } from "react-icons/io5";
+import { MdOutlineNoteAlt, MdOutlineQuiz } from "react-icons/md";
+import { BsThreeDotsVertical } from "react-icons/bs";
+import { FiDownload } from "react-icons/fi";
 
-  if (url.includes("backblazeb2.com")) {
-    const authResponse = await fetch(`/api/books/${id}/download`);
-    if (!authResponse.ok) {
-      throw new Error("Failed to get authenticated download URL");
-    }
-    const data = await authResponse.json();
-    downloadUrl = data.url;
-  }
-
-  const response = await fetch(downloadUrl);
-  if (!response.ok) {
-    throw new Error("Failed to download file");
-  }
-  const blob = await response.blob();
-
-  const blobUrl = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = blobUrl;
-  link.download = filename;
-  document.body.appendChild(link);
-  link.click();
-  fetch("/api/activity", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      type: "DOWNLOAD",
-      targetId: id,
-    }),
-  });
-  document.body.removeChild(link);
-
-  URL.revokeObjectURL(blobUrl);
+type Book = {
+  id: string;
+  title: string;
+  course: string;
+  type: string;
+  fileUrl: string;
+  createdAt: string;
 };
-// @ts-ignore
-export const BooksRow = ({ book }) => {
+
+export const BooksRow = ({ book }: { book: Book }) => {
   const router = useRouter();
 
+  // 🎨 dynamic badge color per book type
+  const badgeColors: Record<string, string> = {
+    material: "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300",
+    textbook:
+      "bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300",
+    note: "bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300",
+    research:
+      "bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300",
+    "past question":
+      "bg-rose-100 text-rose-700 dark:bg-rose-900 dark:text-rose-300",
+  };
+
+  // 📘 choose an icon per type
+  const iconMap: Record<string, JSX.Element> = {
+    material: <FaFileAlt className="h-4 w-4 text-blue-500" />,
+    textbook: <IoBookSharp className="h-4 w-4 text-emerald-500" />,
+    note: <MdOutlineNoteAlt className="h-4 w-4 text-purple-500" />,
+    research: <FaGraduationCap className="h-4 w-4 text-amber-500" />,
+    "past question": <MdOutlineQuiz className="h-4 w-4 text-rose-500" />,
+  };
+
+  const bookType = book.type.toLowerCase();
+
   return (
-    <tr className="font-poppins text-xs py-3 text-zinc-800 dark:text-slate-100 font-normal border-b border-zinc-200 dark:border-zinc-800">
-      <td
-        className="py-4 cursor-pointer"
+    <TableRow className="text-xs font-poppins hover:bg-muted/50 transition-colors">
+      {/* Title with icon */}
+      <TableCell
+        className="font-normal cursor-pointer flex items-center gap-2"
         onClick={() => {
           router.push(`/student/book/${book.id}`);
           addRecentlyViewedBook({ ...book, progress: 0 });
         }}
       >
-        {book.title}
-      </td>
-      <td>{book.course}</td>
-      <td>{book.type}</td>
-      <td>
+        {iconMap[bookType] || <FaBookOpen className="h-4 w-4 text-zinc-500" />}
+        <span className="truncate">{book.title}</span>
+      </TableCell>
+
+      {/* Course */}
+      <TableCell className="capitalize text-zinc-700 dark:text-zinc-300">
+        {book.course}
+      </TableCell>
+
+      {/* Type badge */}
+      <TableCell>
+        <Badge
+          className={`capitalize border-none ${
+            badgeColors[bookType] ||
+            "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300"
+          }`}
+        >
+          {book.type}
+        </Badge>
+      </TableCell>
+
+      {/* Date */}
+      <TableCell className="text-zinc-500">
         {new Date(book.createdAt).toLocaleString("en-NG", {
           dateStyle: "medium",
           timeStyle: "short",
         })}
-      </td>
-      <td className="flex pt-2 gap-1.5">
-        <div
-          onClick={() =>
-            downloadFile(book.fileUrl, book.id, `${book.title}.pdf`)
-          }
-          className="p-2 cursor-pointer bg-neutral-700 text-white rounded"
-        >
-          <DownloadIcon className="h-4 w-4" />
-        </div>
-      </td>
-    </tr>
+      </TableCell>
+
+      {/* Actions */}
+      <TableCell className="text-right">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button className="p-2 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors">
+              <BsThreeDotsVertical className="h-4 w-4" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem
+              onClick={() => {
+                router.push(`/student/book/${book.id}`);
+                addRecentlyViewedBook({ ...book, progress: 0 });
+              }}
+            >
+              <FaBookOpen className="h-4 w-4 mr-2" /> Read
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() =>
+                downloadFile(book.fileUrl, book.id, `${book.title}.pdf`)
+              }
+            >
+              <FiDownload className="h-4 w-4 mr-2" /> Download
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </TableCell>
+    </TableRow>
   );
 };

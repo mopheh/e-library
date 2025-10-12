@@ -27,14 +27,15 @@ const Nav = () => {
           <div className="flex gap-2 items-center flex-wrap sm:flex-nowrap">
             {user && (
               <>
-                <Image
-                  src={user?.imageUrl}
-                  alt={"user image"}
-                  height={30}
-                  width={30}
-                  title="My profile"
-                  className="rounded-full border-1 border-white cursor-pointer"
-                />
+                <div className="relative w-10 h-10 rounded-full overflow-hidden border border-gray-200">
+                  <Image
+                    src={user?.imageUrl}
+                    alt={"user image"}
+                    fill
+                    className="object-cover"
+                  />
+                </div>
+
                 <div className=" text-[10px] sm:text-xs">
                   <h3 className="text-zinc-800 dark:text-zinc-200 font-medium">
                     {user?.fullName}

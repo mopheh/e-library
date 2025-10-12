@@ -7,7 +7,7 @@ export function cn(...inputs: ClassValue[]) {
 }
 export const STORAGE_KEY = "recentlyViewedBooks";
 
-export const addRecentlyViewedBook = (book: { id: any }) => {
+export const addRecentlyViewedBook = (book: { id: any; progress: number }) => {
   if (!book?.id) return;
 
   const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
@@ -111,3 +111,43 @@ export async function authorizeB2() {
     await b2.authorize(); // gets auth + API URLs
   }
 }
+export const downloadFile = async (
+  url: string,
+  id: string,
+  filename: string
+) => {
+  let downloadUrl = url;
+
+  if (url.includes("backblazeb2.com")) {
+    const authResponse = await fetch(`/api/books/${id}/download`);
+    if (!authResponse.ok) {
+      throw new Error("Failed to get authenticated download URL");
+    }
+    const data = await authResponse.json();
+    downloadUrl = data.url;
+  }
+
+  const response = await fetch(downloadUrl);
+  if (!response.ok) {
+    throw new Error("Failed to download file");
+  }
+  const blob = await response.blob();
+
+  const blobUrl = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = blobUrl;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  fetch("/api/activity", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      type: "DOWNLOAD",
+      targetId: id,
+    }),
+  });
+  document.body.removeChild(link);
+
+  URL.revokeObjectURL(blobUrl);
+};

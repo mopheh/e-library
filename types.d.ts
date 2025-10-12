@@ -29,7 +29,7 @@ type Department = {
 type Book = {
   id: string;
   course: string;
-  fileUrl: string | Null;
+  fileUrl: string;
   title: string;
   type: string;
   createdAt: string;

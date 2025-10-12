@@ -11,7 +11,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-// 🧩 Icons from react-icons
 import { FaBookOpen, FaFileAlt, FaGraduationCap } from "react-icons/fa";
 import { IoBookSharp } from "react-icons/io5";
 import { MdOutlineNoteAlt, MdOutlineQuiz } from "react-icons/md";

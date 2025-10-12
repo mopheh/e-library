@@ -14,6 +14,7 @@ type Book = {
   id: string;
   title: string;
   course: string;
+  fileUrl: string;
   type: string;
   createdAt: string;
 };

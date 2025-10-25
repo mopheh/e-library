@@ -16,7 +16,7 @@ const poppinsSans = LocalFont({
 });
 
 export const metadata: Metadata = {
-  title: "E-Library",
+  title: "UniVault - E-Library",
   description: "Online Study",
 };
 
@@ -36,12 +36,10 @@ export default function RootLayout({
             disableTransitionOnChange
           >
             <Providers>{children}</Providers>
-            {/* <Toaster position="top-right" /> */}
             <ServiceWorkerRegister />
-            
+
             <Toaster position="top-center" richColors duration={4000} />
           </ThemeProvider>
-
         </body>
       </html>
     </ClerkProvider>

@@ -14,7 +14,7 @@ export function WelcomeToast({ name }: { name: string | null | undefined }) {
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0 }}
-        className="p-5 font-poppins bg-background border rounded-lg shadow-md w-72"
+        className="p-5 font-poppins bg-background border rounded-lg shadow-md w-80"
       >
         <h3 className="font-semibold text-sm">
           👋 Welcome back{name ? `, ${name}` : ""}!

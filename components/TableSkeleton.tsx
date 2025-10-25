@@ -4,7 +4,7 @@ import { Skeleton } from "@/components/Skeleton";
 export const TableSkeleton = () => {
   return (
     <>
-      {Array.from({ length: 5 }).map((_, i) => (
+      {Array.from({ length: 3 }).map((_, i) => (
         <tr
           key={i}
           className="font-poppins text-xs py-3 text-zinc-800 font-normal border-b border-zinc-200 dark:border-zinc-700"

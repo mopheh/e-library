@@ -50,9 +50,9 @@ const ActivityItem = ({
 
   return (
     <div className="relative flex gap-3 pl-12 pb-6 last:pb-0">
-      <div className="absolute left-6 top-0 bottom-0 w-px bg-zinc-200 dark:bg-zinc-800"></div>
+      <div className="absolute left-4 top-0 bottom-0 w-px bg-zinc-200 dark:bg-zinc-800"></div>
 
-      <div className="absolute left-2 top-0 flex items-center p-2 justify-center rounded-full bg-white dark:bg-zinc-950 shadow-sm border">
+      <div className="absolute left-0 top-0 flex items-center p-2 justify-center rounded-full bg-white dark:bg-zinc-950 shadow-sm border">
         {icons[type]}
       </div>
 
@@ -86,7 +86,7 @@ export default function ActivityFeed() {
   }, []);
 
   return (
-    <div className="bg-white mt-5 dark:bg-zinc-950 rounded-lg w-full lg:w-1/3 p-3 h-[300px] overflow-y-auto">
+    <div className="bg-white mt-5 dark:bg-zinc-950 rounded-lg w-full lg:w-1/3 p-5 h-[300px] overflow-y-auto no-scrollbar">
       <div className="flex justify-between items-center mb-3">
         <h3 className="font-semibold font-open-sans">Recent Activities</h3>
       </div>
@@ -96,26 +96,33 @@ export default function ActivityFeed() {
             <Loader2 className="animate-spin h-6 w-6 text-muted-foreground" />
           </div>
         ) : activities.length > 0 ? (
-          activities.map((a) => (
-            <ActivityItem
-              key={a.id}
-              type={a.type}
-              message={
-                a.type === "READ"
-                  ? `You read ${a.book?.title} (${a.meta?.pagesRead} pages)`
-                  : a.type === "DOWNLOAD"
-                    ? `You downloaded ${a.book?.title}`
-                    : a.type === "CBT"
-                      ? `You completed CBT with score ${a.meta?.score}%`
-                      : a.type === "ONBOARDING"
-                        ? "You completed onboarding 🎉"
-                        : "You logged in"
-              }
-              time={formatDistanceToNow(new Date(a.createdAt), {
-                addSuffix: true,
-              })}
-            />
-          ))
+          activities
+            ?.sort(
+              (a, b) =>
+                new Date(b.createdAt).getTime() -
+                new Date(a.createdAt).getTime()
+            )
+            .slice(0, 5)
+            .map((a) => (
+              <ActivityItem
+                key={a.id}
+                type={a.type}
+                message={
+                  a.type === "READ"
+                    ? `You read ${a.book?.title} (${a.meta?.pagesRead ?? 0} pages)`
+                    : a.type === "DOWNLOAD"
+                      ? `You downloaded ${a.book?.title}`
+                      : a.type === "CBT"
+                        ? `You completed CBT with score ${a.meta?.score}%`
+                        : a.type === "ONBOARDING"
+                          ? "You completed onboarding 🎉"
+                          : "You logged in"
+                }
+                time={formatDistanceToNow(new Date(a.createdAt), {
+                  addSuffix: true,
+                })}
+              />
+            ))
         ) : (
           <div className="text-center font-light text-xs text-muted-foreground py-6 font-poppins">
             No recent activities yet.

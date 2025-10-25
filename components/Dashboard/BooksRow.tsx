@@ -29,7 +29,6 @@ type Book = {
 export const BooksRow = ({ book }: { book: Book }) => {
   const router = useRouter();
 
-  // 🎨 dynamic badge color per book type
   const badgeColors: Record<string, string> = {
     material: "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300",
     textbook:
@@ -41,7 +40,6 @@ export const BooksRow = ({ book }: { book: Book }) => {
       "bg-rose-100 text-rose-700 dark:bg-rose-900 dark:text-rose-300",
   };
 
-  // 📘 choose an icon per type
   const iconMap: Record<string, JSX.Element> = {
     material: <FaFileAlt className="h-4 w-4 text-blue-500" />,
     textbook: <IoBookSharp className="h-4 w-4 text-emerald-500" />,

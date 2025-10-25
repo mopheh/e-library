@@ -54,7 +54,7 @@ export default function AddedMaterials({
                   )
                   .slice(0, 5)
                   .map((book) => <BooksRow key={book.id} book={book} />)}
-              {loading && <TableSkeleton />}
+              {(loading || !books) && <TableSkeleton />}
             </TableBody>
           </Table>
         </div>

@@ -33,10 +33,12 @@ import {
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { AiOutlineFilePdf } from "react-icons/ai";
 import { HiOutlineDownload } from "react-icons/hi";
-import { downloadFile } from "@/lib/utils";
+import { addRecentlyViewedBook, downloadFile } from "@/lib/utils";
+import { useRouter } from "next/navigation";
 
 const Page = () => {
   const { data: user, isLoading: userLoading } = useUserData();
+  const router = useRouter();
 
   const [department, setDepartment] = useState<string | undefined>();
   const [level, setLevel] = useState<string | undefined>();
@@ -200,7 +202,13 @@ const Page = () => {
 
                     <div className=" sm:ml-10 font-light">
                       <div className="flex justify-between items-start">
-                        <h3 className="text-sm my-1 font-josefin-sans uppercase sm:text-lg font-normal leading-none dark:text-white">
+                        <h3
+                          className="text-sm my-1 font-josefin-sans uppercase sm:text-lg font-normal leading-none dark:text-white"
+                          onClick={() => {
+                            router.push(`/student/book/${book.id}`);
+                            addRecentlyViewedBook({ ...book, progress: 0 });
+                          }}
+                        >
                           {book.title}
                         </h3>
                         <button
@@ -235,7 +243,6 @@ const Page = () => {
                 ))}
               </div>
 
-              {/* 💻 Desktop View – Table */}
               <div className="hidden md:block">
                 <Table>
                   <TableHeader>

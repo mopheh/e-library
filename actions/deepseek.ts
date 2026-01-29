@@ -15,10 +15,7 @@ export const askDeepSeek = async (
   // });
 
   // const data = await response.json();
-  // const openai = new OpenAI({
-  //   apiKey:
-  //     "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",
-  // });
+  //
 
   // const response = openai.responses.create({
   //   model: "gpt-5-nano",

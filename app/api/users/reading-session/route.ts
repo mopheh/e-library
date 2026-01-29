@@ -85,7 +85,7 @@ export async function GET(req: NextRequest) {
         dailyTotals[dayKey] = (dailyTotals[dayKey] || 0) + pagesRead;
       },
     );
-    console.log(dailyTotals);
+    // console.log(dailyTotals);
     const result = Array.from({ length: 7 }).map((_, i) => {
       const date = subDays(today, 6 - i);
       const key = format(date, "yyyy-MM-dd");

@@ -3,6 +3,7 @@ import React, { useEffect } from "react";
 import { useParams } from "next/navigation";
 import PDFReader from "@/components/Dashboard/PDFReader";
 import { useBook } from "@/hooks/useBooks";
+import { Loader2 } from "lucide-react";
 
 const Page = () => {
   const { id } = useParams<{ id: string }>();
@@ -10,12 +11,8 @@ const Page = () => {
 
   if (isLoading || !book) {
     return (
-      <div className="flex bg-white/80 h-screen w-full justify-center items-center animate-fade-in col-span-3">
-        <img
-          src="/univault.png"
-          alt="Loading UniVault..."
-          className="h-20 w-auto animate-pulse mb-4"
-        />
+      <div className="flex justify-center items-center h-screen">
+        <Loader2 className="w-6 h-6 animate-spin text-green-500" />
       </div>
     );
   }

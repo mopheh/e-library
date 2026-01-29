@@ -1,6 +1,6 @@
 "use client";
 
-import { JSX, useEffect, useState } from "react";
+import { act, JSX, useEffect, useState } from "react";
 import {
   Loader2,
   LogIn,
@@ -64,26 +64,8 @@ const ActivityItem = ({
   );
 };
 
-export default function ActivityFeed() {
-  const [activities, setActivities] = useState<Activity[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    async function fetchActivities() {
-      try {
-        const res = await fetch("/api/activity");
-        const data = await res.json();
-        console.log(data);
-        setActivities(data);
-      } catch (err) {
-        console.error("Error fetching activities", err);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    fetchActivities();
-  }, []);
+export default function ActivityFeed({ activity }: { activity: any }) {
+  const [activities, setActivities] = useState<Activity[]>(activity || []);
 
   return (
     <div className="bg-white mt-5 dark:bg-zinc-950 rounded-lg w-full lg:w-1/3 p-5 h-[300px] overflow-y-auto no-scrollbar">
@@ -91,7 +73,7 @@ export default function ActivityFeed() {
         <h3 className="font-semibold font-open-sans">Recent Activities</h3>
       </div>
       <div className="relative">
-        {loading ? (
+        {!activity ? (
           <div className="flex justify-center py-6">
             <Loader2 className="animate-spin h-6 w-6 text-muted-foreground" />
           </div>
@@ -100,7 +82,7 @@ export default function ActivityFeed() {
             ?.sort(
               (a, b) =>
                 new Date(b.createdAt).getTime() -
-                new Date(a.createdAt).getTime()
+                new Date(a.createdAt).getTime(),
             )
             .slice(0, 5)
             .map((a) => (

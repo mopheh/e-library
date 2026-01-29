@@ -3,6 +3,7 @@ import { auth } from "@clerk/nextjs/server"; // to get current user
 import { NextResponse } from "next/server";
 import { db } from "@/database/drizzle";
 import { departments, faculty, users } from "@/database/schema";
+import { notificationQueue } from "@/queue/notificationQueue";
 
 export async function GET() {
   try {
@@ -57,7 +58,21 @@ export async function GET() {
       ...cliqProfile,
       ...dbProfile,
     };
-
+    await notificationQueue.add(
+      "system-alert",
+      {
+        id: userId,
+        title: "Account Notice",
+        message: `UniVault User Profile ${cliqProfile.firstName} is currently updated.`,
+      },
+      {
+        attempts: 5,
+        backoff: {
+          type: "exponential",
+          delay: 3000,
+        },
+      }
+    );
     return NextResponse.json(mergedProfile);
   } catch (error: any) {
     console.error("Profile fetch error:", error);

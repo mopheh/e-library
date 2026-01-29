@@ -155,7 +155,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggle }) => {
         />
       )}
 
-      <nav className="sm:hidden fixed bottom-0 left-0 w-full bg-white dark:bg-zinc-900 border-t border-zinc-200 dark:border-zinc-700 flex justify-around items-center py-5 !z-100">
+      {/* <nav className="sm:hidden fixed bottom-0 left-0 w-full bg-white dark:bg-zinc-900 border-t border-zinc-200 dark:border-zinc-700 flex justify-around items-center py-5 !z-100">
         {menuItems.slice(0, 4).map(({ id, icon: Icon, path }) => {
           const isActive = active === id;
           return (
@@ -186,7 +186,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggle }) => {
             />
           </div>
         )}
-      </nav>
+      </nav> */}
       {dropdownOpen && (
         <div className="sm:hidden fixed bottom-16 left-0 w-full bg-white dark:bg-zinc-900 shadow-lg rounded-t-xl p-4 z-50">
           {" "}

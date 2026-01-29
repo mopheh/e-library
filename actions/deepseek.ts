@@ -1,5 +1,6 @@
+import OpenAI from "openai";
 export const askDeepSeek = async (
-  messages: { role: string; content: string }[]
+  messages: { role: string; content: string }[],
 ) => {
   // const response = await fetch("https://api.together.xyz/v1/chat/completions", {
   //   method: "POST",
@@ -14,6 +15,18 @@ export const askDeepSeek = async (
   // });
 
   // const data = await response.json();
+  // const openai = new OpenAI({
+  //   apiKey:
+  //     "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",
+  // });
+
+  // const response = openai.responses.create({
+  //   model: "gpt-5-nano",
+  //   input: "write a haiku about ai",
+  //   store: true,
+  // });
+
+  // response.then((result) => console.log(result.output_text));
   const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
     method: "POST",
     headers: {
@@ -21,8 +34,9 @@ export const askDeepSeek = async (
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      model: "moonshotai/kimi-k2:free", // or "moonshot-v1-32k" if you want bigger context
+      model: "openai/gpt-5.2", // or "moonshot-v1-32k" if you want bigger context
       messages,
+      max_tokens: 500,
     }),
   });
 

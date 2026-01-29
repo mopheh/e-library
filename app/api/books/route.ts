@@ -37,15 +37,13 @@ export async function GET(req: NextRequest) {
     const page = parseInt(searchParams.get("page") || "1");
     const pageSize = parseInt(searchParams.get("pageSize") || "12");
 
-    // Early exit if departmentId is missing
     if (!departmentId) {
       return NextResponse.json(
         { error: "departmentId is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
-    // Base where clause
     const conditions = [eq(books.departmentId, departmentId)];
 
     if (type) conditions.push(eq(books.type, type));
@@ -63,7 +61,7 @@ export async function GET(req: NextRequest) {
       .where(and(...conditions));
 
     const count = Number(countResult?.[0]?.count ?? 0);
-    // Get paginated data
+
     const booksWithCourses = await db
       .select({
         id: books.id,
@@ -93,7 +91,7 @@ export async function GET(req: NextRequest) {
     console.error("[GET /api/books]", error);
     return NextResponse.json(
       { error: "Failed to fetch books" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -222,7 +220,7 @@ export async function POST(req: NextRequest) {
       await generateQuestionsFromBook(createdBook.id);
       return NextResponse.json(
         { ...createdBook, pageCount: numPages },
-        { status: 201 }
+        { status: 201 },
       );
     } else {
       // ---- Upload to Supabase ----
@@ -300,7 +298,7 @@ export async function POST(req: NextRequest) {
           bookId: createdBook.id,
           pageNumber: p.pageNumber,
           textChunk: p.text,
-        }))
+        })),
       );
       console.log(bookWithTexts);
 
@@ -313,14 +311,14 @@ export async function POST(req: NextRequest) {
       await generateQuestionsFromBook(createdBook.id);
       return NextResponse.json(
         { ...createdBook, pageCount: numPages },
-        { status: 201 }
+        { status: 201 },
       );
     }
   } catch (error: any) {
     console.error("[POST /api/books]", error);
     return NextResponse.json(
       { error: error?.message || "Failed to create book" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

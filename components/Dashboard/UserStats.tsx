@@ -17,13 +17,8 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-import { Calendar } from "@/components/ui/calendar";
 import { useEffect, useState } from "react";
 import { FileText, BookOpen, CalendarDays } from "lucide-react";
-import { Button } from "../ui/button";
-import { useReadingSession } from "@/hooks/useUsers";
-import { useMyBooks } from "@/hooks/useBooks";
-import Welcome from "../Welcome";
 import { WelcomeToast } from "../welcome-toast";
 
 // Dummy data (replace with real data)
@@ -37,28 +32,22 @@ const readingProgress = [
   { day: "Sun", pages: 40 },
 ];
 
-export default function UserStats() {
+export default function UserStats({
+  pagesRead,
+  data,
+}: {
+  pagesRead: number;
+  data: { date: string; pagesRead: number }[];
+}) {
   const { user } = useUser();
-  const [pagesRead, setPagesRead] = useState(0);
-  const { data: myBooks } = useMyBooks();
 
-  const { data } = useReadingSession();
-  useEffect(() => {
-    if (data) {
-      const books = data.reduce(
-        (sum: number, book: { pagesRead: number }) => sum + book.pagesRead,
-        0
-      );
-      setPagesRead(books);
-    }
-  }, [data]);
   const [goal, setGoal] = useState(20); // pages/day
   const today = new Date();
   const resumptionDate = new Date(2025, 2, 3); // March 3, 2025
-  const examDate = new Date(2025, 9, 14);
+  const examDate = new Date(2026, 2, 26);
   const daysToExam = Math.max(
     0,
-    Math.ceil((examDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
+    Math.ceil((examDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)),
   );
 
   const totalBooks = 7;
@@ -67,12 +56,7 @@ export default function UserStats() {
   return (
     <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4 font-poppins md:flex-1">
       <WelcomeToast name={user?.firstName} />
-      {/* <div>
-        <Welcome
-          name={user?.firstName}
-          guide="Monitor all books and material in your library"
-        />
-      </div> */}
+
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-xs font-light font-poppins">
@@ -168,46 +152,46 @@ export default function UserStats() {
         </CardFooter> */}
       </Card>
       <Card>
-  <CardHeader>
-    <CardTitle className="flex items-center gap-2 text-xs font-light font-poppins">
-      <CalendarDays className="h-5 w-5 text-red-500" />
-      Days to Exam
-    </CardTitle>
-  </CardHeader>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-xs font-light font-poppins">
+            <CalendarDays className="h-5 w-5 text-red-500" />
+            Days to Exam
+          </CardTitle>
+        </CardHeader>
 
-  <CardContent className="flex flex-col items-center justify-center font-poppins">
-    <div className="relative flex items-center justify-center w-20 h-20">
-      <svg className="w-20 h-20 -rotate-90">
-        <circle
-          cx="40"
-          cy="40"
-          r="35"
-          stroke="#e5e7eb"
-          strokeWidth="6"
-          fill="none"
-        />
-        <circle
-          cx="40"
-          cy="40"
-          r="35"
-          stroke="#ef4444"
-          strokeWidth="6"
-          strokeDasharray={`${440 - daysToExam * 2}, 440`}
-          strokeLinecap="round"
-          fill="none"
-        />
-      </svg>
-      <span className="absolute text-xl font-bold text-red-500">
-        {daysToExam}
-      </span>
-    </div>
-    <p className="text-xs mt-2 text-muted-foreground">Days Left</p>
-  </CardContent>
+        <CardContent className="flex flex-col items-center justify-center font-poppins">
+          <div className="relative flex items-center justify-center w-20 h-20">
+            <svg className="w-20 h-20 -rotate-90">
+              <circle
+                cx="40"
+                cy="40"
+                r="35"
+                stroke="#e5e7eb"
+                strokeWidth="6"
+                fill="none"
+              />
+              <circle
+                cx="40"
+                cy="40"
+                r="35"
+                stroke="#ef4444"
+                strokeWidth="6"
+                strokeDasharray={`${440 - daysToExam * 2}, 440`}
+                strokeLinecap="round"
+                fill="none"
+              />
+            </svg>
+            <span className="absolute text-xl font-bold text-red-500">
+              {daysToExam}
+            </span>
+          </div>
+          <p className="text-xs mt-2 text-muted-foreground">Days Left</p>
+        </CardContent>
 
-  <CardFooter className="flex justify-center text-xs text-muted-foreground">
-    Exam: {examDate.toDateString().split(" ").slice(1).join(" ")}
-  </CardFooter>
-</Card>
+        <CardFooter className="flex justify-center text-xs text-muted-foreground">
+          Exam: {examDate.toDateString().split(" ").slice(1).join(" ")}
+        </CardFooter>
+      </Card>
 
       {/* <Card className="px-0">
         <CardHeader>

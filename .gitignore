@@ -19,7 +19,10 @@
 
 # production
 /build
-
+/queue
+/workers
+redis.js
+test.js
 # misc
 .DS_Store
 *.pem

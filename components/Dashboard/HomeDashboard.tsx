@@ -11,34 +11,25 @@ import UserStats from "./UserStats";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Calendar } from "../ui/calendar";
 import { CalendarDays } from "lucide-react";
+import { useDashboard } from "@/hooks/useDashboard";
 
 const HomeDashboard = () => {
-  const { data: myData } = useUserData();
-  const [department, setDepartment] = useState<string | undefined>();
-  const [level, setLevel] = useState<string | undefined>();
   const today = new Date();
   const resumptionDate = new Date(2025, 2, 3); // March 3, 2025
   const examDate = new Date(2025, 9, 14);
   const daysToExam = Math.max(
     0,
-    Math.ceil((examDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
+    Math.ceil((examDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)),
   );
 
-  useEffect(() => {
-    if (myData) {
-      setLevel(myData.level);
-      setDepartment(myData.departmentId);
-    }
-  }, [myData]);
+  // const {
+  //   data: books = { books: [], totalPages: 1 },
+  //   isLoading: booksLoading,
+  //   error: booksError,
+  // } = useBooks({ departmentId: department, level: level });
 
-  const {
-    data: books = { books: [], totalPages: 1 },
-    isLoading: booksLoading,
-    error: booksError,
-  } = useBooks({ departmentId: department, level: level });
-
+  const { data, isLoading: booksLoading } = useDashboard();
   const { user, isSignedIn, isLoaded } = useUser();
-  const { signOut } = useAuth();
   const router = useRouter();
   useEffect(() => {
     if (user) {
@@ -47,15 +38,16 @@ const HomeDashboard = () => {
   }, [isSignedIn]);
 
   return (
-    <>
-      {/* <UserStats /> */}
-      <Stats />
-      <BookWrap />
-      <div className="flex sm:flex-row flex-col-reverse gap-2 sm:px-2">
-        <AddedMaterials books={books.books} loading={booksLoading} />
-        <Activity />
-      </div>
-    </>
+    data && (
+      <>
+        <Stats data={data.readingSessions} />
+        <BookWrap />
+        <div className="flex sm:flex-row flex-col-reverse gap-2 sm:px-2">
+          <AddedMaterials books={data.books} loading={booksLoading} />
+          <Activity activity={data.activities} />
+        </div>
+      </>
+    )
   );
 };
 export default HomeDashboard;

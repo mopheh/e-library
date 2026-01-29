@@ -2,6 +2,7 @@ import { relations } from "drizzle-orm";
 import {
   boolean,
   date,
+  index,
   integer,
   jsonb,
   pgEnum,
@@ -9,6 +10,7 @@ import {
   text,
   timestamp,
   unique,
+  uniqueIndex,
   uuid,
   varchar,
 } from "drizzle-orm/pg-core";
@@ -30,31 +32,41 @@ export const parseStatusEnum = pgEnum("parse_status", [
   "completed",
   "failed",
 ]);
-export const users = pgTable("users", {
-  id: uuid("id").primaryKey().notNull().unique().defaultRandom(),
-  clerkId: varchar("clerk_id", { length: 255 }).notNull().unique(),
-  fullName: varchar("full_name", { length: 255 }).notNull(),
-  email: varchar("email", { length: 255 }).notNull().unique(),
+export const users = pgTable(
+  "users",
+  {
+    id: uuid("id").primaryKey().notNull().unique().defaultRandom(),
+    clerkId: varchar("clerk_id", { length: 255 }).notNull().unique(),
+    fullName: varchar("full_name", { length: 255 }).notNull(),
+    email: varchar("email", { length: 255 }).notNull().unique(),
 
-  phoneNumber: varchar("phone_number", { length: 20 }),
-  year: LEVEL_ENUM("level").notNull(),
-  facultyId: uuid("faculty_id")
-    .notNull()
-    .references(() => faculty.id, { onDelete: "cascade" }),
-  departmentId: uuid("department_id")
-    .notNull()
-    .references(() => departments.id, { onDelete: "cascade" }),
-  matricNo: varchar("matric_no", { length: 255 }).notNull().unique(),
-  dateOfBirth: varchar("date_of_birth", { length: 255 }),
-  role: ROLE_ENUM("role").default("STUDENT"),
-  gender: GENDER_ENUM("gender").notNull(),
-  address: varchar("address", { length: 255 }).notNull(),
+    phoneNumber: varchar("phone_number", { length: 20 }),
+    year: LEVEL_ENUM("level").notNull(),
+    facultyId: uuid("faculty_id")
+      .notNull()
+      .references(() => faculty.id, { onDelete: "cascade" }),
+    departmentId: uuid("department_id")
+      .notNull()
+      .references(() => departments.id, { onDelete: "cascade" }),
+    matricNo: varchar("matric_no", { length: 255 }).notNull().unique(),
+    dateOfBirth: varchar("date_of_birth", { length: 255 }),
+    role: ROLE_ENUM("role").default("STUDENT"),
+    gender: GENDER_ENUM("gender").notNull(),
+    address: varchar("address", { length: 255 }).notNull(),
 
-  lastActivityDate: date("last_activity_date").defaultNow(),
-  createdAt: timestamp("created_at", {
-    withTimezone: true,
-  }).defaultNow(),
-});
+    lastActivityDate: date("last_activity_date").defaultNow(),
+    createdAt: timestamp("created_at", {
+      withTimezone: true,
+    }).defaultNow(),
+  },
+  (table) => ({
+    emailIdx: uniqueIndex("users_email_idx").on(table.email),
+    matricIdx: uniqueIndex("users_matric_idx").on(table.matricNo),
+
+    facultyIdx: index("users_faculty_idx").on(table.facultyId),
+    departmentIdx: index("users_department_idx").on(table.departmentId),
+  }),
+);
 
 export const faculty = pgTable("faculty", {
   id: uuid("id").primaryKey().notNull().unique().defaultRandom(),
@@ -118,45 +130,64 @@ export const bookCourses = pgTable("book_courses", {
     .references(() => courses.id, { onDelete: "cascade" }),
 });
 
-export const userBooks = pgTable("user_books", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  userId: uuid("user_id")
-    .notNull()
-    .references(() => users.id),
-  bookId: uuid("book_id")
-    .notNull()
-    .references(() => books.id),
+export const userBooks = pgTable(
+  "user_books",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id),
+    bookId: uuid("book_id")
+      .notNull()
+      .references(() => books.id),
 
-  readCount: integer("read_count").default(0).notNull(),
-  downloadCount: integer("download_count").default(0).notNull(),
-  aiRequests: integer("ai_requests").default(0).notNull(),
+    readCount: integer("read_count").default(0).notNull(),
+    downloadCount: integer("download_count").default(0).notNull(),
+    aiRequests: integer("ai_requests").default(0).notNull(),
 
-  lastReadAt: timestamp("last_read_at", { withTimezone: true }).defaultNow(),
-  lastDownloadedAt: timestamp("last_downloaded_at", { withTimezone: true }),
-  lastAIInteractionAt: timestamp("last_ai_interaction_at", {
-    withTimezone: true,
+    lastReadAt: timestamp("last_read_at", { withTimezone: true }).defaultNow(),
+    lastDownloadedAt: timestamp("last_downloaded_at", { withTimezone: true }),
+    lastAIInteractionAt: timestamp("last_ai_interaction_at", {
+      withTimezone: true,
+    }),
+
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
+  },
+  (table) => ({
+    userIdx: index("user_books_user_idx").on(table.userId),
+    bookIdx: index("user_books_book_idx").on(table.bookId),
+
+    // optional composite if you query both together
+    userBookIdx: uniqueIndex("user_books_user_book_idx").on(
+      table.userId,
+      table.bookId,
+    ),
   }),
+);
+export const readingSessions = pgTable(
+  "reading_sessions",
+  {
+    id: uuid("id").notNull().unique().defaultRandom(),
 
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
-});
-export const readingSessions = pgTable("reading_sessions", {
-  id: uuid("id").notNull().unique().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id),
 
-  userId: uuid("user_id")
-    .notNull()
-    .references(() => users.id),
+    bookId: uuid("book_id")
+      .notNull()
+      .references(() => books.id),
 
-  bookId: uuid("book_id")
-    .notNull()
-    .references(() => books.id),
-
-  date: date("date").notNull(), // The day the session happened
-  pagesRead: integer("pages_read").notNull().default(0), // Number of pages read
-  duration: integer("duration").default(0).notNull(),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
-});
+    date: date("date").notNull(), // The day the session happened
+    pagesRead: integer("pages_read").notNull().default(0), // Number of pages read
+    duration: integer("duration").default(0).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
+  },
+  (table) => ({
+    userDateIdx: index("reading_user_date_idx").on(table.userId, table.date),
+  }),
+);
 export const bookPages = pgTable(
   "book_pages",
   {
@@ -172,7 +203,7 @@ export const bookPages = pgTable(
   },
   (t) => ({
     uniq: unique().on(t.bookId, t.pageNumber),
-  })
+  }),
 );
 
 export const questions = pgTable("questions", {

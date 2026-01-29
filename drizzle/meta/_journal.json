@@ -134,6 +134,13 @@
       "when": 1758289812948,
       "tag": "0018_steep_toro",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1769459887974,
+      "tag": "0019_legal_gorilla_man",
+      "breakpoints": true
     }
   ]
 }

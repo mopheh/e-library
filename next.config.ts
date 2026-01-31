@@ -13,7 +13,6 @@ const nextConfig: NextConfig = {
         crypto: false,
       };
 
-
       config.externals = [...(config.externals || []), "canvas"];
     }
 
@@ -28,7 +27,6 @@ const nextConfig: NextConfig = {
     ],
   },
 };
-
 
 export default withPWA({
   dest: "public",
@@ -58,7 +56,8 @@ export default withPWA({
       },
     },
     {
-      urlPattern: /^https:\/\/e-library-two-cyan.vercel.app\/api\/(books|readingSessions).*$/,
+      urlPattern:
+        /^https:\/\/e-library-two-cyan.vercel.app\/api\/(books|readingSessions).*$/,
       handler: "NetworkFirst",
       options: {
         cacheName: "api-cache",

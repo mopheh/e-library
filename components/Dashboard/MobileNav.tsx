@@ -93,7 +93,7 @@ export default function BottomNav({
         hidden: { y: "100%" },
       }}
       transition={{ duration: 0.25, ease: "easeOut" }}
-      className="sm:hidden pb-[env(safe-area-inset-bottom)] fixed bottom-0 left-0 w-full bg-white dark:bg-zinc-900 border-t border-zinc-200 dark:border-zinc-700 flex justify-around items-center py-5 !z-[100]"
+      className="sm:hidden fixed bottom-0 left-0 w-full bg-white dark:bg-zinc-900 border-t border-zinc-200 dark:border-zinc-700 flex justify-around items-center py-5 !z-[100]"
     >
       <>
         {menuItems.map(({ id, icon: Icon, path }) => {

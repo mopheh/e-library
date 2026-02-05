@@ -56,7 +56,7 @@ const PDFStudyView = ({ fileUrl, bookId }: PDFStudyViewProps) => {
   useEffect(() => {
     const interval = setInterval(() => {
       const el = document.querySelector(
-        ".rpv-core__inner-pages"
+        ".rpv-core__inner-pages",
       ) as HTMLDivElement;
       if (el && el.scrollHeight > el.clientHeight) {
         setPdfScrollContainer(el);
@@ -85,7 +85,7 @@ const PDFStudyView = ({ fileUrl, bookId }: PDFStudyViewProps) => {
 
       const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
       const updated = stored.map((b: { id: string; [key: string]: any }) =>
-        b.id === bookId ? { ...b, progress: Math.round(percent) } : b
+        b.id === bookId ? { ...b, progress: Math.round(percent) } : b,
       );
       localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
     };
@@ -155,7 +155,7 @@ const PDFStudyView = ({ fileUrl, bookId }: PDFStudyViewProps) => {
           }),
         });
       },
-      2 * 60 * 1000
+      2 * 60 * 1000,
     );
     return () => clearTimeout(countAsRead);
   }, []);
@@ -238,7 +238,7 @@ const PDFStudyView = ({ fileUrl, bookId }: PDFStudyViewProps) => {
             </TabsContent>
           </div>
 
-          <TabsList className="fixed bottom-18 left-0 w-full flex justify-around font-poppins text-xs border-t dark:bg-zinc-900 text-zinc-500 bg-neutral-200">
+          <TabsList className="fixed bottom-0 left-0 w-full flex justify-around font-poppins text-xs border-t dark:bg-zinc-900 text-zinc-500 bg-neutral-200">
             <TabsTrigger value="study" className="flex-1 py-3">
               <IoBookOutline /> Study
             </TabsTrigger>

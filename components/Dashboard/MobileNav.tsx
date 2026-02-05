@@ -61,6 +61,9 @@ export default function BottomNav({
       id: `/${role}/profile`,
     },
   ];
+  const HIDDEN_ROUTES = ["/cbt", `/${role}/book`, "/library/read", "/viewer"];
+  const hardHide = HIDDEN_ROUTES.some((route) => pathname.startsWith(route));
+  if (hardHide) return null;
   const [mounted, setMounted] = useState(false);
   const [hidden, setHidden] = useState(false);
   const shouldHide = hidden || keyboardOpen;

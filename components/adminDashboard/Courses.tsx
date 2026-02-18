@@ -10,6 +10,7 @@ import AddCoursesForm from "@/components/AddCourses";
 import { TrashIcon } from "@heroicons/react/24/outline";
 import { EditIcon } from "lucide-react";
 import { getDepartmentWithFaculty } from "@/actions/department";
+import { Department } from "@/types";
 
 interface CoursesProps {
   department: Department[] | null;

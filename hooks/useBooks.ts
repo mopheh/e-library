@@ -17,7 +17,7 @@ export const useBooks = (filters: BookFilters) => {
     level,
     courseId,
     page = 1,
-    pageSize = 12,
+    pageSize = 5,
   } = filters;
 
   return useQuery({
@@ -83,7 +83,6 @@ export const useBookPages = (bookId: string) => {
 import { useMutation } from "@tanstack/react-query";
 
 async function uploadBook(file: File): Promise<string> {
-
   // const res = await fetch("/api/upload/signature");
   // if (!res.ok) throw new Error("Failed to get upload signature");
   //
@@ -91,7 +90,7 @@ async function uploadBook(file: File): Promise<string> {
   // console.log({ timestamp, signature, apiKey, cloudName })
   //   console.log(file, file.size, file.type);
 
-    // 2. Prepare form data
+  // 2. Prepare form data
   const formData = new FormData();
 
   formData.append("file", file);
@@ -104,15 +103,12 @@ async function uploadBook(file: File): Promise<string> {
   for (const [key, value] of formData.entries()) {
     console.log(key, value);
   }
-  const uploadRes = await fetch(
-      `/api/books/upload`,
-      {
-        method: "POST",
-        body: formData,
-      }
-  );
-  const data1 = await uploadRes.json()
-  console.log(data1)
+  const uploadRes = await fetch(`/api/books/upload`, {
+    method: "POST",
+    body: formData,
+  });
+  const data1 = await uploadRes.json();
+  console.log(data1);
   if (!uploadRes.ok) throw new Error("Cloudinary upload failed");
 
   const data = await uploadRes.json();

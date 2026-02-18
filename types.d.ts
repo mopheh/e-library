@@ -34,3 +34,8 @@ type Book = {
   type: string;
   createdAt: string;
 };
+export type JobType = "parse_book" | "generate_questions";
+
+export interface JobPayload {
+  bookId: string;
+}

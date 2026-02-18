@@ -1,3 +1,4 @@
+import { JobPayload } from "@/types";
 import { relations } from "drizzle-orm";
 import {
   boolean,
@@ -28,9 +29,16 @@ export const LEVEL_ENUM = pgEnum("level", [
 ]);
 export const parseStatusEnum = pgEnum("parse_status", [
   "pending",
+  "parsing",
+  "parsed",
+  "generating_questions",
   "processing",
   "completed",
   "failed",
+]);
+export const jobTypeEnum = pgEnum("job_type", [
+  "parse_book",
+  "generate_questions",
 ]);
 export const users = pgTable(
   "users",
@@ -101,6 +109,19 @@ export const departmentCourses = pgTable("department_courses", {
   courseId: uuid("course_id")
     .notNull()
     .references(() => courses.id, { onDelete: "cascade" }),
+});
+
+export const jobs = pgTable("jobs", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  type: text("type").notNull(),
+  payload: jsonb("payload").$type<JobPayload>().notNull(),
+  status: text("status").default("pending").notNull(),
+  attempts: integer("attempts").default(0).notNull(),
+  maxAttempts: integer("max_attempts").default(3).notNull(),
+  lastError: text("last_error"),
+  lockedAt: timestamp("locked_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 export const books = pgTable("books", {
@@ -197,7 +218,7 @@ export const bookPages = pgTable(
       .references(() => books.id, { onDelete: "cascade" }),
 
     pageNumber: integer("page_number").notNull(),
-    textChunk: varchar("text_chunk"),
+    textChunk: text("text_chunk"),
 
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
@@ -210,7 +231,7 @@ export const questions = pgTable("questions", {
   id: uuid("id").primaryKey().unique().defaultRandom(),
   courseId: uuid("course_id").references(() => courses.id),
   questionText: varchar("question_text").notNull(),
-  type: varchar("type").notNull().default("mcq"), // mcq, theory, true/false
+  type: varchar("type").notNull().default("mcq"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 

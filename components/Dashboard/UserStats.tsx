@@ -43,15 +43,25 @@ export default function UserStats({
 
   const [goal, setGoal] = useState(20); // pages/day
   const today = new Date();
-  const resumptionDate = new Date(2025, 2, 3); // March 3, 2025
-  const examDate = new Date(2026, 2, 26);
+  const resumptionDate = new Date(2025, 10, 21); // March 3, 2025
+  const examDate = new Date(2026, 2, 16);
   const daysToExam = Math.max(
     0,
     Math.ceil((examDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)),
   );
+  const totalSemesterDays = Math.ceil(
+    (examDate.getTime() - resumptionDate.getTime()) / (1000 * 60 * 60 * 24),
+  );
+
+  const radius = 35;
+  const circumference = 2 * Math.PI * radius;
+  const progress = daysToExam / totalSemesterDays;
+  const strokeDashoffset = circumference * progress;
 
   const totalBooks = 7;
   const totalPages = 215;
+  const todayPages = data?.[data.length - 1]?.pagesRead || 0;
+  const isOnTrack = todayPages >= goal;
 
   return (
     <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4 font-poppins md:flex-1">
@@ -67,7 +77,7 @@ export default function UserStats({
         <CardContent>
           <p className="text-2xl font-bold tracking-tight">{pagesRead}</p>
           <ResponsiveContainer width="100%" height={60}>
-            <LineChart data={readingProgress || data}>
+            <LineChart data={data?.length ? data : readingProgress}>
               <Line
                 type="monotone"
                 dataKey="pages"
@@ -132,6 +142,11 @@ export default function UserStats({
           <p className="text-xs uppercase font-normal text-muted-foreground">
             Pages / Day
           </p>
+          <p
+            className={`text-xs ${isOnTrack ? "text-green-500" : "text-red-500"}`}
+          >
+            {isOnTrack ? "On Track" : "Behind Today"}
+          </p>
 
           <ResponsiveContainer width="100%" height={60}>
             <BarChart data={readingProgress}>
@@ -151,7 +166,7 @@ export default function UserStats({
           </Button>
         </CardFooter> */}
       </Card>
-      <Card>
+      <Card className="border-red-500/20 bg-red-500/5 transition-all hover:-translate-y-1 hover:shadow-lg">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-xs font-light font-poppins">
             <CalendarDays className="h-5 w-5 text-red-500" />
@@ -175,8 +190,8 @@ export default function UserStats({
                 cy="40"
                 r="35"
                 stroke="#ef4444"
-                strokeWidth="6"
-                strokeDasharray={`${440 - daysToExam * 2}, 440`}
+                strokeDasharray={circumference}
+                strokeDashoffset={strokeDashoffset}
                 strokeLinecap="round"
                 fill="none"
               />

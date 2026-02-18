@@ -104,9 +104,9 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggle }) => {
                 <div
                   key={id}
                   onClick={() => handleNavigation(id, path)}
-                  className={`flex items-center gap-3 py-3 px-4 rounded-2xl cursor-pointer transition-all duration-300 ${
+                  className={`flex items-center gap-3 py-3 px-4 rounded-2xl  cursor-pointer transition-all duration-300 ${
                     isActive
-                      ? "bg-white dark:bg-zinc-800 shadow"
+                      ? "bg-white dark:bg-zinc-800 shadow border border-blue-500"
                       : "rounded-full"
                   }`}
                 >
@@ -114,7 +114,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggle }) => {
                     className={`h-8 w-8 flex items-center justify-center rounded-full p-2 ${
                       isActive
                         ? "bg-[#3b82f6] text-white"
-                        : "bg-white dark:bg-zinc-800 text-[#3b82f6] dark:text-blue-400 shadow"
+                        : "bg-white dark:bg-zinc-800 text-[#3b82f6] dark:text-blue-400 brightness shadow"
                     }`}
                   >
                     <Icon className="w-5 h-5" />

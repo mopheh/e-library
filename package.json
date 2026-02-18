@@ -10,7 +10,7 @@
     "db:generate": "npx drizzle-kit generate",
     "db:migrate": "npx drizzle-kit migrate",
     "db:studio": "npx drizzle-kit studio",
-    "worker": "tsx workers/notificationWorker.ts"
+    "worker": "tsx workers/index.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.873.0",
@@ -56,6 +56,7 @@
     "next-themes": "^0.4.6",
     "openai": "^6.16.0",
     "pdf-parse": "^1.1.1",
+    "pg": "^8.18.0",
     "react": "^19.2.4",
     "react-countup": "^6.5.3",
     "react-day-picker": "^9.11.0",
@@ -73,6 +74,7 @@
     "sonner": "^2.0.7",
     "tailwind-merge": "^3.3.1",
     "tailwindcss-animate": "^1.0.7",
+    "tesseract.js": "^7.0.0",
     "together-ai": "^0.21.0",
     "ts-node": "^10.9.2",
     "uuid": "^11.1.0",

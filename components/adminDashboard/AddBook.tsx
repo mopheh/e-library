@@ -11,6 +11,8 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import { useCourses } from "@/hooks/useCourses";
 import { useUploadBook } from "@/hooks/useBooks";
+import { useBookUpload } from "@/hooks/useBookUpload";
+import { Department } from "@/types";
 
 // schema
 export const bookSchema = z
@@ -33,7 +35,7 @@ export const bookSchema = z
     {
       message: "File is required when source is file",
       path: ["file"],
-    }
+    },
   )
   .refine((data) => (data.source === "link" ? !!data.link : true), {
     message: "Link is required when source is link",
@@ -50,6 +52,7 @@ export function UploadBookForm({
   setOpen: Function;
 }) {
   const [loading, setLoading] = useState(false);
+  const { uploadBook } = useBookUpload();
   const { data: courses } = useCourses({
     limit: 2000,
   });
@@ -78,43 +81,52 @@ export function UploadBookForm({
 
   const source = watch("source");
 
-  const onSubmit: SubmitHandler<BookFormData> = async (data: BookFormData) => {
+  const onSubmit: SubmitHandler<BookFormData> = async (data) => {
     setLoading(true);
     toast.info("Uploading...");
 
     try {
-      const formData = new FormData();
-
-      formData.append("title", data.title);
-      formData.append("description", data.description);
-      formData.append("departmentId", data.departmentId);
-      formData.append("type", data.type);
-
-      data.courseIds.forEach((id) => {
-        formData.append("courseIds[]", id);
-      });
+      let fileUrl: string | undefined;
 
       if (data.source === "file" && data.file) {
-        formData.append("file", data.file);
-      }
+        fileUrl = await uploadBook({
+          file: data.file,
+          title: data.title,
+          description: data.description,
+          departmentId: data.departmentId,
+          type: data.type,
+          courseIds: data.courseIds,
+        });
 
-      if (data.source === "link" && data.link) {
-        formData.append("link", data.link);
-      }
-
-      console.log("Form: ", formData);
-      const res = await fetch("/api/books", {
-        method: "POST",
-        body: formData,
-      });
-
-      if (res.ok) {
         toast.success("Book uploaded!");
         reset();
         setOpen(false);
-      } else {
-        const err = await res.json();
-        toast.error(err.error || "Failed to upload book");
+        return;
+      }
+
+      if (data.source === "link" && data.link) {
+        const res = await fetch("/api/books", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            title: data.title,
+            description: data.description,
+            departmentId: data.departmentId,
+            type: data.type,
+            courseIds: data.courseIds,
+            link: data.link,
+          }),
+        });
+
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.error || "Failed to upload book");
+        }
+
+        toast.success("Book uploaded!");
+
+        reset();
+        setOpen(false);
       }
     } catch (err) {
       console.error(err);
@@ -213,7 +225,7 @@ export function UploadBookForm({
               value={field.value}
               onChange={(e) =>
                 field.onChange(
-                  Array.from(e.target.selectedOptions, (opt) => opt.value)
+                  Array.from(e.target.selectedOptions, (opt) => opt.value),
                 )
               }
               className="w-full border rounded p-2 text-xs dark:bg-zinc-900 dark:border-zinc-700"
@@ -241,7 +253,7 @@ export function UploadBookForm({
           <TabsTrigger
             value="file"
             className={cn(
-              "flex items-center gap-2 data-[state=active]:bg-white dark:data-[state=active]:bg-zinc-900 rounded-xl"
+              "flex items-center gap-2 data-[state=active]:bg-white dark:data-[state=active]:bg-zinc-900 rounded-xl",
             )}
           >
             <CloudUpload className="w-4 h-4" /> Upload File
@@ -249,7 +261,7 @@ export function UploadBookForm({
           <TabsTrigger
             value="link"
             className={cn(
-              "flex items-center gap-2 data-[state=active]:bg-white dark:data-[state=active]:bg-zinc-900 rounded-xl"
+              "flex items-center gap-2 data-[state=active]:bg-white dark:data-[state=active]:bg-zinc-900 rounded-xl",
             )}
           >
             <LinkIcon className="w-4 h-4" /> Paste Link

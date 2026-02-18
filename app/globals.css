@@ -163,7 +163,20 @@
     margin: 0;
   }
 }
+.rpv-core__icon, rpv-core__minimal-button {
+  color: #4b5563;
+  /* gray-600 */
+}
 
+/* Dark mode */
+.dark .rpv-core__icon, .dark rpv-core__minimal-button{
+  color: #d1d5db;
+  /* gray-300 */
+}
+
+.dark .rpv-core__icon:hover {
+  color: #ffffff;
+}
 .cl-internal-1dauvpw {
   display: none !important;
 }

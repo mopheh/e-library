@@ -163,13 +163,13 @@ const PDFStudyView = ({ fileUrl, bookId }: PDFStudyViewProps) => {
     <div className="h-[85vh] w-full overflow-hidden">
       <div className="hidden md:flex h-full">
         <div className="w-[60%] h-full border-r flex flex-col">
-          <div className="flex items-center justify-between gap-2 p-2 bg-zinc-100 border-b">
-            <div className="flex items-center gap-2 text-xs">
+          <div className="flex items-center justify-between gap-2 p-2 bg-zinc-100 dark:bg-zinc-800 border-b">
+            <div className="flex items-center gap-2 text-xs text-zinc-900 dark:text-zinc-100">
               <ZoomOutButton />
               <ZoomPopover />
               <ZoomInButton />
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 text-zinc-900 dark:text-zinc-100">
               <GoToPreviousPage />
               <CurrentPageLabel />
               <GoToNextPage />
@@ -204,13 +204,13 @@ const PDFStudyView = ({ fileUrl, bookId }: PDFStudyViewProps) => {
               className="h-full data-[state=inactive]:hidden"
             >
               <div className="flex flex-col h-full">
-                <div className="flex items-center justify-between gap-2 p-2 bg-zinc-100 border-b">
-                  <div className="flex items-center gap-2 text-xs">
+                <div className="flex items-center justify-between gap-2 p-2 bg-zinc-100 dark:bg-zinc-800 border-b">
+                  <div className="flex items-center gap-2 text-xs text-zinc-900 dark:text-zinc-200 ">
                     <ZoomOutButton />
                     <ZoomPopover />
                     <ZoomInButton />
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 text-xs text-zinc-900 dark:text-zinc-200">
                     <GoToPreviousPage />
                     <CurrentPageLabel />
                     <GoToNextPage />

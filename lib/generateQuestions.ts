@@ -1,5 +1,9 @@
+import dotenv from "dotenv";
+
+dotenv.config({ path: ".env.worker" });
+
 import { bookCourses, bookPages, options, questions } from "@/database/schema";
-import { db } from "@/database/drizzle";
+import { db } from "@/workers/db";
 import { eq } from "drizzle-orm";
 
 // Helper: fetch with retry on 429
@@ -16,6 +20,7 @@ async function fetchWithRetry(url: string, options: any, retries = 5) {
 }
 
 export async function generateQuestionsFromBook(bookId: string) {
+  console.log("OPENROUTER_API_KEY exists:", !!process.env.OPENROUTER_API_KEY);
   // Get course for the book
   const [bookCourse] = await db
     .select()
@@ -66,14 +71,15 @@ Text: ${textBatch}
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          model: "moonshotai/kimi-k2:free",
+          model: "openai/gpt-5.2",
+          max_tokens: 800,
           messages: [{ role: "user", content: prompt }],
         }),
-      }
+      },
     );
 
     const data = await res.json();
-
+    console.log(data);
     if (!data.choices || data.choices.length === 0) {
       console.warn("No AI response for this batch");
       continue;
@@ -103,7 +109,7 @@ Text: ${textBatch}
           questionId: savedQ.id,
           optionText: opt.optionText,
           isCorrect: opt.isCorrect,
-        }))
+        })),
       );
     }
 

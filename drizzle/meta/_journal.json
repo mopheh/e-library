@@ -141,6 +141,34 @@
       "when": 1769459887974,
       "tag": "0019_legal_gorilla_man",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1770637918418,
+      "tag": "0020_outstanding_carlie_cooper",
+      "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1770638612274,
+      "tag": "0021_massive_serpent_society",
+      "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1770714847801,
+      "tag": "0022_chilly_sentry",
+      "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1771248821866,
+      "tag": "0023_amazing_eternity",
+      "breakpoints": true
     }
   ]
 }

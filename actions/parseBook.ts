@@ -1,27 +1,60 @@
+import * as pdfjsLib from "pdfjs-dist/legacy/build/pdf.js";
+import { db } from "@/database/drizzle";
+import { bookPages } from "@/database/schema";
+import { extractTextWithOCR } from "@/lib/ocr";
 
-import * as pdfjsLib from "pdfjs-dist";
-import {db} from "@/database/drizzle";
-import {bookPages} from "@/database/schema";
-
-pdfjsLib.GlobalWorkerOptions.workerSrc = require("pdfjs-dist/build/pdf.worker.min.js");
 export async function parsePdfPages(fileBuffer: Buffer, bookId: string) {
-    const pages: { pageNumber: number; text: string }[] = [];
-    const uint8Array = new Uint8Array(fileBuffer);
-    const pdf = await pdfjsLib.getDocument({ data: uint8Array }).promise;
-    const numPages = pdf.numPages;
+  const uint8Array = new Uint8Array(fileBuffer);
 
-    for (let i = 1; i <= numPages; i++) {
-        const page = await pdf.getPage(i);
-        const content = await page.getTextContent();
-        const strings = content.items
-            .map((item: any) => ("str" in item ? item.str : ""))
-            .filter(Boolean);
-        pages.push({ pageNumber: i, text: strings.join(" ").trim() });
+  const pdf = await pdfjsLib.getDocument({
+    data: uint8Array,
+    useWorkerFetch: false,
+    isEvalSupported: false,
+    disableFontFace: true,
+  }).promise;
+
+  const numPages = pdf.numPages;
+
+  const pages: {
+    bookId: string;
+    pageNumber: number;
+    textChunk: string;
+  }[] = [];
+
+  for (let i = 1; i <= numPages; i++) {
+    const page = await pdf.getPage(i);
+    const content = await page.getTextContent();
+
+    let text = content.items
+      .map((item: any) => item.str ?? "")
+      .join(" ")
+      .trim();
+
+    if (!text) {
+      console.log(`📷 Page ${i} has no text. Running OCR...`);
+      text = await extractTextWithOCR(pdf, i);
     }
 
-    await db.insert(bookPages).values(
-        pages.map((p) => ({ bookId, pageNumber: p.pageNumber, textChunk: p.text }))
-    );
+    pages.push({
+      bookId,
+      pageNumber: i,
+      textChunk: text,
+    });
+  }
 
-    return numPages;
+  const nonEmpty = pages.filter((p) => p.textChunk.length > 0);
+
+  if (nonEmpty.length === 0) {
+    throw new Error("PDF produced zero text even after OCR");
+  }
+
+  const BATCH_SIZE = 10;
+
+  for (let i = 0; i < pages.length; i += BATCH_SIZE) {
+    const batch = pages.slice(i, i + BATCH_SIZE);
+
+    await db.insert(bookPages).values(batch);
+  }
+
+  return numPages;
 }

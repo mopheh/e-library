@@ -27,6 +27,6 @@ new Worker(
     console.log("Notification sent:", message);
   },
   {
-    connection,
+    connection: connection as any,
   }
 );

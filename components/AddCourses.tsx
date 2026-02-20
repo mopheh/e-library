@@ -7,6 +7,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { createCourses } from "@/actions/course";
 import { useFaculties } from "@/hooks/useFaculties";
 import { useDepartments } from "@/hooks/useDepartments";
+import { Department } from "@/types";
 
 type FormData = {
   faculty: string;

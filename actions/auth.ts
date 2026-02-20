@@ -1,3 +1,4 @@
+import { Credentials } from "@/types";
 
 
 export const createUser = async (params: Credentials) => {

@@ -56,7 +56,7 @@ export const useMyBooks = () => {
   });
 };
 export const useBook = (bookId: string) => {
-  return useQuery<Book>({
+  return useQuery<any>({
     queryKey: ["books", bookId],
     queryFn: async () => {
       const res = await fetch(`/api/books/${bookId}`);

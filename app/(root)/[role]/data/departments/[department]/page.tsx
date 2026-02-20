@@ -9,6 +9,7 @@ import StudentRow from "@/components/adminDashboard/StudentRow";
 import { useBooks } from "@/hooks/useBooks";
 import { BooksRow } from "@/components/Dashboard/BooksRow";
 import { useParams } from "next/navigation";
+import { Book, Credentials } from "@/types";
 
 const Page = () => {
   const department = useParams().department as string;

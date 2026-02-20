@@ -31,15 +31,13 @@ export const askDeepSeek = async (
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      model: "openai/gpt-5.2", // or "moonshot-v1-32k" if you want bigger context
+      model: "deepseek/deepseek-chat",
       messages,
-      max_tokens: 500,
+      max_tokens: 4096,
     }),
   });
 
   const data = await res.json();
   console.log(data);
-  console.log(data.choices[0].message.content);
-  //
   return data.choices?.[0]?.message?.content || "No response.";
 };

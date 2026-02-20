@@ -1,14 +1,16 @@
-"use client";
+"use client"
 import Sidebar from "@/components/Dashboard/Sidebar";
 import Nav from "@/components/Dashboard/Nav";
 import { useRef, useState } from "react";
 import BottomNav from "@/components/Dashboard/MobileNav";
+import { usePathname } from "next/navigation";
 
 export default function layout({ children }: { children: React.ReactNode }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
   const scrollRef = useRef<HTMLDivElement | null>(null);
+  const pathname = usePathname();
   return (
     <>
       <div className="bg-zinc-50 dark:bg-zinc-900 flex h-screen">
@@ -25,7 +27,7 @@ export default function layout({ children }: { children: React.ReactNode }) {
           <main>{children}</main>
         </div>
       </div>
-      <BottomNav scrollRef={scrollRef} />
+      {!pathname?.includes("/book/") && <BottomNav scrollRef={scrollRef} />}
     </>
   );
 }

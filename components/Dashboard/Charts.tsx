@@ -11,6 +11,7 @@ import {
 } from "recharts";
 import { useReadingSession } from "@/hooks/useUsers";
 import { useIsDarkMode } from "../is-dark";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface Props {
   data: { date: string; pagesRead: number }[];
@@ -19,7 +20,16 @@ interface Props {
 export default function Charts() {
   const isDark = useIsDarkMode();
 
-  const { data } = useReadingSession();
+  const { data, isLoading } = useReadingSession();
+
+  if (isLoading) {
+    return (
+      <div className="w-[445px] relative transform -translate-x-10 sm:translate-x-0 md:w-full h-[90%]">
+        <Skeleton className="w-full h-full rounded-md" />
+      </div>
+    );
+  }
+
   return (
     <div className="w-[445px] relative transform -translate-x-10 sm:translate-x-0 md:w-full h-[90%]">
       <ResponsiveContainer width="100%" height="100%">

@@ -2,6 +2,8 @@
 "use client";
 import { useUsers } from "@/hooks/useUsers";
 
+import { TableRow, TableCell } from "@/components/ui/table";
+
 const FacultyRow = ({
   facultyId,
   name,
@@ -13,12 +15,12 @@ const FacultyRow = ({
   const { data: users, isLoading, isError } = useUsers(facultyId);
 
   return (
-    <tr className="font-poppins text-xs py-3 text-zinc-800 border-b border-zinc-200 dark:border-zinc-900 dark:text-zinc-300 font-light">
-      <td className="px-6 py-4">{name}</td>
-      <td className="px-6 py-4">
-        {isLoading ? "Loading..." : isError ? "Error" : (users?.length ?? 0)}
-      </td>
-    </tr>
+    <TableRow className="group cursor-default hover:bg-zinc-50 dark:hover:bg-zinc-900/50 transition-colors">
+      <TableCell className="font-medium text-zinc-900 dark:text-zinc-100 py-3">{name}</TableCell>
+      <TableCell className="text-right text-zinc-500 dark:text-zinc-400">
+        {isLoading ? "..." : isError ? "-" : (users?.length ?? 0)}
+      </TableCell>
+    </TableRow>
   );
 };
 

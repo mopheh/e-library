@@ -88,14 +88,20 @@ export function convertToMarkdownMath(input: string): string {
       // Bolden keywords
       .replace(/\b(Intersection|Area|Result|Ans\.)\b/gi, "**$1:**")
 
-      // Inline LaTeX already with \( ... \)
-      .replace(/\\\((.*?)\\\)/g, (_, expr) => `$${expr.trim()}$`)
-
-      // Block LaTeX already with \[ ... \]
-      .replace(/\\\[(.*?)\\\]/g, (_, expr) => `$$${expr.trim()}$$`)
+      // Fix common bracket styles to dollar signs for KaTeX
+      .replace(/\\\[(.*?)\\\]/gs, (_, expr) => `$$${expr.trim()}$$`)
+      .replace(/\\\((.*?)\\\)/gs, (_, expr) => `$${expr.trim()}$`)
+      
+      // Fix standalone brackets [ ] containing math-like chars
+      .replace(/\[\s*([0-9a-zA-Z\+\-\*\/=\^\{\}\\]{2,})\s*\]/g, (_, expr) => `$$${expr.trim()}$$`)
+      
+      // Fix standalone parens ( ) containing math-like chars (risky, but helps)
+      // .replace(/\(\s*([0-9a-zA-Z\+\-\*\/=\^\{\}\\]{2,})\s*\)/g, (_, expr) => `$${expr.trim()}$`)
 
       // If a line looks like pure math, wrap as block math
-      .replace(/^( *[\(\)\d+\-\+\*\/=a-zA-Z\^\{\}\\ ]+ *)$/gm, (line) => {
+      .replace(/^( *[\(\)\d+\-\+\*\/=a-zA-Z\^\{\}\\ ]{3,}[^.?!] *)$/gm, (line) => {
+        // Only if it doesn't already have $
+        if(line.includes("$")) return line;
         return `$$${line.trim()}$$`;
       })
   );

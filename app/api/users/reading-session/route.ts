@@ -35,12 +35,15 @@ export async function POST(req: NextRequest) {
   if (existing.length > 0) {
     await db
       .update(readingSessions)
-      .set({ pagesRead: existing[0].pagesRead + pagesRead })
+      .set({ 
+        pagesRead: existing[0].pagesRead + pagesRead,
+        duration: (existing[0].duration || 0) + duration 
+      })
       .where(eq(readingSessions.id, existing[0].id));
   } else {
     await db
       .insert(readingSessions)
-      .values({ userId: id, bookId, date: today, pagesRead });
+      .values({ userId: id, bookId, date: today, pagesRead, duration });
   }
 
   return new Response("Logged successfully", { status: 200 });

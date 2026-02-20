@@ -169,6 +169,13 @@
       "when": 1771248821866,
       "tag": "0023_amazing_eternity",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1771439836110,
+      "tag": "0024_cynical_the_order",
+      "breakpoints": true
     }
   ]
 }

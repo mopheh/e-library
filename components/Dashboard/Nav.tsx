@@ -1,27 +1,46 @@
 "use client";
-import React from "react";
+import React, { useState, useEffect } from "react";
 import Breadcrumbs from "@/components/Breadcrumbs";
-import { SearchIcon } from "lucide-react";
+import { Search, SearchIcon } from "lucide-react";
 import { BellIcon } from "@heroicons/react/20/solid";
 import Image from "next/image";
 import { useAuth, useUser } from "@clerk/nextjs";
 import { STORAGE_KEY } from "@/lib/utils";
+import { SearchCommand } from "./SearchCommand";
 
 const Nav = () => {
   const { user } = useUser();
   const { signOut } = useAuth();
+  const [open, setOpen] = useState(false);
+
+  // Toggle search with Ctrl+K or Cmd+K
+  useEffect(() => {
+    const down = (e: KeyboardEvent) => {
+      if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault();
+        setOpen((open) => !open);
+      }
+    };
+    document.addEventListener("keydown", down);
+    return () => document.removeEventListener("keydown", down);
+  }, []);
+
   return (
     <div className="hidden sm:flex w-full justify-between items-start sm:items-center mb-0 sm:mb-5 gap-2 sm:gap-4">
       <Breadcrumbs />
       <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center font-poppins">
-        {/* <div className="border-1 w-56 flex items-center bg-white border-zinc-200 px-2 rounded-2xl">
-          <SearchIcon className="w-5 h-5 text-zinc-500 mr-2" />
-          <input
-            placeholder="Type here..."
-            className="font-poppins focus:outline-none  w-full p-2 placeholder:text-xs placeholder:font-poppins placeholder:text-zinc-400"
-            type="text"
-          />
-        </div> */}
+        <button 
+           onClick={() => setOpen(true)}
+           className="group relative flex items-center gap-2 rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-sm text-zinc-500 hover:border-zinc-300 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-400 dark:hover:border-zinc-700 w-56 transition-all shadow-sm"
+        >
+          <Search className="h-4 w-4" />
+          <span className="inline-flex">Search...</span>
+          <kbd className="pointer-events-none absolute right-2 top-1.5 hidden h-5 select-none items-center gap-1 rounded border bg-zinc-100 px-1.5 font-mono text-[10px] font-medium text-zinc-500 opacity-100 sm:flex dark:bg-zinc-800">
+            <span className="text-xs">⌘</span>K
+          </kbd>
+        </button>
+        <SearchCommand open={open} setOpen={setOpen} />
+
         <div className="text-zinc-500 hidden dark:text-zinc-400 sm:flex items-center gap-3">
           {/* <BellIcon className="w-5 h-5" /> */}
           <div className="flex gap-2 items-center flex-wrap sm:flex-nowrap">

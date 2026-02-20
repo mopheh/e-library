@@ -280,3 +280,15 @@ export const activitiesRelations = relations(activities, ({ one }) => ({
   }),
   // later: add CBT relation the same way
 }));
+
+export const goals = pgTable("goals", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  type: text("type").notNull(), // 'books_read', 'minutes_read', etc.
+  target: integer("target").notNull(),
+  frequency: text("frequency").default("weekly").notNull(), // 'daily', 'weekly', 'monthly'
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
+});

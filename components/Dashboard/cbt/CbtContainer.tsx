@@ -7,52 +7,41 @@ import CbtResult from "./CbtResult";
 import { useCbtCourses } from "@/hooks/useCourses";
 import CbtSetup from "@/components/Dashboard/cbt/CbtSetup";
 
-const sampleQuestions = [
-  {
-    id: 1,
-    questionText: "What is 2 + 2?",
-    options: [
-      { optionText: "3", isCorrect: false },
-      { optionText: "4", isCorrect: true },
-      { optionText: "5", isCorrect: false },
-      { optionText: "6", isCorrect: false },
-    ],
-  },
-  {
-    id: 2,
-    questionText: "What is the capital of France?",
-    options: [
-      { optionText: "Berlin", isCorrect: false },
-      { optionText: "Paris", isCorrect: true },
-      { optionText: "Rome", isCorrect: false },
-      { optionText: "London", isCorrect: false },
-    ],
-  },
-];
+  // const sampleQuestions = ... (removed)
 
 export default function CbtContainer() {
   const [setupData, setSetupData] = useState<any>(null);
   const [stage, setStage] = useState<
     "setup" | "instructions" | "test" | "result"
   >("setup");
-  const [answers, setAnswers] = useState<{ [key: number]: string }>({});
+  const [answers, setAnswers] = useState<{ [key: string]: string }>({}); // Changed key to string to match question ID type if needed, or keep number if IDs are numbers
   const [showSubmit, setShowSubmit] = useState(false);
   const [score, setScore] = useState(0);
-  const { data: courses } = useCbtCourses();
+  const { data: courses, isLoading: coursesLoading } = useCbtCourses(); // Added isLoading
+
   const handleStart = () => setStage("test");
 
   const handleAnswer = (questionId: number, optionText: string) => {
-    console.log(answers);
     setAnswers((prev) => ({ ...prev, [questionId]: optionText }));
   };
-  useEffect(() => {
-    console.log(courses);
-    console.log(setupData);
-  }, [setupData]);
+
+  // Reset state when starting fresh
+  const handleSetupStart = (data: any) => {
+      setSetupData(data);
+      setAnswers({});
+      setScore(0);
+      setStage("instructions");
+  }
+
   const handleSubmit = () => {
+    if (!setupData?.course?.questions) return;
+    
     let newScore = 0;
-    sampleQuestions.forEach((q) => {
-      const correctOpt = q.options.find((o) => o.isCorrect);
+    const questions = setupData.course.questions;
+    
+    questions.forEach((q: any) => {
+      const correctOpt = q.options.find((o: any) => o.isCorrect);
+      // Ensure specific comparison, trim strings if necessary
       if (answers[q.id] === correctOpt?.optionText) {
         newScore++;
       }
@@ -68,10 +57,8 @@ export default function CbtContainer() {
       {stage === "setup" && (
         <CbtSetup
           courses={courses}
-          onStart={(data) => {
-            setSetupData(data);
-            setStage("instructions");
-          }}
+          loading={coursesLoading}
+          onStart={handleSetupStart}
         />
       )}
       {stage === "test" && setupData && (
@@ -81,6 +68,7 @@ export default function CbtContainer() {
             answers={answers}
             onAnswer={handleAnswer}
             onSubmit={() => setShowSubmit(true)}
+            duration={setupData.duration} 
           />
           <CbtSubmitModal
             open={showSubmit}
@@ -91,7 +79,11 @@ export default function CbtContainer() {
       )}
 
       {stage === "result" && (
-        <CbtResult score={score} total={sampleQuestions.length} />
+        <CbtResult 
+            score={score} 
+            total={setupData?.course?.questions?.length || 0} 
+            onRetry={() => setStage("setup")}
+        />
       )}
     </div>
   );

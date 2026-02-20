@@ -18,8 +18,10 @@ const Page = () => {
   }
 
   return (
-    <div className="md:px-4 pt-2 pb-[6rem] sm:pb-2">
-      <PDFReader fileUrl={(book as any).fileUrl} bookId={(book as any).id} />
+    <div className="h-[calc(100dvh-theme(spacing.4))] md:h-[calc(100vh-9rem)] w-full overflow-hidden flex flex-col">
+      <div className="flex-1 w-full h-full overflow-hidden">
+        <PDFReader fileUrl={(book as any).fileUrl} bookId={(book as any).id} />
+      </div>
     </div>
   );
 };

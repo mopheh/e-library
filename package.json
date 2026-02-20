@@ -10,11 +10,13 @@
     "db:generate": "npx drizzle-kit generate",
     "db:migrate": "npx drizzle-kit migrate",
     "db:studio": "npx drizzle-kit studio",
-    "worker": "tsx workers/index.ts"
+    "worker": "tsx workers/index.ts",
+    "postinstall": "node scripts/copy-worker.js"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.873.0",
     "@clerk/nextjs": "^6.14.1",
+    "@google/genai": "^1.42.0",
     "@heroicons/react": "^2.2.0",
     "@hookform/resolvers": "^5.2.0",
     "@neondatabase/serverless": "^1.0.1",
@@ -42,6 +44,7 @@
     "class-variance-authority": "^0.7.1",
     "cloudinary": "^2.7.0",
     "clsx": "^2.1.1",
+    "cmdk": "^1.1.1",
     "date-fns": "^4.1.0",
     "dotenv": "^16.5.0",
     "drizzle-orm": "^0.44.2",
@@ -55,8 +58,10 @@
     "next-pwa": "^5.6.0",
     "next-themes": "^0.4.6",
     "openai": "^6.16.0",
+    "pdfjs-dist": "3.11.174",
     "pdf-parse": "^1.1.1",
     "pg": "^8.18.0",
+    "radix-ui": "^1.4.3",
     "react": "^19.2.4",
     "react-countup": "^6.5.3",
     "react-day-picker": "^9.11.0",

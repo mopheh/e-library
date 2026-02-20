@@ -1,13 +1,14 @@
-// components/SkeletonRow.tsx
-export const SkeletonRow = () => {
+import { TableRow, TableCell } from "@/components/ui/table";
+import { Skeleton } from "@/components/ui/skeleton";
+
+export const SkeletonRow = ({ columns = 2 }: { columns?: number }) => {
   return (
-    <tr className="animate-pulse border-b border-zinc-200 dark:border-zinc-900">
-      <td className="px-6 py-4">
-        <div className="h-4 w-32 bg-zinc-200 dark:bg-zinc-700 rounded" />
-      </td>
-      <td className="px-6 py-4">
-        <div className="h-4 w-10 bg-zinc-200 dark:bg-zinc-700 rounded" />
-      </td>
-    </tr>
+    <TableRow>
+      {Array.from({ length: columns }).map((_, i) => (
+        <TableCell key={i} className="px-6 py-4">
+          <Skeleton className="h-4 w-full" />
+        </TableCell>
+      ))}
+    </TableRow>
   );
 };

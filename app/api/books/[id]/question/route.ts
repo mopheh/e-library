@@ -4,8 +4,8 @@ import { books } from "@/database/schema";
 import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
-export async function POST(_: Request, { params }: { params: { id: string } }) {
-  const bookId = params.id;
+export async function POST(_: Request, { params }: { params: Promise<{ id: string }> }) {
+  const { id: bookId } = await params;
 
   await generateQuestionsFromBook(bookId);
 

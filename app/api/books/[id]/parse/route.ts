@@ -4,8 +4,8 @@ import { bookPages, books } from "@/database/schema";
 import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
-export async function POST(_: Request, { params }: { params: { id: string } }) {
-  const bookId = params.id;
+export async function POST(_: Request, { params }: { params: Promise<{ id: string }> }) {
+  const { id: bookId } = await params;
 
   const [book] = await db.select().from(books).where(eq(books.id, bookId));
 

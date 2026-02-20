@@ -20,7 +20,6 @@
 # production
 /build
 /queue
-redis.js
 test.js
 queue/notificationQueue.ts
 workers/notificationWorker.ts

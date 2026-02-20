@@ -1,5 +1,5 @@
 import { Worker } from "bullmq";
-import { connection } from "../redis.js";
+import { connection } from "@/redis";
 
 const keyPrefix = "notification:sent";
 

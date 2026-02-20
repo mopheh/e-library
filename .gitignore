@@ -22,6 +22,8 @@
 /queue
 redis.js
 test.js
+queue/notificationQueue.ts
+workers/notificationWorker.ts
 # misc
 .DS_Store
 *.pem

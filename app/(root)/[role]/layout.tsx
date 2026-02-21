@@ -3,6 +3,7 @@ import Sidebar from "@/components/Dashboard/Sidebar";
 import Nav from "@/components/Dashboard/Nav";
 import { useRef, useState } from "react";
 import BottomNav from "@/components/Dashboard/MobileNav";
+import MobileRepFloatingButton from "@/components/Dashboard/MobileRepFloatingButton";
 import { usePathname } from "next/navigation";
 
 export default function layout({ children }: { children: React.ReactNode }) {
@@ -27,7 +28,12 @@ export default function layout({ children }: { children: React.ReactNode }) {
           <main>{children}</main>
         </div>
       </div>
-      {!pathname?.includes("/book/") && <BottomNav scrollRef={scrollRef} />}
+      {!pathname?.includes("/book/") && (
+        <>
+          <MobileRepFloatingButton />
+          <BottomNav scrollRef={scrollRef} />
+        </>
+      )}
     </>
   );
 }

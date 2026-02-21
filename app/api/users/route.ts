@@ -5,38 +5,71 @@ import { users } from "@/database/schema";
 import { eq } from "drizzle-orm";
 import { auth } from "@clerk/nextjs/server";
 
+import { clerkClient } from "@clerk/nextjs/server";
+
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const facultyId = searchParams.get("facultyId");
     const departmentId = searchParams.get("departmentId");
 
+    let results = [];
+
     if (facultyId) {
-      // Case: Filtered by facultyId
-      const filterUsers = await db
+      results = await db
         .select()
         .from(users)
         .where(eq(users.facultyId, facultyId));
-      return NextResponse.json(filterUsers);
-    }
-    if (departmentId) {
-      // Case: Filtered by facultyId
-      const filterUsers = await db
+    } else if (departmentId) {
+      results = await db
         .select()
         .from(users)
         .where(eq(users.departmentId, departmentId));
-      return NextResponse.json(filterUsers);
+    } else {
+      results = await db.select().from(users);
     }
 
-    // Case: Fetch all departments
-    const allUsers = await db.select().from(users);
+    const repClerkIds = results
+      .filter((u) => u.role === "FACULTY REP")
+      .map((u) => u.clerkId);
 
-    return NextResponse.json(allUsers);
+    if (repClerkIds.length > 0) {
+      try {
+        const client = await clerkClient();
+        // userIds array allows fetching multiple users by their ID
+        const clerkUsersResp = await client.users.getUserList({
+          userId: repClerkIds,
+          limit: 100,
+        });
+
+        // Map clerkId to imageUrl
+        const clerkUserMap = new Map(
+          clerkUsersResp.data.map((u) => [u.id, u.imageUrl])
+        );
+
+        const mappedResults = results.map((u) => {
+          if (
+            (u.role === "FACULTY REP") &&
+            clerkUserMap.has(u.clerkId)
+          ) {
+            return { ...u, imageUrl: clerkUserMap.get(u.clerkId) };
+          }
+          return u;
+        });
+
+        return NextResponse.json(mappedResults);
+      } catch (err) {
+        console.error("Failed to fetch clerk users for imageUrls:", err);
+        return NextResponse.json(results);
+      }
+    }
+
+    return NextResponse.json(results);
   } catch (error) {
     console.error("[GET /api/users]", error);
     return NextResponse.json(
       { error: "Failed to fetch users" },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }

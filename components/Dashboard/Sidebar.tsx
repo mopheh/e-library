@@ -15,7 +15,9 @@ import {
 } from "lucide-react";
 import { ModeToggle } from "../toggle";
 import { useAuth, useUser } from "@clerk/nextjs";
+import { useUserData } from "@/hooks/useUsers";
 import { STORAGE_KEY } from "@/lib/utils";
+import SidebarRepWidget from "./SidebarRepWidget";
 
 interface SidebarProps {
   role?: string;
@@ -26,6 +28,7 @@ interface SidebarProps {
 const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggle }) => {
   const { user } = useUser();
   const { signOut } = useAuth();
+  const { data: userData } = useUserData();
   const { role } = useParams();
   const pathname = usePathname();
   const router = useRouter();
@@ -133,10 +136,10 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggle }) => {
             })}
           </nav>
 
-          {/* Admin Link */}
-          {role === "admin" && (
+          {/* Admin & Faculty Rep Links */}
+          {(role === "admin" || role === "faculty-rep") && (
             <div
-              onClick={() => router.push("/admin/data")}
+              onClick={() => router.push(role === "admin" ? "/admin/data" : `/${role}/data/departments/${userData?.departmentId}`)}
               className="flex gap-3 font-poppins text-xs items-center cursor-pointer mt-auto"
             >
               <div className="h-9 w-9 flex items-center justify-center rounded-full p-2 bg-white dark:bg-zinc-800 text-[#1E3A8A] dark:text-blue-300">
@@ -145,6 +148,9 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggle }) => {
               <h3 className="text-zinc-700 dark:text-zinc-200">Manage Data</h3>
             </div>
           )}
+
+          {/* Compact Faculty Rep Widget at the bottom */}
+          <SidebarRepWidget />
         </div>
       </aside>
 

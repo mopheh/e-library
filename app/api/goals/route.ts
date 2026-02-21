@@ -1,8 +1,8 @@
 import { db } from "@/database/drizzle";
-import { goals, users } from "@/database/schema";
+import { goals, users, readingSessions, userBooks } from "@/database/schema";
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
-import { eq, and } from "drizzle-orm";
+import { eq, and, gt, sql } from "drizzle-orm";
 
 export async function GET() {
   try {
@@ -26,7 +26,34 @@ export async function GET() {
       .from(goals)
       .where(eq(goals.userId, user.id));
 
-    return NextResponse.json(userGoals);
+    const goalsWithProgress = await Promise.all(
+        userGoals.map(async (goal) => {
+            let currentProgress = 0;
+
+            if (goal.type === "minutes_read") {
+                const result = await db
+                    .select({ sum: sql<number>`sum(${readingSessions.duration})` })
+                    .from(readingSessions)
+                    .where(eq(readingSessions.userId, user.id));
+                currentProgress = result[0].sum || 0;
+            } else if (goal.type === "books_read") {
+                const result = await db
+                    .select({ count: sql<number>`count(*)` })
+                    .from(userBooks)
+                    .where(
+                        and(
+                            eq(userBooks.userId, user.id),
+                            gt(userBooks.readCount, 0)
+                        )
+                    );
+                currentProgress = result[0].count || 0;
+            }
+
+            return { ...goal, currentProgress };
+        })
+    );
+
+    return NextResponse.json(goalsWithProgress);
   } catch (error: any) {
     console.error("Goals fetch error:", error);
     return NextResponse.json({ error: "Failed to fetch goals" }, { status: 500 });

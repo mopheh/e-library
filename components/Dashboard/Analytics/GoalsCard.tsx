@@ -101,10 +101,10 @@ const GoalsCard = () => {
                         {goal.type === "books_read" ? "Books" : "Minutes"}
                     </span>
                     <span className="font-bold font-cabin text-xs">
-                        0 / {goal.target} {/* Placeholder for current progress */}
+                        {goal.currentProgress || 0} / {goal.target}
                     </span>
                 </div>
-                <Progress value={33} className="h-2" /> {/* Placeholder value */}
+                <Progress value={Math.min(100, Math.round(((goal.currentProgress || 0) / goal.target) * 100))} className="h-2" />
               </div>
             ))
           ) : (

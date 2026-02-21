@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { toast } from "react-hot-toast";
 import CbtInstructions from "./CbtInstructions";
 import CbtTest from "./CbtTest";
 import CbtSubmitModal from "./CbtSubmitModal";
@@ -16,6 +17,7 @@ export default function CbtContainer() {
   >("setup");
   const [answers, setAnswers] = useState<{ [key: string]: string }>({}); // Changed key to string to match question ID type if needed, or keep number if IDs are numbers
   const [showSubmit, setShowSubmit] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [score, setScore] = useState(0);
   const { data: courses, isLoading: coursesLoading } = useCbtCourses(); // Added isLoading
 
@@ -27,28 +29,75 @@ export default function CbtContainer() {
 
   // Reset state when starting fresh
   const handleSetupStart = (data: any) => {
-      setSetupData(data);
+      // 1. Slice questions according to `numQuestions` randomly or from the top.
+      const selectedQuestions = [...(data.course.questions || [])]
+          .sort(() => 0.5 - Math.random())
+          .slice(0, data.numQuestions);
+
+      setSetupData({
+          ...data,
+          course: {
+              ...data.course,
+              questions: selectedQuestions,
+          }
+      });
       setAnswers({});
       setScore(0);
       setStage("instructions");
   }
 
-  const handleSubmit = () => {
-    if (!setupData?.course?.questions) return;
+  const handleSubmit = async () => {
+    if (!setupData?.course?.questions || isSubmitting) return;
     
+    setIsSubmitting(true);
     let newScore = 0;
     const questions = setupData.course.questions;
     
+    const userAnswers: any[] = [];
+
     questions.forEach((q: any) => {
       const correctOpt = q.options.find((o: any) => o.isCorrect);
-      // Ensure specific comparison, trim strings if necessary
-      if (answers[q.id] === correctOpt?.optionText) {
+      const isCorrect = answers[q.id] === correctOpt?.optionText;
+      if (isCorrect) {
         newScore++;
       }
+
+      // Find the ID of the option the user actually selected
+      const selectedOpt = q.options.find((o: any) => o.optionText === answers[q.id]);
+
+      userAnswers.push({
+        questionId: q.id,
+        selectedOptionId: selectedOpt?.id,
+        isCorrect
+      });
     });
-    setScore(newScore);
-    setStage("result");
-    setShowSubmit(false);
+
+    try {
+        const response = await fetch("/api/cbt/sessions", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                courseId: setupData.course.id,
+                score: newScore,
+                userAnswers,
+            }),
+        });
+
+        if (!response.ok) {
+            throw new Error("Failed to submit assessment result");
+        }
+
+        setScore(newScore);
+        setStage("result");
+    } catch (error) {
+        console.error("Submission error:", error);
+        toast.error("Failed to save your score. Please check your connection.");
+    } finally {
+        setIsSubmitting(false);
+        setShowSubmit(false);
+    }
   };
 
   return (
@@ -74,6 +123,7 @@ export default function CbtContainer() {
             open={showSubmit}
             onConfirm={handleSubmit}
             onCancel={() => setShowSubmit(false)}
+            loading={isSubmitting}
           />
         </>
       )}

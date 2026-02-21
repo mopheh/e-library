@@ -176,6 +176,20 @@
       "when": 1771439836110,
       "tag": "0024_cynical_the_order",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1771631237529,
+      "tag": "0025_handy_surge",
+      "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1771633457993,
+      "tag": "0026_supreme_doomsday",
+      "breakpoints": true
     }
   ]
 }

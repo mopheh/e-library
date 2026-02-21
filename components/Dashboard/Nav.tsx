@@ -7,6 +7,7 @@ import Image from "next/image";
 import { useAuth, useUser } from "@clerk/nextjs";
 import { STORAGE_KEY } from "@/lib/utils";
 import { SearchCommand } from "./SearchCommand";
+import NotificationBell from "./Notifications/NotificationBell";
 
 const Nav = () => {
   const { user } = useUser();
@@ -42,7 +43,7 @@ const Nav = () => {
         <SearchCommand open={open} setOpen={setOpen} />
 
         <div className="text-zinc-500 hidden dark:text-zinc-400 sm:flex items-center gap-3">
-          {/* <BellIcon className="w-5 h-5" /> */}
+          <NotificationBell />
           <div className="flex gap-2 items-center flex-wrap sm:flex-nowrap">
             {user && (
               <>

@@ -1,5 +1,5 @@
 import { db } from "@/database/drizzle";
-import { users, courses, books, readingSessions, departments, faculty } from "@/database/schema";
+import { users, courses, books, readingSessions, departments, faculty, sessions } from "@/database/schema";
 import { count, sql } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
@@ -20,7 +20,8 @@ export async function GET() {
       materialCount,
       departmentCount,
       facultyCount,
-      readingStats
+      readingStats,
+      cbtStats
     ] = await Promise.all([
       db.select({ count: count() }).from(users),
       db.select({ count: count() }).from(courses),
@@ -30,7 +31,8 @@ export async function GET() {
       db.select({ 
         totalSessions: count(), 
         totalDuration: sql<number>`sum(${readingSessions.duration})` 
-      }).from(readingSessions)
+      }).from(readingSessions),
+      db.select({ count: count() }).from(sessions)
     ]);
 
     return NextResponse.json({
@@ -40,7 +42,7 @@ export async function GET() {
         departments: departmentCount[0].count,
         faculties: facultyCount[0].count,
         totalReadingMinutes: readingStats[0].totalDuration || 0,
-        cbtUsage: 0, // Placeholder until CBT table is fully integrated
+        cbtUsage: cbtStats[0].count, 
         revenue: 0 // Placeholder
     });
   } catch (error) {

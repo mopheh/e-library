@@ -121,6 +121,12 @@ export async function POST(req: Request) {
     if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 401 });
     }
+    
+    // Authorization Check: Only ADMIN or FACULTY REP can upload materials
+    if (user.role !== "ADMIN" && user.role !== "FACULTY REP") {
+        return NextResponse.json({ error: "Forbidden: Insufficient privileges" }, { status: 403 });
+    }
+
     const body = await req.json();
 
     const { title, description, departmentId, type, courseIds, fileUrl, link } =

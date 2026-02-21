@@ -27,6 +27,7 @@ interface Goal {
   type: string;
   target: number;
   frequency: string;
+  currentProgress?: number;
 }
 
 export const useGoals = () => {

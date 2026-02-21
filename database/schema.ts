@@ -292,3 +292,43 @@ export const goals = pgTable("goals", {
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
 });
+
+export const auditLogs = pgTable("audit_logs", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  actionType: varchar("action_type", { length: 255 }).notNull(),
+  targetId: varchar("target_id", { length: 255 }), // ID of the entity affected (user, book, etc.)
+  performedBy: uuid("performed_by")
+    .notNull()
+    .references(() => users.id),
+  details: jsonb("details"), // e.g. { assignedRole: "FACULTY REP", facultyId: "..." }
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
+export const complaintStatusEnum = pgEnum("complaint_status", ["PENDING", "RESOLVED"]);
+
+export const complaints = pgTable("complaints", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  studentId: uuid("student_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  facultyRepId: uuid("faculty_rep_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  message: text("message").notNull(),
+  status: complaintStatusEnum("status").default("PENDING").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
+});
+
+export const notificationTypeEnum = pgEnum("notification_type", ["COMPLAINT", "SYSTEM", "GENERAL"]);
+
+export const notifications = pgTable("notifications", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }), // recipient of notification
+  type: notificationTypeEnum("type").default("GENERAL").notNull(),
+  message: text("message").notNull(),
+  isRead: boolean("is_read").default(false).notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+});

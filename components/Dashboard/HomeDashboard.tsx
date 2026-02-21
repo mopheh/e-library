@@ -11,7 +11,6 @@ import AIInsights from "./Analytics/AIInsights";
 import ContinueReading from "./Analytics/ContinueReading";
 import { useAnalytics } from "@/hooks/useAnalytics";
 import Charts from "./Charts";
-
 const HomeDashboard = () => {
   const today = new Date();
   const resumptionDate = new Date(2025, 2, 3); // March 3, 2025
@@ -76,7 +75,7 @@ const HomeDashboard = () => {
         {/* Right Column (Goals, AI, Continue Reading) - Spans 3 columns on large screens */}
         <div className="col-span-1 md:col-span-2 lg:col-span-3 space-y-6">
             {/* Goals & AI Stacked */}
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-1">
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-1 mt-6 lg:mt-0">
                 <GoalsCard />
                 <AIInsights />
             </div>

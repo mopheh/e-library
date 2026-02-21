@@ -12,6 +12,7 @@ export default function CbtTest({
   answers,
   onAnswer,
   onSubmit,
+  duration
 }: any) {
   const [currentIdx, setCurrentIdx] = useState(0);
   const currentQuestion = questions[currentIdx];
@@ -62,7 +63,7 @@ export default function CbtTest({
                      </div>
                      <Progress value={progress} className="h-2" />
                 </div>
-                <CbtTimer />
+                <CbtTimer durationMinutes={duration || 30} onTimeUp={onSubmit} />
             </div>
 
           <div className="flex-1">

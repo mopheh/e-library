@@ -16,7 +16,7 @@ import {
   varchar,
 } from "drizzle-orm/pg-core";
 
-export const ROLE_ENUM = pgEnum("role", ["STUDENT", "ADMIN", "FACULTY REP"]);
+export const ROLE_ENUM = pgEnum("role", ["STUDENT", "ADMIN", "FACULTY REP", "ASPIRANT"]);
 export const SEMESTER_ENUM = pgEnum("semester", ["FIRST", "SECOND"]);
 export const GENDER_ENUM = pgEnum("gender", ["MALE", "FEMALE"]);
 export const LEVEL_ENUM = pgEnum("level", [
@@ -97,6 +97,7 @@ export const courses = pgTable("courses", {
   level: LEVEL_ENUM("level").notNull(),
   semester: SEMESTER_ENUM("semester").default("FIRST"),
   title: varchar("title").notNull(),
+  examDate: timestamp("exam_date", { withTimezone: true }),
   departmentId: uuid("department_id")
     .notNull()
     .references(() => departments.id, { onDelete: "cascade" }),
@@ -109,6 +110,54 @@ export const departmentCourses = pgTable("department_courses", {
   courseId: uuid("course_id")
     .notNull()
     .references(() => courses.id, { onDelete: "cascade" }),
+});
+
+export const studentCourses = pgTable(
+  "student_courses",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    courseId: uuid("course_id")
+      .notNull()
+      .references(() => courses.id, { onDelete: "cascade" }),
+    semester: SEMESTER_ENUM("semester").default("FIRST"),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  },
+  (t) => ({
+    userCourseUniq: uniqueIndex("student_courses_user_course_idx").on(
+      t.userId,
+      t.courseId,
+    ),
+  }),
+);
+
+export const threads = pgTable("threads", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  courseId: uuid("course_id")
+    .notNull()
+    .references(() => courses.id, { onDelete: "cascade" }),
+  authorId: uuid("author_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  title: varchar("title", { length: 255 }).notNull(),
+  content: text("content").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
+export const comments = pgTable("comments", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  threadId: uuid("thread_id")
+    .notNull()
+    .references(() => threads.id, { onDelete: "cascade" }),
+  authorId: uuid("author_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  content: text("content").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 });
 
 export const jobs = pgTable("jobs", {
@@ -331,4 +380,185 @@ export const notifications = pgTable("notifications", {
   message: text("message").notNull(),
   isRead: boolean("is_read").default(false).notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
+// Pre-Admission Hub Tables
+
+export const verificationStatusEnum = pgEnum("verification_status", ["PENDING", "APPROVED", "REJECTED"]);
+
+export const candidateProfiles = pgTable("candidate_profiles", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  jambScore: integer("jamb_score"),
+  intendedDepartmentId: uuid("intended_department_id").references(() => departments.id),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
+export const verificationRequests = pgTable("verification_requests", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  jambNo: varchar("jamb_no", { length: 255 }).notNull(),
+  documentUrl: text("document_url").notNull(),
+  status: verificationStatusEnum("status").default("PENDING").notNull(),
+  approvedDepartmentId: uuid("approved_department_id").references(() => departments.id),
+  approvedFacultyId: uuid("approved_faculty_id").references(() => faculty.id),
+  admissionYear: varchar("admission_year", { length: 10 }),
+  level: LEVEL_ENUM("level"),
+  reviewedBy: uuid("reviewed_by").references(() => users.id),
+  reviewedAt: timestamp("reviewed_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
+export const postUtmeQuestions = pgTable("post_utme_questions", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  subject: varchar("subject", { length: 255 }).notNull(),
+  questionText: text("question_text").notNull(),
+  explanation: text("explanation"),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
+export const postUtmeOptions = pgTable("post_utme_options", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  questionId: uuid("question_id").notNull().references(() => postUtmeQuestions.id, { onDelete: "cascade" }),
+  optionText: text("option_text").notNull(),
+  isCorrect: boolean("is_correct").default(false).notNull(),
+});
+
+export const candidateAttempts = pgTable("candidate_attempts", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  score: integer("score"),
+  totalQuestions: integer("total_questions").notNull(),
+  startedAt: timestamp("started_at", { withTimezone: true }).defaultNow().notNull(),
+  completedAt: timestamp("completed_at", { withTimezone: true }),
+});
+
+export const candidateAnswers = pgTable("candidate_answers", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  attemptId: uuid("attempt_id").notNull().references(() => candidateAttempts.id, { onDelete: "cascade" }),
+  questionId: uuid("question_id").notNull().references(() => postUtmeQuestions.id, { onDelete: "cascade" }),
+  selectedOptionId: uuid("selected_option_id").references(() => postUtmeOptions.id),
+  isCorrect: boolean("is_correct"),
+});
+
+export const connectionStatusEnum = pgEnum("connection_status", ["PENDING", "ACCEPTED", "REJECTED"]);
+
+export const studentConnections = pgTable("student_connections", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  aspirantId: uuid("aspirant_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  studentId: uuid("student_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  status: connectionStatusEnum("status").default("PENDING").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
+export const departmentCommunities = pgTable("department_communities", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  departmentId: uuid("department_id").notNull().references(() => departments.id, { onDelete: "cascade" }),
+  name: varchar("name", { length: 255 }).notNull(),
+  description: text("description"),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
+export const communityPosts = pgTable("community_posts", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  communityId: uuid("community_id").notNull().references(() => departmentCommunities.id, { onDelete: "cascade" }),
+  authorId: uuid("author_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  content: text("content").notNull(),
+  isPinned: boolean("is_pinned").default(false).notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
+export const studyRooms = pgTable("study_rooms", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  courseId: uuid("course_id").notNull().references(() => courses.id, { onDelete: "cascade" }),
+  hostId: uuid("host_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  name: varchar("name", { length: 255 }).notNull(),
+  description: text("description"),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
+export const studyRoomMembers = pgTable("study_room_members", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  roomId: uuid("room_id").notNull().references(() => studyRooms.id, { onDelete: "cascade" }),
+  userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  joinedAt: timestamp("joined_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
+export const annotations = pgTable("annotations", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  bookId: uuid("book_id").notNull().references(() => books.id, { onDelete: "cascade" }),
+  userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  pageNumber: integer("page_number").notNull(),
+  text: text("text").notNull(),
+  coordinates: jsonb("coordinates"), // To store x, y, width, height format
+  color: varchar("color", { length: 50 }).default("yellow"),
+  isPublic: boolean("is_public").default(false).notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
+export const questionTopics = pgTable("question_topics", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  questionId: uuid("question_id").notNull().references(() => questions.id, { onDelete: "cascade" }),
+  topicName: varchar("topic_name", { length: 255 }).notNull(),
+});
+
+export const examInsights = pgTable("exam_insights", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  courseId: uuid("course_id").notNull().references(() => courses.id, { onDelete: "cascade" }),
+  topicName: varchar("topic_name", { length: 255 }).notNull(),
+  frequencyPercentage: integer("frequency_percentage").notNull(),
+  lastCalculated: timestamp("last_calculated", { withTimezone: true }).defaultNow().notNull(),
+});
+
+export const survivalGuides = pgTable("survival_guides", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  courseId: uuid("course_id").notNull().references(() => courses.id, { onDelete: "cascade" }),
+  authorId: uuid("author_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  title: varchar("title", { length: 255 }).notNull(),
+  content: text("content").notNull(),
+  upvotes: integer("upvotes").default(0).notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
+export const opportunityTypeEnum = pgEnum("opportunity_type", ["INTERNSHIP", "SCHOLARSHIP", "HACKATHON", "JOB"]);
+
+export const opportunities = pgTable("opportunities", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  title: varchar("title", { length: 255 }).notNull(),
+  company: varchar("company", { length: 255 }).notNull(),
+  url: text("url").notNull(),
+  type: opportunityTypeEnum("type").default("INTERNSHIP").notNull(),
+  deadline: timestamp("deadline", { withTimezone: true }),
+  departmentId: uuid("department_id").references(() => departments.id),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
+export const targetLevelEnum = pgEnum("target_level", ["100", "200", "300", "400", "500", "600", "ALL"]);
+
+export const seniorQa = pgTable("senior_qa", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  departmentId: uuid("department_id").notNull().references(() => departments.id, { onDelete: "cascade" }),
+  authorId: uuid("author_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  targetLevel: targetLevelEnum("target_level").default("ALL").notNull(),
+  title: varchar("title", { length: 255 }).notNull(),
+  content: text("content").notNull(),
+  upvotes: integer("upvotes").default(0).notNull(),
+  isAnonymous: boolean("is_anonymous").default(false).notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
+export const seniorQaAnswers = pgTable("senior_qa_answers", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  questionId: uuid("question_id").notNull().references(() => seniorQa.id, { onDelete: "cascade" }),
+  authorId: uuid("author_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  content: text("content").notNull(),
+  upvotes: integer("upvotes").default(0).notNull(),
+  isAccepted: boolean("is_accepted").default(false).notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 });

@@ -9,6 +9,10 @@ import {
   ClipboardIcon,
   LayoutDashboardIcon,
   UserIcon,
+  MonitorPlay,
+  Medal,
+  Briefcase,
+  Sparkles,
 } from "lucide-react";
 import { useAuth, useUser } from "@clerk/nextjs";
 
@@ -42,6 +46,30 @@ export default function BottomNav({
       id: "dashboard",
     },
     {
+      name: "Workspace",
+      path: "/dashboard/workspaces",
+      icon: MonitorPlay,
+      id: `/${role}/dashboard/workspaces`,
+    },
+    {
+      name: "Leaderboard",
+      path: "/dashboard/leaderboard",
+      icon: Medal,
+      id: `/${role}/dashboard/leaderboard`,
+    },
+    {
+      name: "Opportunities",
+      path: "/dashboard/opportunities",
+      icon: Briefcase,
+      id: `/${role}/dashboard/opportunities`,
+    },
+    {
+      name: "Ask Seniors",
+      path: "/dashboard/ask-seniors",
+      icon: Sparkles,
+      id: `/${role}/dashboard/ask-seniors`,
+    },
+    {
       name: "Library",
       path: "/library",
       icon: BookOpenIcon,
@@ -61,9 +89,9 @@ export default function BottomNav({
       id: `/${role}/profile`,
     },
   ];
-  const HIDDEN_ROUTES = ["/cbt", `/${role}/book`, "/library/read", "/viewer"];
+  const HIDDEN_ROUTES = ["/cbt", `/${role}/book`, "/library/read", "/viewer", `/${role}/dashboard/courses`, `/${role}/dashboard/study-rooms`];
   const hardHide = HIDDEN_ROUTES.some((route) => pathname.startsWith(route));
-  if (hardHide) return null;
+
   const [mounted, setMounted] = useState(false);
   const [hidden, setHidden] = useState(false);
   const shouldHide = hidden || keyboardOpen;
@@ -86,6 +114,8 @@ export default function BottomNav({
       setHidden(false);
     }
   });
+
+  if (hardHide) return null;
 
   return (
     <motion.nav

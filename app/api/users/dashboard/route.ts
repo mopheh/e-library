@@ -7,6 +7,7 @@ import {
   courses,
   readingSessions,
   userBooks,
+  studentCourses,
 } from "@/database/schema";
 import { eq, and, sql, desc } from "drizzle-orm";
 import { getCurrentUser } from "@/lib/auth";
@@ -26,7 +27,7 @@ export async function GET() {
     const start = startDate.toISOString().slice(0, 10);
     const end = today.toISOString().slice(0, 10);
 
-    const [bookCount, recentBooks, sessions, activity] = await Promise.all([
+    const [bookCount, recentBooks, sessions, activity, enrolledCourses] = await Promise.all([
       db
         .select({ count: sql<number>`count(*)` })
         .from(userBooks)
@@ -41,17 +42,14 @@ export async function GET() {
           type: books.type,
           fileUrl: books.fileUrl,
           course: courses.courseCode,
+          courseId: courses.id,
           level: courses.level,
         })
         .from(books)
         .leftJoin(bookCourses, eq(books.id, bookCourses.bookId))
         .leftJoin(courses, eq(bookCourses.courseId, courses.id))
-        .where(
-          and(
-            eq(books.departmentId, user.departmentId),
-            eq(courses.level, user.year),
-          ),
-        )
+        .innerJoin(studentCourses, eq(courses.id, studentCourses.courseId))
+        .where(eq(studentCourses.userId, user.id))
         .limit(12),
 
       db
@@ -83,6 +81,19 @@ export async function GET() {
         .where(eq(activities.userId, user.id))
         .orderBy(desc(activities.createdAt))
         .limit(10),
+
+      db
+        .select({
+          id: courses.id,
+          courseCode: courses.courseCode,
+          title: courses.title,
+          unitLoad: courses.unitLoad,
+          level: courses.level,
+          examDate: courses.examDate,
+        })
+        .from(courses)
+        .innerJoin(studentCourses, eq(courses.id, studentCourses.courseId))
+        .where(eq(studentCourses.userId, user.id)),
     ]);
     console.log(activity);
     return NextResponse.json({
@@ -98,6 +109,7 @@ export async function GET() {
       books: recentBooks,
       readingSessions: sessions,
       activities: activity,
+      enrolledCourses,
     });
   } catch (error) {
     console.error("[GET /api/dashboard]", error);

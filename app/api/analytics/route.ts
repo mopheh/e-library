@@ -12,9 +12,12 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Get internal user ID
+    // Get internal user ID and department
     const [user] = await db
-      .select({ id: users.id })
+      .select({ 
+        id: users.id,
+        departmentId: users.departmentId
+      })
       .from(users)
       .where(eq(users.clerkId, clerkId))
       .limit(1);
@@ -24,6 +27,7 @@ export async function GET() {
     }
 
     const userId = user.id;
+    const departmentId = user.departmentId;
 
     // 1. KPIs
     // Total Books Read
@@ -105,23 +109,64 @@ export async function GET() {
     const days = eachDayOfInterval({ start: sevenDaysAgo, end: new Date() });
     
     days.forEach(day => {
-        trendsMap.set(format(day, "yyyy-MM-dd"), 0);
+        trendsMap.set(format(day, "yyyy-MM-dd"), { user: 0, department: 0 });
     });
 
     last7DaysSessions.forEach(session => {
-        // session.date might be a string or Date depending on driver, assuming string YYYY-MM-DD from neon driver if type is date
-        // But safe to format
         const d = new Date(session.date); 
         const key = format(d, "yyyy-MM-dd");
         if (trendsMap.has(key)) {
-            trendsMap.set(key, trendsMap.get(key) + (session.minutes || 0));
+            const current = trendsMap.get(key);
+            trendsMap.set(key, { ...current, user: current.user + (session.minutes || 0) });
         }
     });
 
-    const weeklyTrends = Array.from(trendsMap.entries()).map(([date, minutes]) => ({
+    // 4. Department Average Trends (Last 7 days)
+    if (departmentId) {
+      const deptSessions = await db
+        .select({
+          date: readingSessions.date,
+          minutes: readingSessions.duration,
+          userId: readingSessions.userId,
+        })
+        .from(readingSessions)
+        .innerJoin(users, eq(readingSessions.userId, users.id))
+        .where(and(
+          eq(users.departmentId, departmentId),
+          gte(readingSessions.date, format(sevenDaysAgo, "yyyy-MM-dd"))
+        ));
+
+      // Calculate average per day
+      // 1. Group by date and sum total minutes across all dept users
+      // 2. Count distinct active users per day (or total users in dept but active is more accurate for "average reader")
+      const deptDailyTotals: Record<string, { totalMins: number, users: Set<string> }> = {};
+      
+      deptSessions.forEach(s => {
+          const d = new Date(s.date);
+          const key = format(d, "yyyy-MM-dd");
+          if (!deptDailyTotals[key]) {
+             deptDailyTotals[key] = { totalMins: 0, users: new Set() };
+          }
+          deptDailyTotals[key].totalMins += (s.minutes || 0);
+          deptDailyTotals[key].users.add(s.userId);
+      });
+
+      // Inject averages into trendsMap
+      for (const [key, data] of Object.entries(deptDailyTotals)) {
+          if (trendsMap.has(key)) {
+              const current = trendsMap.get(key);
+              const userCount = data.users.size || 1; // avoid division by zero
+              const averageMins = Math.round(data.totalMins / userCount);
+              trendsMap.set(key, { ...current, department: averageMins });
+          }
+      }
+    }
+
+    const weeklyTrends = Array.from(trendsMap.entries()).map(([date, data]) => ({
         date,
-        minutes,
-        day: format(new Date(date), "EEE") // Mon, Tue...
+        minutes: data.user,
+        departmentAverage: data.department,
+        day: format(parseISO(date), "EEE") // Mon, Tue...
     }));
 
 

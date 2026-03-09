@@ -12,12 +12,22 @@ import {
   UserIcon,
   MenuIcon,
   XIcon,
+  MonitorPlay,
+  Medal,
+  Briefcase,
+  Sparkles,
 } from "lucide-react";
 import { ModeToggle } from "../toggle";
 import { useAuth, useUser } from "@clerk/nextjs";
 import { useUserData } from "@/hooks/useUsers";
 import { STORAGE_KEY } from "@/lib/utils";
 import SidebarRepWidget from "./SidebarRepWidget";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 
 interface SidebarProps {
   role?: string;
@@ -41,33 +51,71 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggle }) => {
     router.push(`/${role}/${route}`);
     // toggle();
   };
-  const menuItems = [
+  const menuGroupings = role === "aspirant" ? [
     {
-      name: "Dashboard",
-      path: "/dashboard",
-      icon: LayoutDashboardIcon,
-      id: "dashboard",
+       label: "Core",
+       defaultOpen: true,
+       items: [
+         { name: "Hub Dashboard", path: "/dashboard", icon: LayoutDashboardIcon, id: "dashboard" },
+         { name: "Verification", path: "/verify", icon: SettingsIcon, id: `/${role}/verify` },
+       ]
     },
     {
-      name: "Library",
-      path: "/library",
-      icon: BookOpenIcon,
-      id: `/${role}/library`,
+       label: "Academics",
+       defaultOpen: true,
+       items: [
+         { name: "CBT Practice", path: "/cbt", icon: ClipboardIcon, id: `/${role}/cbt` },
+         { name: "Study Roadmap", path: "/roadmap", icon: BookmarkIcon, id: `/${role}/roadmap` },
+       ]
     },
     {
-      name: "Saved",
-      path: "/saved",
-      icon: BookmarkIcon,
-      id: `/${role}/saved"`,
-    },
-    { name: "CBT", path: "/cbt", icon: ClipboardIcon, id: `/${role}/cbt` },
+       label: "Community",
+       defaultOpen: false,
+       items: [
+         { name: "Dept Preview", path: "/preview", icon: BookOpenIcon, id: `/${role}/preview` },
+         { name: "Connect", path: "/connect", icon: UserIcon, id: `/${role}/connect` },
+       ]
+    }
+  ] : [
     {
-      name: "Profile",
-      path: "/profile",
-      icon: UserIcon,
-      id: `/${role}/profile`,
+       label: "Core",
+       defaultOpen: true,
+       items: [
+         { name: "Dashboard", path: "/dashboard", icon: LayoutDashboardIcon, id: "dashboard" },
+         { name: "Profile", path: "/profile", icon: UserIcon, id: `/${role}/profile` },
+       ]
     },
+    {
+       label: "Academics",
+       defaultOpen: true,
+       items: [
+         { name: "My Workspace", path: "/dashboard/workspaces", icon: MonitorPlay, id: `/${role}/dashboard/workspaces` },
+         { name: "Library", path: "/library", icon: BookOpenIcon, id: `/${role}/library` },
+         { name: "CBT", path: "/cbt", icon: ClipboardIcon, id: `/${role}/cbt` },
+         { name: "Saved", path: "/saved", icon: BookmarkIcon, id: `/${role}/saved"` },
+       ]
+    },
+    {
+       label: "Community",
+       defaultOpen: false,
+       items: [
+         { name: "Leaderboard", path: "/dashboard/leaderboard", icon: Medal, id: `/${role}/dashboard/leaderboard` },
+         { name: "Ask Seniors", path: "/dashboard/ask-seniors", icon: Sparkles, id: `/${role}/dashboard/ask-seniors` },
+         { name: "Connect", path: "/connect", icon: UserIcon, id: `/${role}/connect` },
+       ]
+    },
+    {
+       label: "Discover",
+       defaultOpen: false,
+       items: [
+         { name: "Opportunities", path: "/dashboard/opportunities", icon: Briefcase, id: `/${role}/dashboard/opportunities` },
+         { name: "Dept Preview", path: "/preview", icon: BookOpenIcon, id: `/${role}/preview` },
+       ]
+    }
   ];
+  
+  const defaultValues = menuGroupings.filter(g => g.defaultOpen).map(g => g.label);
+
   return (
     <>
       <div className="hidden fixed top-4 left-4 z-50">
@@ -100,41 +148,48 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggle }) => {
           </div>
           <hr className="border-t border-zinc-300 dark:border-zinc-700 opacity-30 my-2" />
 
-          <nav className="flex flex-col gap-2">
-            {menuItems.map(({ name, icon: Icon, id, path }) => {
-              const isActive = active === id;
-              return (
-                <div
-                  key={id}
-                  onClick={() => handleNavigation(id, path)}
-                  className={`flex items-center gap-3 py-3 px-4 rounded-2xl  cursor-pointer transition-all duration-300 ${
-                    isActive
-                      ? "bg-white dark:bg-zinc-800 shadow border border-blue-500"
-                      : "rounded-full"
-                  }`}
-                >
-                  <div
-                    className={`h-8 w-8 flex items-center justify-center rounded-full p-2 ${
-                      isActive
-                        ? "bg-[#3b82f6] text-white"
-                        : "bg-white dark:bg-zinc-800 text-[#3b82f6] dark:text-blue-400 brightness shadow"
-                    }`}
-                  >
-                    <Icon className="w-5 h-5" />
-                  </div>
-                  <span
-                    className={`font-poppins text-xs ${
-                      isActive
-                        ? "text-zinc-700 dark:text-zinc-100 font-medium"
-                        : "text-zinc-500 dark:text-zinc-400"
-                    }`}
-                  >
-                    {name}
-                  </span>
-                </div>
-              );
-            })}
-          </nav>
+          <div className="flex-1 overflow-y-auto pr-2 no-scrollbar">
+            <Accordion type="multiple" defaultValue={defaultValues} className="w-full space-y-2">
+              {menuGroupings.map((group) => (
+                <AccordionItem value={group.label} key={group.label} className="border-none">
+                  <AccordionTrigger className="py-2 px-4 hover:no-underline rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800/50 transition-colors">
+                    <span className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                      {group.label}
+                    </span>
+                  </AccordionTrigger>
+                  <AccordionContent className="pb-0 pt-1 space-y-1">
+                    {group.items.map(({ name, icon: Icon, id, path }) => {
+                      const isActive = active === id;
+                      return (
+                        <div
+                          key={id}
+                          onClick={() => handleNavigation(id, path)}
+                          className={`flex items-center gap-3 py-2.5 px-4 rounded-xl cursor-pointer transition-all duration-300 ${
+                            isActive
+                              ? "bg-white dark:bg-zinc-800 shadow-sm border border-blue-500 text-blue-600 dark:text-blue-400"
+                              : "hover:bg-white dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:text-blue-600 dark:hover:text-blue-400"
+                          }`}
+                        >
+                          <div
+                            className={`h-7 w-7 flex items-center justify-center rounded-lg ${
+                              isActive
+                                ? "bg-blue-100 dark:bg-blue-900/50"
+                                : "bg-zinc-100 dark:bg-zinc-900"
+                            }`}
+                          >
+                            <Icon className="w-4 h-4" />
+                          </div>
+                          <span className={`font-poppins text-xs ${isActive ? "font-semibold" : "font-medium"}`}>
+                            {name}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
+          </div>
 
           {/* Admin & Faculty Rep Links */}
           {(role === "admin" || role === "faculty-rep") && (

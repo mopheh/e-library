@@ -190,6 +190,83 @@
       "when": 1771633457993,
       "tag": "0026_supreme_doomsday",
       "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "7",
+      "when": 1772509115448,
+      "tag": "0027_chubby_vision",
+      "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "7",
+      "when": 1772510268193,
+      "tag": "0028_cool_gabe_jones",
+      "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1772810785407,
+      "tag": "0029_lowly_winter_soldier",
+      "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1772853178391,
+      "tag": "0030_boring_sebastian_shaw",
+      "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1772853343631,
+      "tag": "0031_cool_shotgun",
+      "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1772853852600,
+      "tag": "0032_flaky_eternity",
+      "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1772855401603,
+      "tag": "0033_absurd_tiger_shark",
+      "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1772857559586,
+      "tag": "0034_fluffy_glorian",
+      "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "7",
+      "when": 1772857785071,
+      "tag": "0035_brown_daimon_hellstrom",
+      "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1772888625762,
+      "tag": "0036_smart_stark_industries",
+      "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "7",
+      "when": 1772889181662,
+      "tag": "0037_fluffy_maria_hill",
+      "breakpoints": true
     }
   ]
 }

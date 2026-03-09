@@ -131,7 +131,9 @@ export default function CbtContainer() {
       {stage === "result" && (
         <CbtResult 
             score={score} 
-            total={setupData?.course?.questions?.length || 0} 
+            total={setupData?.course?.questions?.length || 0}
+            questions={setupData?.course?.questions || []}
+            answers={answers}
             onRetry={() => setStage("setup")}
         />
       )}

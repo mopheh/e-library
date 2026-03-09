@@ -108,6 +108,7 @@ export default function CompactRepWidget() {
                              {rep.repType || "Rep"}
                         </span>
                     </div>
+                    
                 </div>
             ) : (
                 <div className="flex items-center gap-3 py-2 px-3 rounded-2xl w-full">

@@ -90,7 +90,7 @@ const Page = () => {
                              </div>
                              <div className="flex items-center gap-1.5 text-xs text-zinc-600 dark:text-zinc-400 truncate sm:col-span-2">
                                 <GraduationCap className="w-3.5 h-3.5 text-zinc-400" />
-                                <span className="truncate">Level {rep.year} • {departmentInfo?.departmentName}</span>
+                                <span className="truncate">Level {rep.year} • {rep.department?.name}</span>
                              </div>
                           </div>
                        </div>

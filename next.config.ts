@@ -40,7 +40,15 @@ export default withPWA({
   },
   runtimeCaching: [
     {
-      urlPattern: /^https:\/\/.*\/.*\.(?:png|jpg|jpeg|svg|webp)$/,
+      urlPattern: /^https:\/\/fonts\.(?:googleapis|gstatic)\.com\/.*/i,
+      handler: "StaleWhileRevalidate",
+      options: {
+        cacheName: "google-fonts",
+        expiration: { maxEntries: 20, maxAgeSeconds: 365 * 24 * 60 * 60 },
+      },
+    },
+    {
+      urlPattern: /^https:\/\/.*\/.*\.(?:png|jpg|jpeg|svg|webp)$/i,
       handler: "CacheFirst",
       options: {
         cacheName: "images-cache",
@@ -48,7 +56,7 @@ export default withPWA({
       },
     },
     {
-      urlPattern: /\.(?:pdf)$/,
+      urlPattern: /\.(?:pdf)$/i,
       handler: "CacheFirst",
       options: {
         cacheName: "pdf-cache",
@@ -56,12 +64,13 @@ export default withPWA({
       },
     },
     {
-      urlPattern:
-        /^https:\/\/e-library-two-cyan.vercel.app\/api\/(books|readingSessions).*$/,
+      // Catch-all for API routes, ensuring they load from Cache if offline, but try Network first.
+      urlPattern: /\/api\/.*$/i,
       handler: "NetworkFirst",
       options: {
         cacheName: "api-cache",
-        networkTimeoutSeconds: 5,
+        networkTimeoutSeconds: 3,
+        expiration: { maxEntries: 50, maxAgeSeconds: 7 * 24 * 60 * 60 },
       },
     },
   ],

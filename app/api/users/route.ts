@@ -1,7 +1,7 @@
 ///api/users
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/database/drizzle";
-import { users } from "@/database/schema";
+import { departments, users } from "@/database/schema";
 import { eq } from "drizzle-orm";
 import { auth } from "@clerk/nextjs/server";
 
@@ -13,21 +13,26 @@ export async function GET(req: NextRequest) {
     const facultyId = searchParams.get("facultyId");
     const departmentId = searchParams.get("departmentId");
 
-    let results = [];
+    let rawResults;
 
     if (facultyId) {
-      results = await db
+      rawResults = await db
         .select()
-        .from(users)
+        .from(users).leftJoin(departments, eq(users.departmentId, departments.id))
         .where(eq(users.facultyId, facultyId));
     } else if (departmentId) {
-      results = await db
+      rawResults = await db
         .select()
-        .from(users)
+        .from(users).leftJoin(departments, eq(users.departmentId, departments.id))
         .where(eq(users.departmentId, departmentId));
     } else {
-      results = await db.select().from(users);
+      rawResults = await db.select().from(users).leftJoin(departments, eq(users.departmentId, departments.id));
     }
+
+    const results = rawResults.map((r) => ({
+      ...r.users,
+      department: r.department,
+    }));
 
     const repClerkIds = results
       .filter((u) => u.role === "FACULTY REP")
@@ -104,13 +109,11 @@ export async function POST(req: Request) {
       .limit(1);
 
     if (existingUser.length > 0) {
-      console.log("User Exists already!!!");
-      console.error("Failed to insert user");
-      return NextResponse.json(
-        { message: "User Exists already!!!" },
-        { status: 500 },
-      );
+      // User already exists, let's update their onboarding info instead of throwing an error
+      await db.update(users).set(params).where(eq(users.email, params.email));
+      return NextResponse.json({ success: true, message: "user updated" });
     }
+
     //@ts-ignore
     await db.insert(users).values(params);
     return NextResponse.json({ success: true, message: "user created" });

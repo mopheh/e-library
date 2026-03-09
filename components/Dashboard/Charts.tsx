@@ -14,7 +14,7 @@ import { useIsDarkMode } from "../is-dark";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface Props {
-  data: { date: string; pagesRead: number }[];
+  data: { date: string; pagesRead: number; departmentAverage: number }[];
 }
 
 export default function Charts() {
@@ -51,6 +51,18 @@ export default function Charts() {
                 stopOpacity={0}
               />
             </linearGradient>
+            <linearGradient id="colorDeptAvg" x1="0" y1="0" x2="0" y2="1">
+              <stop
+                offset="5%"
+                stopColor={isDark ? "#9ca3af" : "#9ca3af"}
+                stopOpacity={0.2}
+              />
+              <stop
+                offset="95%"
+                stopColor={isDark ? "#9ca3af" : "#9ca3af"}
+                stopOpacity={0}
+              />
+            </linearGradient>
           </defs>
 
           <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
@@ -75,16 +87,30 @@ export default function Charts() {
               fontSize: 12,
               color: isDark ? "#d1d5db" : "#4b5563", // zinc-300 vs zinc-600
             }}
-            formatter={(value: number) => [`${value} pages`, "Pages Read"]}
+            formatter={(value: number, name: string) => [
+              `${value} pages`, 
+              name === "pagesRead" ? "You" : "Dept Avg"
+            ]}
           />
 
           <Area
             type="monotone"
+            dataKey="departmentAverage"
+            stroke="#9ca3af"
+            strokeWidth={2}
+            strokeDasharray="4 4"
+            fill="url(#colorDeptAvg)"
+            activeDot={{ r: 5 }}
+            name="departmentAverage"
+          />
+          <Area
+            type="monotone"
             dataKey="pagesRead"
-            stroke="#3b82f6" // You could also darken/lighten this for contrast
+            stroke="#3b82f6"
             strokeWidth={2}
             fill="url(#colorPages)"
             activeDot={{ r: 5 }}
+            name="pagesRead"
           />
         </AreaChart>
       </ResponsiveContainer>

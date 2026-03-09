@@ -177,6 +177,12 @@
 .dark .rpv-core__icon:hover {
   color: #ffffff;
 }
+
+/* Customizing React PDF Viewer Bookmarks */
+.rpv-bookmark__title {
+  font-size: 0.75rem !important; /* text-xs equivalent */
+  font-family: var(--font-poppins) !important;
+}
 .cl-internal-1dauvpw {
   display: none !important;
 }

@@ -81,7 +81,7 @@ export default function AddedMaterials({
               </TableRow>
             </TableHeader>
             <TableBody>
-                {books
+                {books.slice(0,5)
                   .sort(
                     (a, b) =>
                       new Date(b.createdAt).getTime() -

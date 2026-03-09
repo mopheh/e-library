@@ -10,7 +10,7 @@ import { ClipboardPaste, CloudUpload, Link as LinkIcon } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import { useCourses } from "@/hooks/useCourses";
-import { useUploadBook } from "@/hooks/useBooks";
+
 import { useBookUpload } from "@/hooks/useBookUpload";
 import { Department } from "@/types";
 

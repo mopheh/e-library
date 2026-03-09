@@ -3,6 +3,10 @@ import { db } from "@/database/drizzle";
 import { bookPages, books } from "@/database/schema";
 import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
+import fetch from "node-fetch";
+import fs from "fs";
+import os from "os";
+import path from "path";
 
 export async function POST(_: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id: bookId } = await params;
@@ -13,19 +17,34 @@ export async function POST(_: Request, { params }: { params: Promise<{ id: strin
     return NextResponse.json({ error: "No PDF found" }, { status: 400 });
   }
 
-  const res = await fetch(book.fileUrl);
-  const arrayBuffer = await res.arrayBuffer();
-  const buffer = Buffer.from(arrayBuffer);
+  const tmpPath = path.join(os.tmpdir(), `api_parse_${bookId}_${Date.now()}.pdf`);
 
-  const numPages = await parsePdfPages(buffer, bookId);
+  try {
+    const res = await fetch(book.fileUrl);
+    if (!res.ok) throw new Error("Failed to fetch PDF");
+    if (!res.body) throw new Error("Null response body");
 
-  await db
-    .update(books)
-    .set({
-      parseStatus: "completed",
-      pageCount: numPages,
-    })
-    .where(eq(books.id, bookId));
+    const fileStream = fs.createWriteStream(tmpPath);
+    await new Promise<void>((resolve, reject) => {
+      res.body!.pipe(fileStream);
+      res.body!.on("error", reject);
+      fileStream.on("finish", () => resolve());
+    });
 
-  return NextResponse.json({ success: true });
+    const numPages = await parsePdfPages(tmpPath, bookId);
+
+    await db
+      .update(books)
+      .set({
+        parseStatus: "completed",
+        pageCount: numPages,
+      })
+      .where(eq(books.id, bookId));
+
+    return NextResponse.json({ success: true });
+  } finally {
+    if (fs.existsSync(tmpPath)) {
+      fs.unlinkSync(tmpPath);
+    }
+  }
 }

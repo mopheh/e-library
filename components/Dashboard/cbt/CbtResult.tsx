@@ -1,58 +1,87 @@
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
-import { RefreshCcw, Home } from "lucide-react";
-import Link from "next/link";
+import { motion } from "framer-motion";
+import { CheckCircle, XCircle } from "lucide-react";
 
 export default function CbtResult({
   score,
   total,
+  questions,
+  answers,
   onRetry,
 }: {
   score: number;
   total: number;
+  questions: any[];
+  answers: { [key: string]: string };
   onRetry: () => void;
 }) {
-  const percentage = Math.round((score / total) * 100);
-  const passed = percentage >= 50;
 
   return (
-    <Card className="max-w-md mx-auto p-6 text-center shadow-lg border-zinc-200 dark:border-zinc-800">
-      <CardHeader>
-        <CardTitle className="text-2xl font-bold font-cairo text-zinc-900 dark:text-zinc-100">Assessment Complete</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        <div className="space-y-2">
-            <p className="text-sm font-medium text-zinc-500 uppercase tracking-wider">Your Score</p>
-            <div className="flex items-end justify-center gap-2">
-                <span className="text-6xl font-bold text-zinc-900 dark:text-zinc-50">{score}</span>
-                <span className="text-xl text-zinc-400 mb-2">/ {total}</span>
-            </div>
-        </div>
+    <div className="flex-1 p-4 md:p-8 pt-6 min-h-[80vh] font-poppins flex items-center justify-center bg-zinc-50 dark:bg-zinc-950 rounded-xl">
+       <motion.div 
+         initial={{ opacity: 0, scale: 0.95 }} 
+         animate={{ opacity: 1, scale: 1 }} 
+         className="bg-white dark:bg-zinc-900 rounded-3xl p-8 max-w-2xl w-full shadow-2xl border border-zinc-100 dark:border-zinc-800 text-center"
+       >
+          <div className="w-24 h-24 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-full flex items-center justify-center mx-auto mb-6 text-4xl font-bold">
+            {score}
+          </div>
+          <h2 className="text-2xl font-bold mb-2">Assessment Completed</h2>
+          <p className="text-zinc-600 dark:text-zinc-400 mb-8">
+            You scored {score} out of {total}. Review your answers below.
+          </p>
 
-        <div className="space-y-2">
-            <div className="flex justify-between text-xs text-zinc-500">
-                <span>0%</span>
-                <span>{percentage}%</span>
-                <span>100%</span>
-            </div>
-            <Progress value={percentage} className={`h-3 ${passed ? "bg-green-100" : "bg-red-100"}`}  />
-             <p className={`text-sm font-medium ${passed ? "text-green-600" : "text-red-500"}`}>
-                {passed ? "Excellent work! Keep it up." : "Good effort. Try again to improve."}
-             </p>
-        </div>
+          <div className="text-left space-y-6 max-h-[60vh] overflow-y-auto pr-4 custom-scrollbar">
+            {questions.map((q, i) => {
+              const correctOpt = q.options.find((o: any) => o.isCorrect);
+              const isCorrect = answers[q.id] === correctOpt?.optionText;
+              const skipped = answers[q.id] === undefined;
+              
+              const renderOptionText = (text: string) => {
+                if (text && text.includes("<") && text.includes(">")) {
+                  return <span dangerouslySetInnerHTML={{ __html: text }} />;
+                }
+                return text;
+              };
 
-        <div className="flex flex-col gap-3 pt-4">
-            <Button onClick={onRetry} className="w-full gap-2" size="lg">
-                <RefreshCcw className="w-4 h-4" /> Try Again
-            </Button>
-            <Button asChild variant="outline" className="w-full gap-2" size="lg">
-                <Link href="/student/dashboard">
-                    <Home className="w-4 h-4" /> Return Home
-                </Link>
-            </Button>
-        </div>
-      </CardContent>
-    </Card>
+              return (
+                <div key={q.id} className="p-4 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-100 dark:border-zinc-700">
+                  <div className="flex gap-3">
+                    <span className="font-bold text-zinc-900 dark:text-zinc-100">{i + 1}.</span>
+                    <div className="flex-1">
+                      <p className="font-medium text-sm mb-3 text-zinc-900 dark:text-zinc-100 leading-relaxed font-open-sans">
+                         {q.questionText}
+                      </p>
+                      <div className="flex items-start gap-2 text-sm mb-3">
+                         <span className="text-zinc-500 shrink-0 mt-0.5">Your Answer:</span>
+                         <span className={`font-semibold ${isCorrect ? 'text-green-600' : 'text-red-500'}`}>
+                            {skipped ? "Skipped" : renderOptionText(answers[q.id])}
+                         </span>
+                         {isCorrect ? <CheckCircle className="w-5 h-5 text-green-600 shrink-0" /> : <XCircle className="w-5 h-5 text-red-500 shrink-0" />}
+                      </div>
+                      {!isCorrect && (
+                         <div className="text-sm flex items-start gap-2">
+                           <span className="text-zinc-500 shrink-0">Correct Answer:</span> 
+                           <span className="text-green-600 font-semibold">{renderOptionText(correctOpt?.optionText)}</span>
+                         </div>
+                      )}
+                      
+                      {/* Only render explanation if it exists */}
+                      {q.explanation && (
+                          <p className="text-xs text-blue-600 dark:text-blue-400 mt-3 bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg leading-relaxed">
+                            {q.explanation}
+                          </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+
+          <button onClick={onRetry} className="mt-8 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 px-8 py-3 rounded-full font-semibold hover:scale-105 transition-transform">
+             Retake Assessment
+          </button>
+       </motion.div>
+    </div>
   );
 }

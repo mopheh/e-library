@@ -2,6 +2,7 @@
 import React, { JSX } from "react";
 import { useRouter } from "next/navigation";
 import { addRecentlyViewedBook, downloadFile } from "@/lib/utils";
+import { savePdfForOffline, checkIsPdfOffline, removeOfflinePdf } from "@/lib/offline-storage";
 import { TableRow, TableCell } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -16,6 +17,8 @@ import { IoBookSharp } from "react-icons/io5";
 import { MdOutlineNoteAlt, MdOutlineQuiz } from "react-icons/md";
 import { BsThreeDotsVertical } from "react-icons/bs";
 import { FiDownload } from "react-icons/fi";
+import { WifiOff, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 
 type Book = {
   id: string;
@@ -28,6 +31,42 @@ type Book = {
 
 export const BooksRow = ({ book }: { book: Book }) => {
   const router = useRouter();
+  const [isOfflineReady, setIsOfflineReady] = React.useState(false);
+  const [isDownloading, setIsDownloading] = React.useState(false);
+
+  React.useEffect(() => {
+    checkIsPdfOffline(book.id).then(setIsOfflineReady);
+  }, [book.id]);
+
+  const handleSaveForOffline = async () => {
+    setIsDownloading(true);
+    toast.info("Downloading book for offline access...");
+    try {
+      let downloadUrl = book.fileUrl;
+      if (downloadUrl.includes("backblazeb2.com")) {
+        const authResponse = await fetch(`/api/books/${book.id}/download`);
+        if (!authResponse.ok) throw new Error("Failed");
+        const data = await authResponse.json();
+        downloadUrl = data.url;
+      }
+      
+      const response = await fetch(downloadUrl);
+      const blob = await response.blob();
+      await savePdfForOffline(book.id, blob);
+      setIsOfflineReady(true);
+      toast.success(`${book.title} is now available offline!`);
+    } catch (e) {
+      toast.error("Failed to save for offline mode. Check internet connection.");
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
+  const handleRemoveOffline = async () => {
+    await removeOfflinePdf(book.id);
+    setIsOfflineReady(false);
+    toast.success("Removed from offline storage.");
+  };
 
   const badgeColors: Record<string, string> = {
     material: "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300",
@@ -111,8 +150,18 @@ export const BooksRow = ({ book }: { book: Book }) => {
                 downloadFile(book.fileUrl, book.id, `${book.title}.pdf`)
               }
             >
-              <FiDownload className="h-4 w-4 mr-2" /> Download
+              <FiDownload className="h-4 w-4 mr-2" /> Download file
             </DropdownMenuItem>
+            {isOfflineReady ? (
+               <DropdownMenuItem onClick={handleRemoveOffline}>
+                 <Trash2 className="h-4 w-4 mr-2 text-rose-500" /> Remove Offline
+               </DropdownMenuItem>
+            ) : (
+               <DropdownMenuItem onClick={handleSaveForOffline} disabled={isDownloading}>
+                 <WifiOff className="h-4 w-4 mr-2" /> 
+                 {isDownloading ? "Downloading..." : "Save for Offline"}
+               </DropdownMenuItem>
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
       </TableCell>

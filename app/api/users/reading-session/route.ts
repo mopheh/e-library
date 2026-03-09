@@ -56,10 +56,22 @@ export async function GET(req: NextRequest) {
     });
   }
   const [user] = await db
-    .select({ id: users.id })
+    .select({ 
+      id: users.id, 
+      departmentId: users.departmentId 
+    })
     .from(users)
-    .where(eq(users.clerkId, userId));
+    .where(eq(users.clerkId, userId))
+    .limit(1);
+    
+  if (!user) {
+    return new Response(JSON.stringify({ error: "User not found" }), {
+      status: 404,
+    });
+  }
+
   const id = user.id;
+  const departmentId = user.departmentId;
 
   const today = startOfDay(new Date());
   const daysAgo = subDays(today, 6); // past 7 days including today
@@ -88,13 +100,50 @@ export async function GET(req: NextRequest) {
         dailyTotals[dayKey] = (dailyTotals[dayKey] || 0) + pagesRead;
       },
     );
-    // console.log(dailyTotals);
+    // Get Department Averages if departmentId exists
+    const deptDailyTotals: Record<string, { totalPages: number, users: Set<string> }> = {};
+    
+    if (departmentId) {
+      const deptSessions = await db
+        .select({
+          date: readingSessions.createdAt,
+          pagesRead: readingSessions.pagesRead,
+          userId: readingSessions.userId,
+        })
+        .from(readingSessions)
+        .innerJoin(users, eq(readingSessions.userId, users.id))
+        .where(
+          and(
+            eq(users.departmentId, departmentId),
+            gte(readingSessions.createdAt, daysAgo)
+          )
+        );
+
+      deptSessions.forEach(({ date, pagesRead, userId }: { date: Date | null; pagesRead: number; userId: string }) => {
+        if (!date) return;
+        const dayKey = new Date(date).toISOString().split("T")[0];
+        if (!deptDailyTotals[dayKey]) {
+           deptDailyTotals[dayKey] = { totalPages: 0, users: new Set() };
+        }
+        deptDailyTotals[dayKey].totalPages += pagesRead;
+        deptDailyTotals[dayKey].users.add(userId);
+      });
+    }
+
     const result = Array.from({ length: 7 }).map((_, i) => {
       const date = subDays(today, 6 - i);
       const key = format(date, "yyyy-MM-dd");
+      
+      let deptAverage = 0;
+      if (deptDailyTotals[key]) {
+         const userCount = deptDailyTotals[key].users.size || 1;
+         deptAverage = Math.round(deptDailyTotals[key].totalPages / userCount);
+      }
+
       return {
         date: key,
         pagesRead: dailyTotals[key] || 0,
+        departmentAverage: deptAverage,
       };
     });
     console.log(result);

@@ -3,14 +3,17 @@ import { db } from "@/database/drizzle";
 import { bookPages } from "@/database/schema";
 import { extractTextWithOCR } from "@/lib/ocr";
 
-export async function parsePdfPages(fileBuffer: Buffer, bookId: string) {
-  const uint8Array = new Uint8Array(fileBuffer);
+import * as path from "path";
+
+export async function parsePdfPages(filePath: string, bookId: string) {
+  const standardFontDataUrl = path.join(process.cwd(), "node_modules", "pdfjs-dist", "standard_fonts") + "/";
 
   const pdf = await pdfjsLib.getDocument({
-    data: uint8Array,
+    url: filePath,
     useWorkerFetch: false,
     isEvalSupported: false,
     disableFontFace: true,
+    standardFontDataUrl,
   }).promise;
 
   const numPages = pdf.numPages;
@@ -30,9 +33,23 @@ export async function parsePdfPages(fileBuffer: Buffer, bookId: string) {
       .join(" ")
       .trim();
 
-    if (!text) {
-      console.log(`📷 Page ${i} has no text. Running OCR...`);
-      text = await extractTextWithOCR(pdf, i);
+    const lowerText = text.toLowerCase();
+    // A typical scanned page with a watermark might only yield the watermark text.
+    const isLikelyScannedImage =
+      lowerText.includes("camscanner") ||
+      lowerText.includes("scanned with") ||
+      (text.length > 0 && text.length < 50);
+
+    if (!text || isLikelyScannedImage) {
+      const reason = !text ? "no text" : `suspiciously short or watermark-only (${text.length} chars)`;
+      console.log(`📷 Page ${i} has ${reason}. Running OCR...`);
+      
+      const ocrText = await extractTextWithOCR(pdf, i);
+      
+      // If OCR extracted more meaningful content than the initial parse, use it
+      if (ocrText.trim().length > text.trim().length || !text) {
+        text = ocrText;
+      }
     }
 
     pages.push({

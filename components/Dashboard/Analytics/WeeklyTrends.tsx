@@ -12,7 +12,7 @@ import {
 } from "recharts";
 
 interface WeeklyTrendsProps {
-  data: { date: string; minutes: number; day: string }[];
+  data: { date: string; minutes: number; departmentAverage: number; day: string }[];
 }
 
 const WeeklyTrends = ({ data }: WeeklyTrendsProps) => {
@@ -21,7 +21,7 @@ const WeeklyTrends = ({ data }: WeeklyTrendsProps) => {
       <CardHeader>
         <CardTitle>Reading Activity</CardTitle>
         <CardDescription>
-            Your reading time over the last 7 days.
+            Your reading time vs Department Average (Last 7 days).
         </CardDescription>
       </CardHeader>
       <CardContent className="pl-0">
@@ -45,13 +45,25 @@ const WeeklyTrends = ({ data }: WeeklyTrendsProps) => {
               <Tooltip
                 cursor={{ fill: "rgba(0,0,0,0.05)" }}
                 contentStyle={{ borderRadius: "8px", border: "none", boxShadow: "0 4px 12px rgba(0,0,0,0.1)" }}
+                formatter={(value: number, name: string) => [
+                  `${value}m`, 
+                  name === "minutes" ? "You" : "Dept Avg"
+                ]}
               />
               <Bar 
                 dataKey="minutes" 
+                name="minutes"
                 fill="currentColor" 
                 radius={[4, 4, 0, 0]} 
                 className="fill-indigo-500 dark:fill-indigo-400"
-                />
+              />
+              <Bar 
+                dataKey="departmentAverage" 
+                name="departmentAverage"
+                fill="currentColor" 
+                radius={[4, 4, 0, 0]} 
+                className="fill-slate-300 dark:fill-slate-700"
+              />
             </BarChart>
           </ResponsiveContainer>
         </div>

@@ -6,6 +6,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { Providers } from "@/app/provider";
 import { ThemeProvider } from "@/components/theme-provider";
 import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
+import { OfflineIndicator } from "@/components/OfflineIndicator";
 const poppinsSans = LocalFont({
   src: [
     { path: "/fonts/Poppins-Regular.ttf", weight: "400", style: "normal" },
@@ -37,7 +38,7 @@ export default function RootLayout({
           >
             <Providers>{children}</Providers>
             <ServiceWorkerRegister />
-
+            <OfflineIndicator />
             <Toaster position="top-center" richColors duration={4000} />
           </ThemeProvider>
         </body>

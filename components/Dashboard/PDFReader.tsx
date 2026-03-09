@@ -397,7 +397,7 @@ const PDFStudyView = ({ fileUrl, bookId }: PDFStudyViewProps) => {
                       bookmarkPluginInstance,
                       highlightPluginInstance
                     ]}
-                    onPageChange={handlePageChange}
+                    onPageChange={(e) => setCurrentPage(e.currentPage)}
                   />
                 </Worker>
             </div>

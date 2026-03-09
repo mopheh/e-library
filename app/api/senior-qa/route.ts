@@ -22,7 +22,7 @@ export async function GET(req: Request) {
         createdAt: seniorQa.createdAt,
         authorName: users.fullName,
         authorRole: users.role,
-        authorLevel: users.level,
+        authorLevel: users.year,
       })
       .from(seniorQa)
       .leftJoin(users, eq(seniorQa.authorId, users.id));

@@ -6,7 +6,7 @@ import { auth, currentUser } from "@clerk/nextjs/server";
 
 export async function GET(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { userId } = await auth();
@@ -27,7 +27,7 @@ export async function GET(
       })
       .from(seniorQaAnswers)
       .innerJoin(users, eq(seniorQaAnswers.authorId, users.id))
-      .where(eq(seniorQaAnswers.questionId, params.id))
+      .where(eq(seniorQaAnswers.questionId, (await params).id))
       .orderBy(seniorQaAnswers.createdAt);
 
     return NextResponse.json(answers);
@@ -39,7 +39,7 @@ export async function GET(
 
 export async function POST(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const user = await currentUser();
@@ -63,7 +63,7 @@ export async function POST(
     }
 
     const answer = await db.insert(seniorQaAnswers).values({
-      questionId: params.id,
+      questionId: (await params).id,
       authorId: dbUser.id,
       content,
     }).returning();

@@ -2,6 +2,7 @@ import type { NextConfig } from "next";
 import withPWA from "next-pwa";
 
 const nextConfig: NextConfig = {
+  serverExternalPackages: ["canvas", "pdfjs-dist"],
   webpack: (config, { isServer }) => {
     if (!isServer) {
       // Ignore native canvas for client/PWA builds

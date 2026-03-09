@@ -7,9 +7,10 @@ import path from "path";
 export async function extractTextWithOCR(pdf: any, pageNumber: number) {
   let canvasModule: any;
   try {
-    canvasModule = require("pdfjs-dist/node_modules/canvas");
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    canvasModule = eval('require("canvas")');
   } catch (err) {
-    canvasModule = require("canvas");
+    // ignore
   }
 
   const { createCanvas, Image, Canvas, ImageData } = canvasModule;

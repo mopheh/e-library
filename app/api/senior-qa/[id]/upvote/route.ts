@@ -6,7 +6,7 @@ import { auth } from "@clerk/nextjs/server";
 
 export async function POST(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { userId } = await auth();
@@ -14,7 +14,7 @@ export async function POST(
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    const { id } = params;
+    const { id } = await params;
 
     // Fetch current question to increment upvotes
     const question = await db.query.seniorQa.findFirst({

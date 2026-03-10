@@ -31,7 +31,7 @@ export default function layout({ children }: { children: React.ReactNode }) {
       {!pathname?.includes("/book/") && (
         <>
           <MobileRepFloatingButton />
-          <BottomNav scrollRef={scrollRef} />
+          <BottomNav scrollRef={scrollRef} toggleSidebar={toggleSidebar} />
         </>
       )}
     </>

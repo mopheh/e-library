@@ -13,6 +13,7 @@ import {
   Medal,
   Briefcase,
   Sparkles,
+  Menu,
 } from "lucide-react";
 import { useAuth, useUser } from "@clerk/nextjs";
 
@@ -21,8 +22,10 @@ import { useKeyboardOpen } from "@/hooks/useKeyboardOpen";
 
 export default function BottomNav({
   scrollRef,
+  toggleSidebar,
 }: {
   scrollRef?: RefObject<HTMLElement | null>;
+  toggleSidebar: () => void;
 }) {
   const { user } = useUser();
   const { signOut } = useAuth();
@@ -46,47 +49,17 @@ export default function BottomNav({
       id: "dashboard",
     },
     {
-      name: "Workspace",
-      path: "/dashboard/workspaces",
-      icon: MonitorPlay,
-      id: `/${role}/dashboard/workspaces`,
-    },
-    {
-      name: "Leaderboard",
-      path: "/dashboard/leaderboard",
-      icon: Medal,
-      id: `/${role}/dashboard/leaderboard`,
-    },
-    {
-      name: "Opportunities",
-      path: "/dashboard/opportunities",
-      icon: Briefcase,
-      id: `/${role}/dashboard/opportunities`,
-    },
-    {
-      name: "Ask Seniors",
-      path: "/dashboard/ask-seniors",
-      icon: Sparkles,
-      id: `/${role}/dashboard/ask-seniors`,
-    },
-    {
       name: "Library",
       path: "/library",
       icon: BookOpenIcon,
       id: `/${role}/library`,
     },
-    {
-      name: "Saved",
-      path: "/saved",
-      icon: BookmarkIcon,
-      id: `/${role}/saved`,
-    },
     { name: "CBT", path: "/cbt", icon: ClipboardIcon, id: `/${role}/cbt` },
     {
-      name: "Profile",
-      path: "/profile",
-      icon: UserIcon,
-      id: `/${role}/profile`,
+      name: "Ask Seniors",
+      path: "/dashboard/ask-seniors",
+      icon: Sparkles,
+      id: `/${role}/dashboard/ask-seniors`,
     },
   ];
   const HIDDEN_ROUTES = ["/cbt", `/${role}/book`, "/library/read", "/viewer", `/${role}/dashboard/courses`, `/${role}/dashboard/study-rooms`];
@@ -129,7 +102,7 @@ export default function BottomNav({
       className="sm:hidden fixed bottom-0 left-0 w-full bg-white dark:bg-zinc-900 border-t border-zinc-200 dark:border-zinc-700 flex justify-around items-center py-5 !z-[100]"
     >
       <>
-        {menuItems.map(({ id, icon: Icon, path }) => {
+        {menuItems.map(({ id, name, icon: Icon, path }) => {
           const isActive = active === id;
           return (
             <button
@@ -138,27 +111,27 @@ export default function BottomNav({
               className="flex flex-col items-center text-xs"
             >
               <Icon
-                className={`w-5 h-5 ${
+                className={`w-6 h-6 ${
                   isActive
-                    ? "text-blue-500"
+                    ? "text-[#1E3A8A] dark:text-blue-400"
                     : "text-zinc-500 dark:text-zinc-400"
                 }`}
               />
+              <span className={`text-[10px] mt-1 font-medium ${isActive ? "text-[#1E3A8A] dark:text-blue-400" : "text-zinc-500 dark:text-zinc-400"}`}>
+                {name}
+              </span>
             </button>
           );
         })}
-        {user && (
-          <div className="relative w-10 h-10 rounded-full overflow-hidden border border-gray-200">
-            <Image
-              src={user.imageUrl}
-              alt={"user image"}
-              title="My profile"
-              onClick={() => setDropdownOpen(!dropdownOpen)}
-              fill
-              className="object-cover"
-            />
-          </div>
-        )}
+        <button
+          onClick={toggleSidebar}
+          className="flex flex-col items-center text-xs"
+        >
+          <Menu className="w-6 h-6 text-zinc-500 dark:text-zinc-400" />
+          <span className="text-[10px] mt-1 font-medium text-zinc-500 dark:text-zinc-400">
+            Menu
+          </span>
+        </button>
       </>
     </motion.nav>
   );

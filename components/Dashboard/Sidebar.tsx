@@ -49,7 +49,9 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggle }) => {
   const handleNavigation = (id: string, route: string) => {
     setActive(id);
     router.push(`/${role}/${route}`);
-    // toggle();
+    if (window.innerWidth < 640 && isOpen) {
+      toggle();
+    }
   };
   const menuGroupings = role === "aspirant" ? [
     {

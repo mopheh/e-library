@@ -54,6 +54,8 @@ const HomeDashboard = () => {
         booksRead={analyticsData?.kpis?.booksRead || 0} 
         minutesRead={analyticsData?.kpis?.minutesRead || 0} 
         streak={analyticsData?.kpis?.streak || 0} 
+        daysToExam={analyticsData?.kpis?.daysToExam}
+        totalAiRequests={analyticsData?.kpis?.totalAiRequests}
         loading={analyticsLoading}
       />
 

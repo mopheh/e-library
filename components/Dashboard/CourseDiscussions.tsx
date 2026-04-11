@@ -24,8 +24,8 @@ function ThreadDetail({ thread, onBack }: { thread: ThreadType; onBack: () => vo
 
   const { data: comments, isLoading } = useQuery({
     queryKey: ["comments", thread.id],
-    queryFn: async () => {
-      const res = await fetch(`/api/threads/${thread.id}/comments`);
+    queryFn: async ({ signal }) => {
+      const res = await fetch(`/api/threads/${thread.id}/comments`, { signal });
       if (!res.ok) throw new Error("Failed to load comments");
       return res.json() as Promise<CommentType[]>;
     },
@@ -41,12 +41,28 @@ function ThreadDetail({ thread, onBack }: { thread: ThreadType; onBack: () => vo
       if (!res.ok) throw new Error("Failed to post comment");
       return res.json();
     },
-    onSuccess: () => {
+    onMutate: async (newContent) => {
+      await queryClient.cancelQueries({ queryKey: ["comments", thread.id] });
+      const previousComments = queryClient.getQueryData(["comments", thread.id]);
+      
+      queryClient.setQueryData(["comments", thread.id], (old: any) => [
+        ...(old || []),
+        {
+          id: `temp-${Date.now()}`,
+          content: newContent,
+          createdAt: new Date().toISOString(),
+          author: { id: user?.id || "temp", fullName: user?.fullName || "You" },
+        },
+      ]);
       setNewComment("");
-      queryClient.invalidateQueries({ queryKey: ["comments", thread.id] });
+      return { previousComments };
     },
-    onError: () => {
+    onError: (err, newContent, context) => {
       toast.error("Failed to post comment");
+      queryClient.setQueryData(["comments", thread.id], context?.previousComments);
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["comments", thread.id] });
     },
   });
 
@@ -128,8 +144,8 @@ export default function CourseDiscussions({ courseId, courseName }: { courseId: 
 
   const { data: threads, isLoading } = useQuery({
     queryKey: ["threads", courseId],
-    queryFn: async () => {
-      const res = await fetch(`/api/courses/${courseId}/threads`);
+    queryFn: async ({ signal }) => {
+      const res = await fetch(`/api/courses/${courseId}/threads`, { signal });
       if (!res.ok) throw new Error("Failed to load threads");
       return res.json() as Promise<ThreadType[]>;
     },
@@ -146,15 +162,36 @@ export default function CourseDiscussions({ courseId, courseName }: { courseId: 
       if (!res.ok) throw new Error("Failed to create thread");
       return res.json();
     },
-    onSuccess: () => {
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: ["threads", courseId] });
+      const previousThreads = queryClient.getQueryData(["threads", courseId]);
+      
+      queryClient.setQueryData(["threads", courseId], (old: any) => [
+        {
+          id: `temp-${Date.now()}`,
+          title: newTitle,
+          content: newContent,
+          createdAt: new Date().toISOString(),
+          // Use a generic placeholder since we assume the author is the current user viewing this
+          author: { id: "temp", fullName: "You" },
+        },
+        ...(old || []),
+      ]);
+      
       setIsComposing(false);
       setNewTitle("");
       setNewContent("");
-      queryClient.invalidateQueries({ queryKey: ["threads", courseId] });
+      return { previousThreads };
+    },
+    onSuccess: () => {
       toast.success("Discussion posted!");
     },
-    onError: () => {
+    onError: (err, variables, context) => {
+      queryClient.setQueryData(["threads", courseId], context?.previousThreads);
       toast.error("Failed to post discussion");
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["threads", courseId] });
     },
   });
 

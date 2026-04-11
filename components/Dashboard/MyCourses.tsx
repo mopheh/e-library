@@ -28,19 +28,18 @@ interface MyCoursesProps {
 }
 
 const MyCoursesCard = ({ course }: { course: Course }) => {
-  const { role } = useParams() as { role: string };
   return (
     <Card className="hover:shadow-md transition-shadow flex flex-col h-full bg-white dark:bg-zinc-950 border-gray-200 dark:border-zinc-800">
       <CardHeader className="pb-2 flex-grow">
-        <div className="flex justify-between items-start">
+        <div className="flex justify-between items-start font-poppins !font-light !text-xs">
           <Badge variant="secondary" className="mb-2 bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">{course.courseCode}</Badge>
           <Badge variant="outline" className="border-gray-200 dark:border-zinc-700">{course.unitLoad} Units</Badge>
         </div>
-        <CardTitle className="text-lg line-clamp-2 font-poppins">{course.title}</CardTitle>
-        <CardDescription className="font-open-sans">{course.level} Level</CardDescription>
+        <CardTitle className="text-lg line-clamp-2 font-cabin">{course.title}</CardTitle>
+        <CardDescription className="font-poppins text-xs">{course.level} Level</CardDescription>
       </CardHeader>
       <CardContent className="pb-3">
-        <div className="flex flex-wrap gap-3 text-xs text-muted-foreground mt-2 font-open-sans">
+        <div className="flex flex-wrap gap-3 text-xs text-muted-foreground mt-2 font-poppins">
           <div className="flex items-center gap-1">
             <BookOpen className="w-3.5 h-3.5 text-blue-500" /> Materials
           </div>
@@ -53,8 +52,8 @@ const MyCoursesCard = ({ course }: { course: Course }) => {
         </div>
       </CardContent>
       <CardFooter className="pt-0 pb-4">
-        <Link href={`/${role}/dashboard/courses/${course.id}`} className="w-full">
-          <div className="w-full text-center bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700 py-2.5 rounded-lg text-sm font-semibold transition-all shadow-sm">
+        <Link href={`/dashboard/courses/${course.id}`} className="w-full">
+          <div className="w-full text-center bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700 py-2.5 rounded-lg text-xs font-medium font-poppins transition-all shadow-sm">
             Enter Workspace
           </div>
         </Link>
@@ -78,8 +77,8 @@ export const MyCourses = ({ courses, loading }: MyCoursesProps) => {
     return (
       <div className="text-center p-8 bg-gray-50 dark:bg-zinc-950 rounded-xl border border-dashed border-gray-300 dark:border-zinc-800">
         <BookOpen className="w-8 h-8 mx-auto text-muted-foreground mb-3" />
-        <h3 className="text-lg font-medium text-foreground">No Courses Found</h3>
-        <p className="text-sm text-muted-foreground mt-1">
+        <h3 className="text-lg font-normal font-cabin text-foreground">No Courses Found</h3>
+        <p className="text-xs font-poppins text-muted-foreground mt-1">
           You haven't registered for any courses yet.
         </p>
       </div>

@@ -47,7 +47,7 @@ export default function NotFound() {
             size="lg"
             className="w-full sm:w-auto font-medium font-poppins h-11 px-8 shadow-lg shadow-indigo-500/20"
           >
-            <Link href="/student/dashboard" className="flex items-center gap-2">
+            <Link href="/dashboard" className="flex items-center gap-2">
               <MoveLeft className="w-4 h-4" />
               Back to Dashboard
             </Link>
@@ -58,7 +58,7 @@ export default function NotFound() {
             size="lg"
             className="w-full sm:w-auto font-medium font-poppins h-11 px-8 bg-transparent border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors"
           >
-            <Link href="/student/library" className="flex items-center gap-2">
+            <Link href="/library" className="flex items-center gap-2">
               <BookOpen className="w-4 h-4" />
               Go to Library
             </Link>

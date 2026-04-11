@@ -6,6 +6,7 @@ type CreateBookPayload = {
   courseIds: string[];
   fileUrl?: string;
   link?: string;
+  fileSize?: number;
 };
 
 export function useCreateBook() {

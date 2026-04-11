@@ -95,7 +95,7 @@ export const BooksRow = ({ book }: { book: Book }) => {
       <TableCell
         className="font-normal cursor-pointer flex items-center gap-2"
         onClick={() => {
-          router.push(`/student/book/${book.id}`);
+          router.push(`/dashboard/book/${book.id}`);
           addRecentlyViewedBook({ ...book, progress: 0 });
         }}
       >
@@ -139,7 +139,7 @@ export const BooksRow = ({ book }: { book: Book }) => {
           <DropdownMenuContent align="end">
             <DropdownMenuItem
               onClick={() => {
-                router.push(`/student/book/${book.id}`);
+                router.push(`/dashboard/book/${book.id}`);
                 addRecentlyViewedBook({ ...book, progress: 0 });
               }}
             >

@@ -4,11 +4,18 @@ import { books } from "@/database/schema";
 import { eq } from "drizzle-orm";
 import { authorizeB2, b2 } from "@/lib/utils";
 
+import { requireRole } from "@/lib/auth";
+
 export async function GET(
   req: Request,
   context: { params: Promise<{ id: string }> }
 ) {
   try {
+    const authCheck = await requireRole(["STUDENT", "ADMIN", "FACULTY REP"]);
+    if (!authCheck.authorized) {
+      return NextResponse.json({ error: authCheck.error }, { status: authCheck.status });
+    }
+
     await authorizeB2();
 
     const { id: bookId } = await context.params;

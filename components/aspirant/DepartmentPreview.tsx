@@ -7,10 +7,11 @@ import UpgradePromptModal from "./UpgradePromptModal";
 import Link from "next/link";
 import { getDepartmentPreview } from "@/actions/preview";
 import { useUser } from "@clerk/nextjs";
-import { useParams } from "next/navigation";
+import { useUserData } from "@/hooks/useUsers";
 
 export default function DepartmentPreview({ targetDepartmentId }: { targetDepartmentId?: string }) {
-  const { role } = useParams();
+  const { data: userData } = useUserData();
+  const role = userData?.role?.toLowerCase() || "student";
   const isAspirant = role === "aspirant";
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const { user } = useUser();
@@ -90,7 +91,7 @@ export default function DepartmentPreview({ targetDepartmentId }: { targetDepart
                Discover the future of your field. Get a sneak peek into your first year at the university.
              </p>
              <div className="flex gap-4">
-                <Link href={`/${role}/connect`}>
+                <Link href={`/dashboard/connect`}>
                    <button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-full font-semibold transition-colors flex items-center gap-2">
                       Connect with Students <ArrowRight className="w-4 h-4" />
                    </button>
@@ -194,7 +195,7 @@ export default function DepartmentPreview({ targetDepartmentId }: { targetDepart
                      <Lock className="w-4 h-4" /> View full directory
                    </button>
                  ) : (
-                   <Link href={`/${role}/connect`} className="w-full py-4 mt-4 border-2 border-dashed border-blue-300 dark:border-blue-800 rounded-xl text-blue-600 dark:text-blue-400 font-medium hover:border-blue-500 hover:text-blue-500 transition-colors flex items-center justify-center gap-2">
+                   <Link href={`/dashboard/connect`} className="w-full py-4 mt-4 border-2 border-dashed border-blue-300 dark:border-blue-800 rounded-xl text-blue-600 dark:text-blue-400 font-medium hover:border-blue-500 hover:text-blue-500 transition-colors flex items-center justify-center gap-2">
                      <Users className="w-4 h-4" /> View full directory
                    </Link>
                  )}

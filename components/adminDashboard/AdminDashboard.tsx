@@ -3,6 +3,8 @@ import React, { useEffect, useState } from "react";
 import { useUser } from "@clerk/nextjs";
 import { PlusIcon } from "@heroicons/react/20/solid";
 import { toast } from "sonner";
+import Link from "next/link";
+import { UserCheckIcon, ArrowRightIcon } from "lucide-react";
 import FormModal from "@/components/FormDialogBody";
 import AddFacultyForm from "@/components/adminDashboard/department/AddFacultyForm";
 import DepartmentRow from "@/components/adminDashboard/department/DepartmentRow";
@@ -98,6 +100,27 @@ const AdminDashboard = () => {
         />
       </div>
 
+      {/* === Admin Tasks / Quick Links === */}
+      <div className="px-2 mb-6">
+        <Link 
+          href="/dashboard/admin/verifications" 
+          className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-5 bg-blue-50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-900/30 rounded-xl hover:bg-blue-100/50 dark:hover:bg-blue-900/20 transition-colors group"
+        >
+          <div className="flex items-center gap-4 mb-4 sm:mb-0">
+             <div className="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center text-blue-600 dark:text-blue-400">
+                <UserCheckIcon className="w-6 h-6" />
+             </div>
+             <div>
+                <h3 className="font-medium font-cabin text-zinc-900 dark:text-zinc-100 text-lg">Aspirant Verifications</h3>
+                <p className="font-poppins text-xs text-zinc-600 dark:text-zinc-400">Review submitted post-UTME and JAMB documents to upgrade aspirants to fully admitted students.</p>
+             </div>
+          </div>
+          <div className="flex items-center gap-2 font-light text-xs text-blue-600 dark:text-blue-400 font-poppins ml-auto sm:ml-0 group-hover:translate-x-1 transition-transform">
+             Review Queue <ArrowRightIcon className="w-4 h-4" />
+          </div>
+        </Link>
+      </div>
+
       {/* === Main Content === */}
       <div className="w-full overflow-x-hidden">
         <div className="px-2 flex flex-col lg:flex-row gap-4">
@@ -121,15 +144,7 @@ const AdminDashboard = () => {
               </button>
             </div>
 
-            <div className="w-full overflow-hidden rounded-lg border border-zinc-200 dark:border-zinc-800">
-              <table className="w-full text-sm text-left">
-                <thead className="text-xs text-zinc-500 uppercase bg-zinc-50 dark:bg-zinc-900 dark:text-zinc-400">
-                  <tr>
-                    <th className="px-4 py-3 font-medium font-cabin">Name</th>
-                    <th className="px-4 py-3 font-medium text-right font-cabin">Members</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
+            <div className="w-full flex flex-col gap-1 mt-4">
                   {!facultiesLoading
                     ? faculties?.map((faculty) => (
                         <FacultyRow
@@ -139,8 +154,6 @@ const AdminDashboard = () => {
                         />
                       ))
                     : Array.from({ length: 5 }).map((_, i) => <SkeletonRow key={i} />)}
-                </tbody>
-              </table>
             </div>
 
             {/* Pagination */}
@@ -182,16 +195,7 @@ const AdminDashboard = () => {
               </button>
             </div>
 
-             <div className="w-full overflow-hidden rounded-lg border border-zinc-200 dark:border-zinc-800">
-              <table className="w-full text-sm text-left">
-                <thead className="text-xs text-zinc-500 uppercase bg-zinc-50 dark:bg-zinc-900 dark:text-zinc-400">
-                  <tr>
-                    <th className="px-4 py-3 font-medium font-cabin">Name</th>
-                    <th className="px-4 py-3 font-medium text-center font-cabin">Members</th>
-                    <th className="px-4 py-3 font-medium text-right font-cabin">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
+             <div className="w-full flex flex-col gap-1 mt-4">
                   {!departmentsLoading
                     ? departments?.map((department) => (
                         <DepartmentRow
@@ -201,8 +205,6 @@ const AdminDashboard = () => {
                         />
                       ))
                     : Array.from({ length: 5 }).map((_, i) => <SkeletonRow key={i} columns={3} />)}
-                </tbody>
-              </table>
             </div>
 
             {/* Pagination */}

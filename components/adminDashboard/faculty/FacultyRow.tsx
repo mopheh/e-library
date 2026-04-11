@@ -2,7 +2,6 @@
 "use client";
 import { useState } from "react";
 import { useUsers } from "@/hooks/useUsers";
-import { TableRow, TableCell } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { UserPlus } from "lucide-react";
 import AddRepModal from "./AddRepModal";
@@ -24,21 +23,34 @@ const FacultyRow = ({
 
   return (
     <>
-      <TableRow className="group cursor-default hover:bg-zinc-50 dark:hover:bg-zinc-900/50 transition-colors">
-        <TableCell className="font-medium text-zinc-900 dark:text-zinc-100 py-3 font-cabin">{name}</TableCell>
-        <TableCell className="text-right text-zinc-500 dark:text-zinc-400">
-          <div className="flex items-center justify-end gap-4">
-            <span className="text-xs mr-2 font-poppins">{isLoading ? "..." : isError ? "-" : `${users?.length ?? 0} Students`}</span>
-            
+      <div className="group relative flex flex-col sm:flex-row sm:items-center justify-between p-4 mb-3 bg-white dark:bg-zinc-900/40 border border-zinc-200/50 dark:border-zinc-800/50 rounded-xl transition-all duration-300 hover:shadow-md hover:border-blue-500/30 dark:hover:border-blue-500/30">
+        
+        {/* Name Block */}
+        <div className="flex items-center gap-3 mb-3 sm:mb-0">
+          <div className="w-10 h-10 rounded-lg bg-zinc-100 dark:bg-zinc-800/80 flex items-center justify-center text-zinc-500 dark:text-zinc-400 font-bold font-cairo border border-zinc-200 dark:border-zinc-700/50 shadow-inner">
+            {name.charAt(0).toUpperCase()}
+          </div>
+          <h4 className="font-semibold text-zinc-900 dark:text-zinc-100 text-sm font-poppins">{name}</h4>
+        </div>
+
+        {/* Info & Actions Block */}
+        <div className="flex items-center sm:justify-end gap-3 sm:gap-5 w-full sm:w-auto mt-2 sm:mt-0 pt-2 border-t sm:border-t-0 border-zinc-100 dark:border-zinc-800">
+          <div className="flex flex-col items-end">
+             <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400 font-poppins bg-zinc-100 dark:bg-zinc-800 px-2 py-1 rounded-md">
+               {isLoading ? "..." : isError ? "-" : `${users?.length ?? 0} Students`}
+             </span>
+          </div>
+          
+          <div className="flex items-center gap-3 ml-auto sm:ml-0">
             {/* Render avatars for assigned reps */}
             {reps.length > 0 && (
-              <div className="flex -space-x-2 mr-2">
+              <div className="flex -space-x-2">
                  <TooltipProvider>
                     {reps.map((rep: any, idx: number) => (
                       <Tooltip key={rep.id}>
                         <TooltipTrigger asChild>
                            <div 
-                             className="h-8 w-8 rounded-full flex items-center justify-center bg-indigo-100 text-indigo-600 dark:bg-indigo-900/50 dark:text-indigo-300 font-semibold text-xs border-2 border-white dark:border-zinc-950 shadow-sm cursor-help hover:z-10 transition-transform hover:scale-110 overflow-hidden"
+                             className="h-8 w-8 rounded-full flex items-center justify-center bg-indigo-100 text-indigo-600 dark:bg-indigo-900/50 dark:text-indigo-300 font-bold text-[10px] border-2 border-white dark:border-zinc-900 shadow-sm cursor-help hover:z-10 transition-transform hover:scale-110 overflow-hidden ring-1 ring-black/5 dark:ring-white/10"
                              style={{ zIndex: reps.length - idx }}
                            >
                              {rep.imageUrl ? (
@@ -48,9 +60,9 @@ const FacultyRow = ({
                              )}
                            </div>
                         </TooltipTrigger>
-                        <TooltipContent>
-                           <p className="font-medium text-xs font-poppins">{rep.fullName}</p>
-                           <p className="text-[10px] text-zinc-500 font-poppins">{rep.email}</p>
+                        <TooltipContent className="bg-zinc-900 border-zinc-800">
+                           <p className="font-medium text-xs font-poppins text-white">{rep.fullName}</p>
+                           <p className="text-[10px] text-zinc-400 font-poppins">{rep.email}</p>
                         </TooltipContent>
                       </Tooltip>
                     ))}
@@ -62,7 +74,7 @@ const FacultyRow = ({
               <Button
                   variant="outline"
                   size="sm"
-                  className="h-8 gap-1 hidden group-hover:flex text-xs font-poppins"
+                  className="h-8 pl-2 pr-3 gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity absolute right-4 sm:relative sm:right-auto bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-xs font-poppins text-zinc-700 dark:text-zinc-200 shadow-sm"
                   onClick={() => setOpenRepModal(true)}
               >
                   <UserPlus className="h-3.5 w-3.5" />
@@ -70,8 +82,8 @@ const FacultyRow = ({
               </Button>
             )}
           </div>
-        </TableCell>
-      </TableRow>
+        </div>
+      </div>
 
       <AddRepModal
         open={openRepModal}

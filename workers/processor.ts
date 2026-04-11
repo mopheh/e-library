@@ -33,8 +33,30 @@ export async function processJob(job: {
     const tmpPath = path.join(os.tmpdir(), `book_${bookId}_${Date.now()}.pdf`);
 
     try {
-      const res = await fetch(book.fileUrl);
-      if (!res.ok) throw new Error(`Failed to fetch PDF: ${res.statusText}`);
+      let downloadUrl = book.fileUrl;
+      
+      if (downloadUrl.includes("backblazeb2.com") || downloadUrl.includes("univault-books")) {
+        const { authorizeB2, b2 } = await import("@/lib/utils");
+        await authorizeB2();
+      
+        const urlObj = new URL(downloadUrl);
+        const parts = urlObj.pathname.split("/");
+        const bucketIndex = parts.indexOf("univault-books");
+        const fileName = (bucketIndex !== -1 && bucketIndex + 1 < parts.length)
+          ? parts.slice(bucketIndex + 1).join("/")
+          : parts.pop() || "";
+
+        const { data: auth } = await b2.getDownloadAuthorization({
+          bucketId: process.env.B2_BUCKET_ID!,
+          fileNamePrefix: fileName,
+          validDurationInSeconds: 60 * 60,
+        });
+
+        downloadUrl = `${downloadUrl}?Authorization=${auth.authorizationToken}`;
+      }
+
+      const res = await fetch(downloadUrl);
+      if (!res.ok) throw new Error(`Failed to fetch PDF: ${res.status} ${res.statusText}`);
       
       if (!res.body) throw new Error("Response body is null");
       

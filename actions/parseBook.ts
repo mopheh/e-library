@@ -2,6 +2,7 @@ import * as pdfjsLib from "pdfjs-dist/legacy/build/pdf.js";
 import { db } from "@/database/drizzle";
 import { bookPages } from "@/database/schema";
 import { extractTextWithOCR } from "@/lib/ocr";
+import { getEmbedding } from "@/lib/embeddings";
 
 import * as path from "path";
 
@@ -67,10 +68,22 @@ export async function parsePdfPages(filePath: string, bookId: string) {
 
   const BATCH_SIZE = 10;
 
-  for (let i = 0; i < pages.length; i += BATCH_SIZE) {
-    const batch = pages.slice(i, i + BATCH_SIZE);
+  for (let i = 0; i < nonEmpty.length; i += BATCH_SIZE) {
+    const batch = nonEmpty.slice(i, i + BATCH_SIZE);
 
-    await db.insert(bookPages).values(batch);
+    const batchWithEmbeddings = await Promise.all(
+      batch.map(async (page) => {
+        const embedding = await getEmbedding(page.textChunk);
+        return {
+          ...page,
+          // If embedding api fails, we can assign null or empty, but pgvector expects vector type
+          // so empty array is valid or null if allowed. Drizzle handles arrays.
+          embedding: embedding.length > 0 ? embedding : null 
+        };
+      })
+    );
+
+    await db.insert(bookPages).values(batchWithEmbeddings);
   }
 
   return numPages;

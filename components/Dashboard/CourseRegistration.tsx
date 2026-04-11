@@ -27,8 +27,8 @@ export function CourseRegistrationModal({ departmentId }: { departmentId?: strin
   // Fetch currently enrolled courses
   const { data: enrolledCourses, isLoading: loadingEnrolled } = useQuery({
     queryKey: ["enrolled-courses"],
-    queryFn: async () => {
-      const res = await fetch("/api/users/courses");
+    queryFn: async ({ signal }) => {
+      const res = await fetch("/api/users/courses", { signal });
       if (!res.ok) throw new Error("Failed to fetch enrolled courses");
       return res.json() as Promise<EnrolledCourse[]>;
     },

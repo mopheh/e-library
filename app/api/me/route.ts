@@ -14,6 +14,8 @@ export async function GET() {
       facultyId: faculty.id,
       facultyName: faculty.name,
       level: users.year,
+      role: users.role,
+      matricNo: users.matricNo,
     })
     .from(users)
     //@ts-ignore

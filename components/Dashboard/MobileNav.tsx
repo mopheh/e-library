@@ -29,7 +29,6 @@ export default function BottomNav({
 }) {
   const { user } = useUser();
   const { signOut } = useAuth();
-  const { role } = useParams();
   const pathname = usePathname();
   const router = useRouter();
   const [active, setActive] = useState(pathname);
@@ -38,8 +37,7 @@ export default function BottomNav({
 
   const handleNavigation = (id: string, route: string) => {
     setActive(id);
-    router.push(`/${role}/${route}`);
-    // toggle();
+    router.push(route);
   };
   const menuItems = [
     {
@@ -52,17 +50,17 @@ export default function BottomNav({
       name: "Library",
       path: "/library",
       icon: BookOpenIcon,
-      id: `/${role}/library`,
+      id: `/library`,
     },
-    { name: "CBT", path: "/cbt", icon: ClipboardIcon, id: `/${role}/cbt` },
+    { name: "CBT", path: "/cbt", icon: ClipboardIcon, id: `/cbt` },
     {
       name: "Ask Seniors",
       path: "/dashboard/ask-seniors",
       icon: Sparkles,
-      id: `/${role}/dashboard/ask-seniors`,
+      id: `/dashboard/ask-seniors`,
     },
   ];
-  const HIDDEN_ROUTES = ["/cbt", `/${role}/book`, "/library/read", "/viewer", `/${role}/dashboard/courses`, `/${role}/dashboard/study-rooms`];
+  const HIDDEN_ROUTES = ["/cbt", `/book`, "/library/read", "/viewer", `/dashboard/courses`, `/dashboard/study-rooms`];
   const hardHide = HIDDEN_ROUTES.some((route) => pathname.startsWith(route));
 
   const [mounted, setMounted] = useState(false);

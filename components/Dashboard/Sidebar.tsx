@@ -39,7 +39,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggle }) => {
   const { user } = useUser();
   const { signOut } = useAuth();
   const { data: userData } = useUserData();
-  const { role } = useParams();
+  const role = userData?.role?.toLowerCase() || "student";
   const pathname = usePathname();
   const router = useRouter();
   const [active, setActive] = useState(pathname);
@@ -48,7 +48,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggle }) => {
 
   const handleNavigation = (id: string, route: string) => {
     setActive(id);
-    router.push(`/${role}/${route}`);
+    router.push(route);
     if (window.innerWidth < 640 && isOpen) {
       toggle();
     }
@@ -59,23 +59,23 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggle }) => {
        defaultOpen: true,
        items: [
          { name: "Hub Dashboard", path: "/dashboard", icon: LayoutDashboardIcon, id: "dashboard" },
-         { name: "Verification", path: "/verify", icon: SettingsIcon, id: `/${role}/verify` },
+         { name: "Verification", path: "/verify", icon: SettingsIcon, id: "/verify" },
        ]
     },
     {
        label: "Academics",
        defaultOpen: true,
        items: [
-         { name: "CBT Practice", path: "/cbt", icon: ClipboardIcon, id: `/${role}/cbt` },
-         { name: "Study Roadmap", path: "/roadmap", icon: BookmarkIcon, id: `/${role}/roadmap` },
+         { name: "CBT Practice", path: "/cbt", icon: ClipboardIcon, id: "/cbt" },
+         { name: "Study Roadmap", path: "/roadmap", icon: BookmarkIcon, id: "/roadmap" },
        ]
     },
     {
        label: "Community",
        defaultOpen: false,
        items: [
-         { name: "Dept Preview", path: "/preview", icon: BookOpenIcon, id: `/${role}/preview` },
-         { name: "Connect", path: "/connect", icon: UserIcon, id: `/${role}/connect` },
+         { name: "Dept Preview", path: "/preview", icon: BookOpenIcon, id: "/preview" },
+         { name: "Connect", path: "/connect", icon: UserIcon, id: "/connect" },
        ]
     }
   ] : [
@@ -84,34 +84,34 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggle }) => {
        defaultOpen: true,
        items: [
          { name: "Dashboard", path: "/dashboard", icon: LayoutDashboardIcon, id: "dashboard" },
-         { name: "Profile", path: "/profile", icon: UserIcon, id: `/${role}/profile` },
+         { name: "Profile", path: "/profile", icon: UserIcon, id: "/profile" },
        ]
     },
     {
        label: "Academics",
        defaultOpen: true,
        items: [
-         { name: "My Workspace", path: "/dashboard/workspaces", icon: MonitorPlay, id: `/${role}/dashboard/workspaces` },
-         { name: "Library", path: "/library", icon: BookOpenIcon, id: `/${role}/library` },
-         { name: "CBT", path: "/cbt", icon: ClipboardIcon, id: `/${role}/cbt` },
-         { name: "Saved", path: "/saved", icon: BookmarkIcon, id: `/${role}/saved"` },
+         { name: "My Workspace", path: "/dashboard/workspaces", icon: MonitorPlay, id: "/dashboard/workspaces" },
+         { name: "Library", path: "/library", icon: BookOpenIcon, id: "/library" },
+         { name: "CBT", path: "/cbt", icon: ClipboardIcon, id: "/cbt" },
+         { name: "Saved", path: "/saved", icon: BookmarkIcon, id: "/saved" },
        ]
     },
     {
        label: "Community",
        defaultOpen: false,
        items: [
-         { name: "Leaderboard", path: "/dashboard/leaderboard", icon: Medal, id: `/${role}/dashboard/leaderboard` },
-         { name: "Ask Seniors", path: "/dashboard/ask-seniors", icon: Sparkles, id: `/${role}/dashboard/ask-seniors` },
-         { name: "Connect", path: "/connect", icon: UserIcon, id: `/${role}/connect` },
+         { name: "Leaderboard", path: "/dashboard/leaderboard", icon: Medal, id: "/dashboard/leaderboard" },
+         { name: "Ask Seniors", path: "/dashboard/ask-seniors", icon: Sparkles, id: "/dashboard/ask-seniors" },
+         { name: "Connect", path: "/connect", icon: UserIcon, id: "/connect" },
        ]
     },
     {
        label: "Discover",
        defaultOpen: false,
        items: [
-         { name: "Opportunities", path: "/dashboard/opportunities", icon: Briefcase, id: `/${role}/dashboard/opportunities` },
-         { name: "Dept Preview", path: "/preview", icon: BookOpenIcon, id: `/${role}/preview` },
+         { name: "Opportunities", path: "/dashboard/opportunities", icon: Briefcase, id: "/dashboard/opportunities" },
+         { name: "Dept Preview", path: "/preview", icon: BookOpenIcon, id: "/preview" },
        ]
     }
   ];
@@ -194,9 +194,9 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggle }) => {
           </div>
 
           {/* Admin & Faculty Rep Links */}
-          {(role === "admin" || role === "faculty-rep") && (
+          {(role === "admin" || role === "faculty rep" || role === "faculty-rep") && (
             <div
-              onClick={() => router.push(role === "admin" ? "/admin/data" : `/${role}/data/departments/${userData?.departmentId}`)}
+              onClick={() => router.push(role === "admin" ? "/data" : `/data/departments/${userData?.departmentId}`)}
               className="flex gap-3 font-poppins text-xs items-center cursor-pointer mt-auto"
             >
               <div className="h-9 w-9 flex items-center justify-center rounded-full p-2 bg-white dark:bg-zinc-800 text-[#1E3A8A] dark:text-blue-300">

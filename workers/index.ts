@@ -57,7 +57,7 @@ async function run() {
         id: job.id,
         type: job.type as JobType,
         payload: job.payload as JobPayload,
-        attempts: job.attempts,
+        attempts: job.attempts + 1,
         maxAttempts: job.maxAttempts,
       });
       await db
@@ -70,7 +70,7 @@ async function run() {
 
       console.log(`✅ Job ${job.id} completed`);
     } catch (err: any) {
-      const failed = job.attempts >= job.maxAttempts;
+      const failed = (job.attempts + 1) >= job.maxAttempts;
 
       await db
         .update(jobs)

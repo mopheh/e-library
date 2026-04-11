@@ -2,15 +2,16 @@
 
 import { db } from "@/database/drizzle";
 import { verificationRequests, users, candidateProfiles } from "@/database/schema";
-import { eq } from "drizzle-orm";
+import { eq, desc } from "drizzle-orm";
 import { auth } from "@clerk/nextjs/server";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, unstable_noStore as noStore } from "next/cache";
 
 export async function submitVerification(data: {
-  documentUrl: string;
+  proofUrl: string;
   jambNo: string;
   approvedDepartmentId: string;
   approvedFacultyId: string;
+  subjectCombinations: string[];
   admissionYear: string;
   level: "100" | "200" | "300" | "400" | "500" | "600";
 }) {
@@ -18,17 +19,19 @@ export async function submitVerification(data: {
     const { userId } = await auth();
     if (!userId) throw new Error("Unauthorized");
 
-    // Get DB user
-    const dbUser = await db.query.users.findFirst({
-      where: eq(users.clerkId, userId),
-    });
+    // Get DB user safely
+    const [dbUser] = await db.select()
+      .from(users)
+      .where(eq(users.clerkId, userId))
+      .limit(1);
 
     if (!dbUser) throw new Error("User not found");
 
     // Check if a pending request already exists
-    const existing = await db.query.verificationRequests.findFirst({
-      where: eq(verificationRequests.userId, dbUser.id),
-    });
+    const [existing] = await db.select()
+      .from(verificationRequests)
+      .where(eq(verificationRequests.userId, dbUser.id))
+      .limit(1);
 
     if (existing && existing.status === "PENDING") {
       throw new Error("You already have a pending verification request");
@@ -38,9 +41,10 @@ export async function submitVerification(data: {
     await db.insert(verificationRequests).values({
       userId: dbUser.id,
       jambNo: data.jambNo,
-      documentUrl: data.documentUrl,
+      proofUrl: data.proofUrl,
       approvedDepartmentId: data.approvedDepartmentId,
       approvedFacultyId: data.approvedFacultyId,
+      subjectCombinations: data.subjectCombinations,
       admissionYear: data.admissionYear,
       level: data.level,
     });
@@ -56,24 +60,64 @@ export async function submitVerification(data: {
 }
 
 export async function getVerificationStatus() {
+  noStore(); // Safely disable any aggressive client/server caching of this action
+
   try {
     const { userId } = await auth();
     if (!userId) return null;
 
-    const dbUser = await db.query.users.findFirst({
-      where: eq(users.clerkId, userId),
-    });
+    const [dbUser] = await db.select()
+      .from(users)
+      .where(eq(users.clerkId, userId))
+      .limit(1);
 
     if (!dbUser) return null;
 
-    const req = await db.query.verificationRequests.findFirst({
-      where: eq(verificationRequests.userId, dbUser.id),
-      orderBy: (verificationRequests, { desc }) => [desc(verificationRequests.createdAt)],
-    });
+    const [req] = await db.select()
+      .from(verificationRequests)
+      .where(eq(verificationRequests.userId, dbUser.id))
+      .orderBy(desc(verificationRequests.createdAt))
+      .limit(1);
 
-    return req;
+    return req || null;
   } catch (error) {
     console.error("Error getting verification status:", error);
     return null;
   }
 }
+
+export async function saveCbtSubjects(subjectCombinations: string[]) {
+  try {
+    const { userId } = await auth();
+    if (!userId) throw new Error("Unauthorized");
+
+    const [dbUser] = await db.select()
+      .from(users)
+      .where(eq(users.clerkId, userId))
+      .limit(1);
+
+    if (!dbUser) throw new Error("User not found");
+
+    const [existingProfile] = await db.select()
+      .from(candidateProfiles)
+      .where(eq(candidateProfiles.userId, dbUser.id))
+      .limit(1);
+
+    if (existingProfile) {
+      await db.update(candidateProfiles)
+        .set({ subjectCombinations })
+        .where(eq(candidateProfiles.id, existingProfile.id));
+    } else {
+      await db.insert(candidateProfiles).values({
+        userId: dbUser.id,
+        subjectCombinations,
+      });
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error("Error saving CBT subjects:", error);
+    return { success: false, error: error instanceof Error ? error.message : "Unknown error" };
+  }
+}
+

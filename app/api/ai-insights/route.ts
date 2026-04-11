@@ -29,16 +29,16 @@ export async function GET() {
     const sevenDaysAgo = subDays(new Date(), 7);
     const fourteenDaysAgo = subDays(new Date(), 14);
 
-    const thisWeekSessions = await db
-      .select({ duration: readingSessions.duration })
+    const [thisWeekSessions] = await db
+      .select({ totalDuration: sql<number>`COALESCE(SUM(${readingSessions.duration}), 0)` })
       .from(readingSessions)
       .where(and(
         eq(readingSessions.userId, user.id),
         gte(readingSessions.date, format(sevenDaysAgo, "yyyy-MM-dd"))
       ));
 
-    const lastWeekSessions = await db
-      .select({ duration: readingSessions.duration })
+    const [lastWeekSessions] = await db
+      .select({ totalDuration: sql<number>`COALESCE(SUM(${readingSessions.duration}), 0)` })
       .from(readingSessions)
       .where(and(
         eq(readingSessions.userId, user.id),
@@ -46,8 +46,8 @@ export async function GET() {
         sql`${readingSessions.date} < ${format(sevenDaysAgo, "yyyy-MM-dd")}`
       ));
 
-    const thisWeekMinutes = thisWeekSessions.reduce((acc, s) => acc + (s.duration || 0), 0);
-    const lastWeekMinutes = lastWeekSessions.reduce((acc, s) => acc + (s.duration || 0), 0);
+    const thisWeekMinutes = Number(thisWeekSessions?.totalDuration || 0);
+    const lastWeekMinutes = Number(lastWeekSessions?.totalDuration || 0);
 
     if (thisWeekMinutes > lastWeekMinutes && lastWeekMinutes > 0) {
         const increase = Math.round(((thisWeekMinutes - lastWeekMinutes) / lastWeekMinutes) * 100);
@@ -61,17 +61,19 @@ export async function GET() {
     // 2. Time of day analysis (if we had timestamp, but readingSessions has date... wait, created_at has time)
     // Actually readingSessions has duration and optional startTime if we added it, but schema has createdAt.
     // Let's check recent sessions created_at
-    const recentSessions = await db.select({ createdAt: readingSessions.createdAt }).from(readingSessions).where(eq(readingSessions.userId, user.id)).limit(10);
+    const recentSessions = await db
+        .select({
+           // Check PG extraction 
+           hour: sql<number>`EXTRACT(HOUR FROM ${readingSessions.createdAt})`
+        })
+        .from(readingSessions)
+        .where(eq(readingSessions.userId, user.id))
+        .orderBy(desc(readingSessions.createdAt))
+        .limit(50);
     
-    const morningCount = recentSessions.filter(s => {
-        const h = new Date(s.createdAt!).getHours();
-        return h >= 5 && h < 12;
-    }).length;
-    
-    const eveningCount = recentSessions.filter(s => {
-        const h = new Date(s.createdAt!).getHours();
-        return h >= 17 && h < 24;
-    }).length;
+    // JS-side counting is fine here because we hard-limit to 50 rows instead of hitting OOM
+    const morningCount = recentSessions.filter(s => s.hour >= 5 && s.hour < 12).length;
+    const eveningCount = recentSessions.filter(s => s.hour >= 17 && s.hour < 24).length;
 
     if (morningCount > eveningCount) {
         insights.push(`You seem to be a morning reader. Consider scheduling your reading sessions with your morning coffee.`);

@@ -55,7 +55,7 @@ export async function GET() {
       db
         .select({
           date: readingSessions.date,
-          pagesRead: readingSessions.pagesRead,
+          pagesRead: sql<number>`sum(${readingSessions.pagesRead})`,
         })
         .from(readingSessions)
         .where(
@@ -63,7 +63,10 @@ export async function GET() {
             eq(readingSessions.userId, user.id),
             sql`${readingSessions.date} BETWEEN ${start} AND ${end}`,
           ),
-        ),
+        )
+        .groupBy(readingSessions.date)
+        .orderBy(desc(readingSessions.date))
+        .limit(30),
 
       db
         .select({

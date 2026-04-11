@@ -15,7 +15,6 @@ interface ExamCourse {
 }
 
 export const ExamPrepBanner = ({ courses }: { courses: ExamCourse[] }) => {
-  const { role } = useParams() as { role: string };
   // Find the closest upcoming exam within 14 days
   const upcomingExams = courses
     .filter((c) => c.examDate)
@@ -60,7 +59,7 @@ export const ExamPrepBanner = ({ courses }: { courses: ExamCourse[] }) => {
         </div>
 
         <div className="flex w-full shrink-0 flex-col gap-3 md:w-auto sm:flex-row">
-          <Link href={`/${role}/dashboard/courses/${closest.id}?tab=quizzes`} className="w-full md:w-auto">
+          <Link href={`/dashboard/courses/${closest.id}?tab=quizzes`} className="w-full md:w-auto">
             <Button
               variant="secondary"
               className="w-full bg-white text-red-600 hover:bg-red-50 shadow-sm border-0 font-bold"
@@ -69,7 +68,7 @@ export const ExamPrepBanner = ({ courses }: { courses: ExamCourse[] }) => {
               Generate Mock Exam
             </Button>
           </Link>
-          <Link href={`/${role}/dashboard/courses/${closest.id}`} className="w-full md:w-auto">
+          <Link href={`/dashboard/courses/${closest.id}`} className="w-full md:w-auto">
             <Button
               variant="outline"
               className="w-full border-red-300 text-white hover:bg-red-700/50 bg-transparent"

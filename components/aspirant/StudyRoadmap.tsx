@@ -147,7 +147,7 @@ export default function StudyRoadmap() {
                         </div>
 
                         {!task.locked && !task.completed && (
-                           <Link href={task.type === "Quiz" || task.type === "CBT" ? "/aspirant/cbt" : "#"}>
+                           <Link href={task.type === "Quiz" || task.type === "CBT" ? "/dashboard/cbt" : "#"}>
                               <button className="text-blue-600 dark:text-blue-400 p-2 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors">
                                  <ArrowRight className="w-5 h-5" />
                               </button>

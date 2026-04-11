@@ -176,7 +176,7 @@ const Onboarding = () => {
         }),
       });
 
-      router.push(`/${data.accountType.toLowerCase()}/dashboard`);
+      router.push("/dashboard");
     } catch (e) {
       console.error(e);
       setIsSubmitting(false);

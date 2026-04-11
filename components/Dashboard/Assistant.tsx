@@ -8,6 +8,7 @@ import { convertToMarkdownMath } from "@/lib/utils";
 interface AIChatAssistantProps {
   pageText?: string;
   title?: string;
+  bookId?: string;
 }
 
 type Message = {
@@ -18,6 +19,7 @@ type Message = {
 export default function AIChatAssistant({
   pageText,
   title = "Study Assistant",
+  bookId,
 }: AIChatAssistantProps) {
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -74,7 +76,7 @@ export default function AIChatAssistant({
     try {
       const res = await fetch("/api/ask", {
         method: "POST",
-        body: JSON.stringify({ messages: currentMessages }),
+        body: JSON.stringify({ messages: currentMessages, bookId }),
       });
 
       const data = await res.json();

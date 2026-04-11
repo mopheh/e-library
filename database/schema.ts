@@ -14,6 +14,7 @@ import {
   uniqueIndex,
   uuid,
   varchar,
+  vector,
 } from "drizzle-orm/pg-core";
 
 export const ROLE_ENUM = pgEnum("role", ["STUDENT", "ADMIN", "FACULTY REP", "ASPIRANT"]);
@@ -145,7 +146,9 @@ export const threads = pgTable("threads", {
   content: text("content").notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
-});
+}, (table) => ({
+  courseIdx: index("threads_course_idx").on(table.courseId, table.createdAt),
+}));
 
 export const comments = pgTable("comments", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -183,6 +186,7 @@ export const books = pgTable("books", {
     .references(() => departments.id, { onDelete: "cascade" }),
   parseStatus: parseStatusEnum("parse_status").default("pending"),
   fileUrl: varchar("file_url", { length: 1000 }),
+  fileSize: integer("file_size"),
 
   pageCount: integer("page_count"),
   postedBy: uuid("user_id")
@@ -214,6 +218,9 @@ export const userBooks = pgTable(
     readCount: integer("read_count").default(0).notNull(),
     downloadCount: integer("download_count").default(0).notNull(),
     aiRequests: integer("ai_requests").default(0).notNull(),
+
+    progress: integer("progress").default(0).notNull(), // 0-100
+    lastPage: integer("last_page").default(0).notNull(),
 
     lastReadAt: timestamp("last_read_at", { withTimezone: true }).defaultNow(),
     lastDownloadedAt: timestamp("last_downloaded_at", { withTimezone: true }),
@@ -268,6 +275,7 @@ export const bookPages = pgTable(
 
     pageNumber: integer("page_number").notNull(),
     textChunk: text("text_chunk"),
+    embedding: vector("embedding", { dimensions: 768 }),
 
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
@@ -317,7 +325,9 @@ export const activities = pgTable("activities", {
   targetId: uuid("target_id"), // could be bookId, cbtId, etc.
   meta: jsonb("meta"), // extra info like page, score, duration
   createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+}, (table) => ({
+  userDateIdx: index("activities_user_date_idx").on(table.userId, table.createdAt),
+}));
 export const activitiesRelations = relations(activities, ({ one }) => ({
   user: one(users, {
     fields: [activities.userId],
@@ -391,6 +401,7 @@ export const candidateProfiles = pgTable("candidate_profiles", {
   userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   jambScore: integer("jamb_score"),
   intendedDepartmentId: uuid("intended_department_id").references(() => departments.id),
+  subjectCombinations: jsonb("subject_combinations").$type<string[]>(),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 });
 
@@ -398,10 +409,11 @@ export const verificationRequests = pgTable("verification_requests", {
   id: uuid("id").primaryKey().defaultRandom(),
   userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   jambNo: varchar("jamb_no", { length: 255 }).notNull(),
-  documentUrl: text("document_url").notNull(),
+  proofUrl: text("proof_url").notNull(),
   status: verificationStatusEnum("status").default("PENDING").notNull(),
   approvedDepartmentId: uuid("approved_department_id").references(() => departments.id),
   approvedFacultyId: uuid("approved_faculty_id").references(() => faculty.id),
+  subjectCombinations: jsonb("subject_combinations").$type<string[]>(),
   admissionYear: varchar("admission_year", { length: 10 }),
   level: LEVEL_ENUM("level"),
   reviewedBy: uuid("reviewed_by").references(() => users.id),
@@ -562,3 +574,74 @@ export const seniorQaAnswers = pgTable("senior_qa_answers", {
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 });
+
+export const requestStatusEnum = pgEnum("request_status", ["PENDING", "FULFILLED", "REJECTED"]);
+
+export const resourceRequests = pgTable("resource_requests", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  departmentId: uuid("department_id").notNull().references(() => departments.id, { onDelete: "cascade" }),
+  courseCode: varchar("course_code", { length: 255 }).notNull(),
+  description: text("description").notNull(),
+  status: requestStatusEnum("status").default("PENDING").notNull(),
+  fulfilledUrl: text("fulfilled_url"),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
+export const resourceRequestsRelations = relations(resourceRequests, ({ one }) => ({
+  user: one(users, {
+    fields: [resourceRequests.userId],
+    references: [users.id],
+  }),
+  department: one(departments, {
+    fields: [resourceRequests.departmentId],
+    references: [departments.id],
+  }),
+}));
+
+export const usersRelations = relations(users, ({ one, many }) => ({
+  faculty: one(faculty, {
+    fields: [users.facultyId],
+    references: [faculty.id],
+  }),
+  department: one(departments, {
+    fields: [users.departmentId],
+    references: [departments.id],
+  }),
+  verificationRequests: many(verificationRequests),
+}));
+
+export const facultyRelations = relations(faculty, ({ many }) => ({
+  departments: many(departments),
+  users: many(users),
+}));
+
+export const departmentsRelations = relations(departments, ({ one, many }) => ({
+  faculty: one(faculty, {
+    fields: [departments.facultyId],
+    references: [faculty.id],
+  }),
+  users: many(users),
+  courses: many(courses),
+}));
+
+export const verificationRequestsRelations = relations(verificationRequests, ({ one }) => ({
+  user: one(users, {
+    fields: [verificationRequests.userId],
+    references: [users.id],
+  }),
+  approvedDepartment: one(departments, {
+    fields: [verificationRequests.approvedDepartmentId],
+    references: [departments.id],
+  }),
+  approvedFaculty: one(faculty, {
+    fields: [verificationRequests.approvedFacultyId],
+    references: [faculty.id],
+  }),
+  reviewer: one(users, {
+    fields: [verificationRequests.reviewedBy],
+    references: [users.id],
+  }),
+}));
+

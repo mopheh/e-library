@@ -11,8 +11,9 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import { useCourses } from "@/hooks/useCourses";
 
-import { useBookUpload } from "@/hooks/useBookUpload";
+import { useCreateBook } from "@/hooks/useCreateBook";
 import { Department } from "@/types";
+import { FileUploadDropzone } from "@/components/shared/FileUploadDropzone";
 
 // schema
 export const bookSchema = z
@@ -23,18 +24,15 @@ export const bookSchema = z
     type: z.string(),
     courseIds: z.array(z.string()).nonempty(),
     source: z.enum(["file", "link"]),
-    file: z
-      .custom<File>((val) => val instanceof File, {
-        message: "Invalid file input",
-      })
-      .optional(),
+    fileUrl: z.string().optional(),
+    fileSize: z.number().optional(),
     link: z.string().url().or(z.literal("")).optional(),
   })
   .refine(
-    (data) => (data.source === "file" ? data.file instanceof File : true),
+    (data) => (data.source === "file" ? !!data.fileUrl : true),
     {
-      message: "File is required when source is file",
-      path: ["file"],
+      message: "Please upload a file first",
+      path: ["fileUrl"],
     },
   )
   .refine((data) => (data.source === "link" ? !!data.link : true), {
@@ -52,7 +50,7 @@ export function UploadBookForm({
   setOpen: Function;
 }) {
   const [loading, setLoading] = useState(false);
-  const { uploadBook } = useBookUpload();
+  const { createBook } = useCreateBook();
   const { data: courses } = useCourses({
     limit: 2000,
   });
@@ -74,7 +72,8 @@ export function UploadBookForm({
       type: "",
       courseIds: [],
       source: "file",
-      file: undefined,
+      fileUrl: undefined,
+      fileSize: undefined,
       link: "",
     },
   });
@@ -88,14 +87,15 @@ export function UploadBookForm({
     try {
       let fileUrl: string | undefined;
 
-      if (data.source === "file" && data.file) {
-        fileUrl = await uploadBook({
-          file: data.file,
+      if (data.source === "file" && data.fileUrl) {
+        await createBook({
+          fileUrl: data.fileUrl,
           title: data.title,
           description: data.description,
           departmentId: data.departmentId,
           type: data.type,
           courseIds: data.courseIds,
+          fileSize: data.fileSize,
         });
 
         toast.success("Book uploaded!");
@@ -270,22 +270,18 @@ export function UploadBookForm({
 
         {/* File Upload */}
         <TabsContent value="file" className="mt-4">
-          <label className="block font-medium">Book File</label>
-          <Controller
-            control={control}
-            name="file"
-            render={({ field }) => (
-              <input
-                type="file"
-                onChange={(e) =>
-                  field.onChange(e.target.files?.[0] ?? undefined)
-                }
-                className="w-full dark:bg-zinc-900 dark:border-zinc-700"
-              />
-            )}
+          <label className="block font-medium mb-2">Book File</label>
+          <FileUploadDropzone
+             onUploadSuccess={(url, fileObj) => {
+               setValue("fileUrl", url, { shouldValidate: true })
+               setValue("fileSize", fileObj.size, { shouldValidate: true })
+             }}
+             accept=".pdf,.doc,.docx,.epub"
+             maxSizeMB={50}
+             label="Click or drag book file here"
           />
-          {errors.file && (
-            <p className="text-red-500 text-xs">{errors.file.message}</p>
+          {errors.fileUrl && (
+            <p className="text-red-500 text-xs mt-1">{errors.fileUrl.message}</p>
           )}
         </TabsContent>
 

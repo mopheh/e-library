@@ -19,7 +19,6 @@ export const StudyRoomsList = ({ courseId }: { courseId: string }) => {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const queryClient = useQueryClient();
-  const { role } = useParams() as { role: string };
 
   const { data: rooms, isLoading } = useQuery({
     queryKey: ["studyRooms", courseId],
@@ -161,7 +160,7 @@ export const StudyRoomsList = ({ courseId }: { courseId: string }) => {
                 </div>
               </CardContent>
               <CardFooter className="pt-2 pb-5 border-t border-gray-100 dark:border-zinc-800 px-6 mt-auto bg-gray-50/50 dark:bg-zinc-900/20">
-                <Link href={`/${role}/dashboard/study-rooms/${room.id}`} className="w-full">
+                <Link href={`/dashboard/study-rooms/${room.id}`} className="w-full">
                   <Button className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold shadow-sm transition-all">
                     {room.isMember ? "Return to Room" : "Join Room"}
                   </Button>

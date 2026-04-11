@@ -58,6 +58,8 @@ export default function Page() {
             className="shadow-xl rounded-xl p-8 w-fit mx-4"
           >
             <SignUp
+              forceRedirectUrl="/dashboard"
+              fallbackRedirectUrl="/dashboard"
               appearance={{
                 variables: {
                   colorPrimary: "#016630",

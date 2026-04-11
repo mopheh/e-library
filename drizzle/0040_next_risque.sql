@@ -1,0 +1,1 @@
+ALTER TABLE "verification_requests" RENAME COLUMN "document_url" TO "proof_url";

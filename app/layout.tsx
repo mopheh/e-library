@@ -28,7 +28,7 @@ export default function RootLayout({
 }>) {
   return (
     <ClerkProvider>
-      <html lang="en" className="overflow-y-clip">
+      <html lang="en">
         <body className={`antialiased !overflow-x-hidden`}>
           <ThemeProvider
             attribute="class"

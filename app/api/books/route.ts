@@ -71,6 +71,7 @@ export async function GET(req: NextRequest) {
         createdAt: books.createdAt,
         type: books.type,
         fileUrl: books.fileUrl,
+        fileSize: books.fileSize,
         course: courses.courseCode,
         level: courses.level,
       })
@@ -129,7 +130,7 @@ export async function POST(req: Request) {
 
     const body = await req.json();
 
-    const { title, description, departmentId, type, courseIds, fileUrl, link } =
+    const { title, description, departmentId, type, courseIds, fileUrl, link, fileSize } =
       body;
 
     if (!fileUrl && !link) {
@@ -144,6 +145,7 @@ export async function POST(req: Request) {
         departmentId,
         type,
         fileUrl,
+        fileSize,
         postedBy: user.id,
         parseStatus: "processing" as any,
       } as any)

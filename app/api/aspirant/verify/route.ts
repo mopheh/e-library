@@ -11,10 +11,11 @@ export async function POST(req: Request) {
 
     const body = await req.json();
     const { 
-      documentUrl, 
+      proofUrl, 
       jambNo, 
       approvedDepartmentId, 
       approvedFacultyId, 
+      subjectCombinations,
       admissionYear, 
       level 
     } = body;
@@ -24,10 +25,11 @@ export async function POST(req: Request) {
 
     const [request] = await db.insert(verificationRequests).values({
       userId: user.id,
-      documentUrl,
+      proofUrl,
       jambNo,
       approvedDepartmentId,
       approvedFacultyId,
+      subjectCombinations,
       admissionYear,
       level
     }).returning();

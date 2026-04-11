@@ -22,42 +22,40 @@ export async function GET(
       return NextResponse.json({ error: "Book not found" }, { status: 404 });
     }
     let book = result[0];
-    const fileUrl = book.fileUrl!;
-    if (fileUrl.includes("backblazeb2.com")) {
-      await authorizeB2();
-      const parts = fileUrl.split("/");
-      const fileName = parts
-        .slice(parts.indexOf("univault-books") + 1)
-        .join("/");
+    const fileUrl = book.fileUrl;
 
-      const { data: auth } = await b2.getDownloadAuthorization({
-        bucketId: process.env.B2_BUCKET_ID!,
-        fileNamePrefix: fileName,
-        validDurationInSeconds: 60 * 60,
-      });
-      const originalUrl = fileUrl;
-      const url = new URL(originalUrl);
+    if (fileUrl && (fileUrl.includes("backblazeb2.com") || fileUrl.includes("univault-books"))) {
+      try {
+        await authorizeB2();
+        
+        const url = new URL(fileUrl);
+        const parts = url.pathname.split("/");
+        
+        // Find the index after the bucket name (univault-books)
+        const bucketIndex = parts.indexOf("univault-books");
+        const fileName = (bucketIndex !== -1 && bucketIndex + 1 < parts.length)
+          ? parts.slice(bucketIndex + 1).join("/")
+          : parts.pop() || "";
 
-      const parrts = url.pathname.split("/");
-      const newFileName = parrts.pop()!;
+        const { data: auth } = await b2.getDownloadAuthorization({
+          bucketId: process.env.B2_BUCKET_ID!,
+          fileNamePrefix: fileName,
+          validDurationInSeconds: 60 * 60,
+        });
 
-      const safeFileName = encodeURIComponent(
-        decodeURIComponent(newFileName)
-      ).replace(/%20/g, "+");
-
-      url.pathname = [...parrts, safeFileName].join("/");
-
-      const safeUrl = url.toString();
-      console.log(safeUrl);
-      const signedUrl = `${safeUrl}?Authorization=${auth.authorizationToken}`;
-      console.log(signedUrl);
-      book = {
-        ...book,
-        fileUrl: signedUrl,
-      };
-      return NextResponse.json(book, { status: 200 });
+        // Use URLSearchParams for reliable query param management
+        url.searchParams.set("Authorization", auth.authorizationToken);
+        
+        book = {
+          ...book,
+          fileUrl: url.toString(),
+        };
+      } catch (error) {
+        console.error("B2 Signing error:", error);
+      }
     }
-    return NextResponse.json(result[0], { status: 200 });
+    
+    return NextResponse.json(book, { status: 200 });
   } catch (error) {
     console.error("Error fetching book:", error);
     return NextResponse.json(

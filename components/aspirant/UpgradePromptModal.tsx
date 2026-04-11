@@ -53,7 +53,7 @@ export default function UpgradePromptModal({ isOpen, onClose }: Props) {
                 </div>
 
                 <div className="flex flex-col gap-3 pt-2">
-                  <Link href="/aspirant/verify" onClick={onClose}>
+                  <Link href="/dashboard/verify" onClick={onClose}>
                     <button className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3.5 rounded-xl font-semibold transition-all shadow-md shadow-blue-500/20 flex items-center justify-center gap-2 group">
                       Request Student Verification
                       <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />

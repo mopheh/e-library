@@ -55,17 +55,27 @@ export async function processJob(job: {
         downloadUrl = `${downloadUrl}?Authorization=${auth.authorizationToken}`;
       }
 
-      const res = await fetch(downloadUrl);
-      if (!res.ok) throw new Error(`Failed to fetch PDF: ${res.status} ${res.statusText}`);
-      
-      if (!res.body) throw new Error("Response body is null");
-      
-      const fileStream = fs.createWriteStream(tmpPath);
-      await new Promise<void>((resolve, reject) => {
-        res.body!.pipe(fileStream);
-        res.body!.on("error", reject);
-        fileStream.on("finish", () => resolve());
-      });
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 600000); // 10 minute timeout (600s)
+
+      try {
+        const res = await fetch(downloadUrl, { signal: controller.signal });
+        if (!res.ok) throw new Error(`Failed to fetch PDF: ${res.status} ${res.statusText}`);
+
+        if (!res.body) throw new Error("Response body is null");
+
+        const fileStream = fs.createWriteStream(tmpPath);
+        await new Promise<void>((resolve, reject) => {
+          res.body!.pipe(fileStream);
+          res.body!.on("error", (err: any) => {
+             console.error(`Page stream error: ${err.message}`);
+             reject(err);
+          });
+          fileStream.on("finish", () => resolve());
+        });
+      } finally {
+        clearTimeout(timeout);
+      }
 
       const pageCount = await parsePdfPages(tmpPath, bookId);
 

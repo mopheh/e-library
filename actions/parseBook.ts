@@ -76,9 +76,8 @@ export async function parsePdfPages(filePath: string, bookId: string) {
         const embedding = await getEmbedding(page.textChunk);
         return {
           ...page,
-          // If embedding api fails, we can assign null or empty, but pgvector expects vector type
-          // so empty array is valid or null if allowed. Drizzle handles arrays.
-          embedding: embedding.length > 0 ? embedding : null 
+          // pgvector requires strings in "[0.1, 0.2, ...]" format for the 'vector' type in many drivers
+          embedding: embedding.length > 0 ? `[${embedding.join(",")}]` : null 
         };
       })
     );

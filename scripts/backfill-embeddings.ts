@@ -30,8 +30,9 @@ async function run() {
     console.log(`[${i + 1}/${pages.length}] Embedding page ${page.id}...`);
     
     try {
-      const embedding = await getEmbedding(page.textChunk);
-      if (embedding.length > 0) {
+      const embeddingArray = await getEmbedding(page.textChunk);
+      if (embeddingArray.length > 0) {
+        const embedding = `[${embeddingArray.join(",")}]`;
         await db
           .update(bookPages)
           .set({ embedding })

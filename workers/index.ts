@@ -1,5 +1,5 @@
 import "./bootstrap";
-import { eq, sql, and, isNull, lt, SQL } from "drizzle-orm";
+import { eq, sql, and, isNull, lt, SQL, desc, or } from "drizzle-orm";
 import { processJob } from "./processor";
 import { jobs } from "@/database/schema";
 import { db } from "./db";
@@ -14,19 +14,34 @@ async function sleep(ms: number) {
 }
 
 async function fetchNextJob() {
+  const STALE_THRESHOLD_MS = 10 * 60 * 1000; // 10 minutes
+
   return db.transaction(async (tx) => {
+    // 1. Check for pending jobs OR stale processing jobs
     const [job] = await tx
       .select()
       .from(jobs)
       .where(
         and(
-          eq(jobs.status, "pending"),
-          sql`${jobs.attempts} < ${jobs.maxAttempts}`,
-        ),
+          or(
+            eq(jobs.status, "pending"),
+            and(
+              eq(jobs.status, "processing"),
+              sql`${jobs.lockedAt} < ${new Date(Date.now() - STALE_THRESHOLD_MS)}`
+            )
+          ),
+          lt(jobs.attempts, jobs.maxAttempts)
+        )
       )
+      .orderBy(desc(jobs.createdAt))
       .limit(1);
 
     if (!job) return null;
+
+    // Log if it's a recovery
+    if (job.status === "processing") {
+      console.log(`🔄 Recovering stale job ${job.id} (locked at ${job.lockedAt})`);
+    }
 
     await tx
       .update(jobs)
@@ -70,21 +85,29 @@ async function run() {
 
       console.log(`✅ Job ${job.id} completed`);
     } catch (err: any) {
-      const failed = (job.attempts + 1) >= job.maxAttempts;
+      console.error(`❌ Job ${job.id} encountered an error:`, err.message);
 
-      await db
-        .update(jobs)
-        .set({
-          status: failed ? "failed" : "pending",
-          lastError: err.message,
-          updatedAt: new Date(),
-        })
-        .where(eq(jobs.id, job.id));
+      try {
+        const failed = (job.attempts + 1) >= job.maxAttempts;
 
-      console.error(
-        `❌ Job ${job.id} ${failed ? "failed" : "will retry"}:`,
-        err.message,
-      );
+        await db
+          .update(jobs)
+          .set({
+            status: failed ? "failed" : "pending",
+            lastError: err.message,
+            updatedAt: new Date(),
+          })
+          .where(eq(jobs.id, job.id));
+
+        if (failed) {
+          console.error(`💀 Job ${job.id} has reached max attempts and marked as FAILED.`);
+        } else {
+          console.log(`⏳ Job ${job.id} set back to pending for retry.`);
+        }
+      } catch (dbErr: any) {
+        console.error(`⚠️ Failed to update job status in DB after error: ${dbErr.message}`);
+        // We don't throw here to avoid crashing the whole worker loop
+      }
     }
   }
 }

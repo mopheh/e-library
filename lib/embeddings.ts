@@ -1,22 +1,20 @@
-import { GoogleGenAI } from "@google/genai";
+import { withRetry } from "./ai-utils";
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 /**
  * Returns the embeddings for the given text using Gemini.
  * @param text The string to embed
- * @returns An array of numbers representing the vector (768 dimensions for text-embedding-004)
+ * @returns An array of numbers representing the vector (768 dimensions)
  */
 export async function getEmbedding(text: string): Promise<number[]> {
-  try {
+  return withRetry(async () => {
     const response = await ai.models.embedContent({
-      model: "text-embedding-004",
-      contents: text,
+      model: "gemini-embedding-001",
+      contents: [{ parts: [{ text }] }],
+      outputDimensionality: 768,
     });
     
     return response.embeddings?.[0]?.values || [];
-  } catch (err) {
-    console.error("Failed to generate embedding for text", err);
-    return [];
-  }
+  }, 3, 1000, 30000);
 }

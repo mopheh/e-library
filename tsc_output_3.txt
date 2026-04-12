@@ -1,0 +1,21 @@
+﻿app/(protected)/data/departments/[department]/page.tsx(109,28): error TS2322: Type '{ id: string; facultyName?: string | undefined; departmentName?: string | undefined; facultyId?: string | undefined; }' is not assignable to type 'Department'.
+  Types of property 'facultyId' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+app/(protected)/data/departments/[department]/page.tsx(138,26): error TS2322: Type '{ id: string; facultyName?: string | undefined; departmentName?: string | undefined; facultyId?: string | undefined; }' is not assignable to type 'Department'.
+  Types of property 'facultyId' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+app/(protected)/data/departments/[department]/page.tsx(160,45): error TS2322: Type 'import("C:/Users/USER/Downloads/e-library/types").Book' is not assignable to type 'Book'.
+  Types of property 'course' are incompatible.
+    Type 'string | null | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+app/(protected)/data/departments/[department]/page.tsx(188,26): error TS2322: Type '{ id: string; facultyName?: string | undefined; departmentName?: string | undefined; facultyId?: string | undefined; }' is not assignable to type 'Department'.
+  Types of property 'facultyId' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+app/(protected)/library/page.tsx(223,10): error TS2322: Type 'Book | undefined' is not assignable to type 'Book'.
+  Type 'undefined' is not assignable to type 'Book'.
+components/adminDashboard/AdminDashboard.tsx(204,27): error TS2322: Type 'string | undefined' is not assignable to type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+

@@ -72,6 +72,7 @@ export async function extractTextWithOCR(pdf: pdfjsLib.PDFDocumentProxy, pageNum
     await page.render({
       canvasContext: context,
       viewport,
+      // @ts-expect-error - canvasFactory is required by node-canvas integration but missing from typings
       canvasFactory: new NodeCanvasFactory(),
     }).promise;
   } finally {

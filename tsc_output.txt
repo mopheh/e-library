@@ -1,0 +1,45 @@
+﻿app/(protected)/dashboard/requests/page.tsx(92,23): error TS2352: Conversion of type '{ id: string; role: "STUDENT" | "ADMIN" | "FACULTY REP" | "ASPIRANT" | null; gender: "MALE" | "FEMALE"; clerkId: string; fullName: string; email: string; phoneNumber: string | null; year: "100" | ... 4 more ... | "600"; ... 6 more ...; lastActivityDate: string | null; }' to type 'User' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+  Types of property 'createdAt' are incompatible.
+    Type 'Date | null' is not comparable to type 'string | undefined'.
+      Type 'Date' is not comparable to type 'string'.
+app/(protected)/dashboard/requests/page.tsx(94,21): error TS2352: Conversion of type '{ id: string; role: "STUDENT" | "ADMIN" | "FACULTY REP" | "ASPIRANT" | null; gender: "MALE" | "FEMALE"; clerkId: string; fullName: string; email: string; phoneNumber: string | null; year: "100" | ... 4 more ... | "600"; ... 6 more ...; lastActivityDate: string | null; }' to type 'User' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+  Types of property 'createdAt' are incompatible.
+    Type 'Date | null' is not comparable to type 'string | undefined'.
+      Type 'Date' is not comparable to type 'string'.
+app/(protected)/data/departments/[department]/page.tsx(54,92): error TS2367: This comparison appears to be unintentional because the types '"STUDENT" | "ADMIN" | "ASPIRANT"' and '"faculty-rep"' have no overlap.
+app/(protected)/data/departments/[department]/page.tsx(78,38): error TS2339: Property 'unsafeMetadata' does not exist on type 'User'.
+app/(protected)/data/departments/[department]/page.tsx(109,28): error TS2741: Property 'name' is missing in type '{ id: string; facultyName?: string | undefined; departmentName?: string | undefined; facultyId?: string | undefined; }' but required in type 'Department'.
+app/(protected)/data/departments/[department]/page.tsx(138,26): error TS2741: Property 'name' is missing in type '{ id: string; facultyName?: string | undefined; departmentName?: string | undefined; facultyId?: string | undefined; }' but required in type 'Department'.
+app/(protected)/data/departments/[department]/page.tsx(160,45): error TS2322: Type 'import("C:/Users/USER/Downloads/e-library/types").Book' is not assignable to type 'Book'.
+  Types of property 'course' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+app/(protected)/data/departments/[department]/page.tsx(188,26): error TS2741: Property 'name' is missing in type '{ id: string; facultyName?: string | undefined; departmentName?: string | undefined; facultyId?: string | undefined; }' but required in type 'Department'.
+app/(protected)/library/page.tsx(88,21): error TS2339: Property 'level' does not exist on type 'User'.
+app/(protected)/library/page.tsx(99,5): error TS2353: Object literal may only specify known properties, and 'search' does not exist in type 'BookFilters'.
+app/(protected)/library/page.tsx(223,10): error TS2322: Type 'Book | null' is not assignable to type 'Book'.
+  Type 'null' is not assignable to type 'Book'.
+app/api/books/route.ts(155,23): error TS2339: Property 'message' does not exist on type '{}'.
+components/AddCourses.tsx(101,55): error TS2339: Property 'departmentName' does not exist on type 'Department'.
+components/adminDashboard/AddBook.tsx(204,21): error TS2339: Property 'departmentName' does not exist on type 'Department'.
+components/adminDashboard/faculty/FacultyRow.tsx(22,78): error TS2367: This comparison appears to be unintentional because the types '"STUDENT" | "ADMIN" | "ASPIRANT"' and '"faculty-rep"' have no overlap.
+components/aspirant/AspirantVerify.tsx(92,45): error TS2345: Argument of type '{ proofUrl: string; level: "100" | "200" | "300" | "400" | "500" | "600"; jambNo: string; approvedDepartmentId: string; approvedFacultyId: string; admissionYear: string; }' is not assignable to parameter of type '{ proofUrl: string; jambNo: string; approvedDepartmentId: string; approvedFacultyId: string; subjectCombinations: string[]; admissionYear: string; level: "100" | "200" | "300" | "400" | "500" | "600"; }'.
+  Property 'subjectCombinations' is missing in type '{ proofUrl: string; level: "100" | "200" | "300" | "400" | "500" | "600"; jambNo: string; approvedDepartmentId: string; approvedFacultyId: string; admissionYear: string; }' but required in type '{ proofUrl: string; jambNo: string; approvedDepartmentId: string; approvedFacultyId: string; subjectCombinations: string[]; admissionYear: string; level: "100" | "200" | "300" | "400" | "500" | "600"; }'.
+components/Dashboard/cbt/CbtContainer.tsx(135,11): error TS2322: Type 'Course[] | undefined' is not assignable to type 'CbtCourse[]'.
+  Type 'undefined' is not assignable to type 'CbtCourse[]'.
+components/Dashboard/HomeDashboard.tsx(42,42): error TS2339: Property 'daysToExam' does not exist on type '{ booksRead: number; minutesRead: number; streak: number; }'.
+components/Dashboard/HomeDashboard.tsx(43,47): error TS2339: Property 'totalAiRequests' does not exist on type '{ booksRead: number; minutesRead: number; streak: number; }'.
+components/Filter.tsx(24,1): error TS2578: Unused '@ts-expect-error' directive.
+components/library/PersonalizedSection.tsx(18,24): error TS2345: Argument of type '{ id: string; title: string; description: string; type: string; fileUrl: string | null; fileSize: number | null; createdAt: Date | null; course: string | null; lastReadAt: Date | null; readCount: number; }[]' is not assignable to parameter of type 'SetStateAction<Book[]>'.
+  Type '{ id: string; title: string; description: string; type: string; fileUrl: string | null; fileSize: number | null; createdAt: Date | null; course: string | null; lastReadAt: Date | null; readCount: number; }[]' is not assignable to type 'Book[]'.
+    Type '{ id: string; title: string; description: string; type: string; fileUrl: string | null; fileSize: number | null; createdAt: Date | null; course: string | null; lastReadAt: Date | null; readCount: number; }' is missing the following properties from type 'Book': departmentId, postedBy
+components/library/PersonalizedSection.tsx(54,61): error TS18048: 'book.readCount' is possibly 'undefined'.
+components/Onboarding.tsx(141,9): error TS2322: Type 'string | undefined' is not assignable to type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+components/profile/ProfileForm.tsx(58,27): error TS2339: Property 'firstName' does not exist on type 'User'.
+components/profile/ProfileForm.tsx(59,26): error TS2339: Property 'lastName' does not exist on type 'User'.
+components/profile/ProfileForm.tsx(64,30): error TS2339: Property 'matricNumber' does not exist on type 'User'.
+lib/embeddings.ts(3,16): error TS2304: Cannot find name 'GoogleGenAI'.
+lib/ocr.ts(75,7): error TS2353: Object literal may only specify known properties, and 'canvasFactory' does not exist in type 'RenderParameters'.
+scripts/backfill-embeddings.ts(38,18): error TS2322: Type 'string' is not assignable to type 'SQL<unknown> | PgColumn<ColumnBaseConfig<ColumnDataType, string>, {}, {}> | number[] | null | undefined'.
+

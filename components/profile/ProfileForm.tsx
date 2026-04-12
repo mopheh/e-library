@@ -55,14 +55,14 @@ export default function ProfileForm({ profile, onSaved }: ProfileFormProps) {
   } = useForm<ProfileFormValues>({
     resolver: zodResolver(ProfileSchema),
     defaultValues: {
-      firstName: profile?.firstName || "",
-      lastName: profile?.lastName || "",
+      firstName: profile?.fullName?.split(" ")[0] || "",
+      lastName: profile?.fullName?.split(" ").slice(1).join(" ") || "",
       phone: profile?.phoneNumber || "",
       faculty: profile?.faculty?.id || "",
       department: profile?.department?.id || "",
       year: profile?.year || "",
-      matricNumber: profile?.matricNumber || "",
-      dob: profile?.dateOfBirth || "",
+      matricNumber: profile?.matricNo || "",
+      dob: profile?.dateOfBirth ? String(profile.dateOfBirth) : "",
       gender: profile?.gender || "",
       address: profile?.address || "",
     },

@@ -201,7 +201,7 @@ const AdminDashboard = () => {
                         <DepartmentRow
                           key={department.id}
                           departmentId={department.id}
-                          name={department.name}
+                          name={department.name || department.departmentName || "Unknown"}
                         />
                       ))
                     : Array.from({ length: 5 }).map((_, i) => <SkeletonRow key={i} columns={3} />)}

@@ -15,7 +15,7 @@ export const PersonalizedSection = () => {
     const fetchRecent = async () => {
       try {
         const data = await getRecentBooks();
-        setRecentBooks(data);
+        setRecentBooks(data as Book[]);
       } catch (err) {
         console.error(err);
       } finally {
@@ -51,7 +51,7 @@ export const PersonalizedSection = () => {
           {recentBooks.map((book) => {
              // Fake a progress bar based on readCount or just random for demonstration of SaaS feel
              // As user said: "fake engagement metrics for now"
-             const fakeProgress = Math.min(100, Math.floor((book.readCount * 15) || 5 + Math.random() * 30));
+             const fakeProgress = Math.min(100, Math.floor(((book.readCount || 0) * 15) || 5 + Math.random() * 30));
              
              return (
               <div

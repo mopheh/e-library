@@ -152,7 +152,7 @@ export async function POST(req: Request) {
   } catch (error: unknown) {
     console.error("[POST /api/books]", error);
     return NextResponse.json(
-      { error: error?.message || "Failed to create book" },
+      { error: error instanceof Error ? error.message : "Failed to create book" },
       { status: 500 },
     );
   }

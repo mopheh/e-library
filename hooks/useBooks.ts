@@ -8,6 +8,7 @@ type BookFilters = {
   courseId?: string;
   page?: number;
   pageSize?: number;
+  search?: string;
 };
 
 export const useBooks = (filters: BookFilters) => {

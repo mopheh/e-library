@@ -32,10 +32,9 @@ async function run() {
     try {
       const embeddingArray = await getEmbedding(page.textChunk);
       if (embeddingArray.length > 0) {
-        const embedding = `[${embeddingArray.join(",")}]`;
         await db
           .update(bookPages)
-          .set({ embedding })
+          .set({ embedding: embeddingArray })
           .where(eq(bookPages.id, page.id));
         successCount++;
       } else {

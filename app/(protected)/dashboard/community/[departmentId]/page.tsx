@@ -1,9 +1,8 @@
 import React from "react";
 import { db } from "@/database/drizzle";
 import { eq } from "drizzle-orm";
-import { departments, users, faculty } from "@/database/schema";
-import { Users, BookOpen, MessageCircle, Info, Star } from "lucide-react";
-import Image from "next/image";
+import { departments, users } from "@/database/schema";
+import { MessageCircle, Info, Star } from "lucide-react";
 
 export default async function DepartmentCommunityPage(props: {
   params: Promise<{ departmentId: string }>;
@@ -87,13 +86,9 @@ export default async function DepartmentCommunityPage(props: {
                   <div
                     key={m.id}
                     className="w-10 h-10 rounded-full bg-zinc-200 dark:bg-zinc-800 flex items-center justify-center font-bold text-zinc-600 dark:text-zinc-400 text-xs border border-white dark:border-zinc-950 shadow-sm"
-                    title={m.fullName}
+                    title={m.fullName ?? undefined}
                   >
-                    {m.imageUrl ? (
-                      <img src={m.imageUrl} alt={m.fullName || "Member"} className="w-full h-full rounded-full object-cover" />
-                    ) : (
-                      m.fullName?.charAt(0).toUpperCase() || "U"
-                    )}
+                    {m.fullName?.charAt(0).toUpperCase() || "U"}
                   </div>
                 ))
               ) : (

@@ -36,11 +36,11 @@ const HomeDashboard = () => {
 
       {/* 1. Key Performance Indicators */}
       <KPICards 
-        booksRead={analyticsData?.kpis?.booksRead || 0} 
-        minutesRead={analyticsData?.kpis?.minutesRead || 0} 
-        streak={analyticsData?.kpis?.streak || 0} 
-        daysToExam={analyticsData?.kpis?.daysToExam}
-        totalAiRequests={analyticsData?.kpis?.totalAiRequests}
+        booksRead={(analyticsData as any)?.kpis?.booksRead || 0} 
+        minutesRead={(analyticsData as any)?.kpis?.minutesRead || 0} 
+        streak={(analyticsData as any)?.kpis?.streak || 0} 
+        daysToExam={(analyticsData as any)?.kpis?.daysToExam}
+        totalAiRequests={(analyticsData as any)?.kpis?.totalAiRequests}
         loading={analyticsLoading}
       />
 

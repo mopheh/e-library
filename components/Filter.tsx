@@ -21,7 +21,6 @@ const departments = ["All", "Computer Engineering", "Electrical", "Mechanical"];
 const faculties = ["All", "Engineering", "Science", "Arts"];
 const levels = ["All", "100", "200", "300", "400", "500"];
 
-// @ts-expect-error - filters object key mapping
 export const Filters = ({ filters, setFilters }: FiltersProps) => {
   const handleChange = (key: keyof typeof filters, value: string) => {
     setFilters({ ...filters, [key]: value });

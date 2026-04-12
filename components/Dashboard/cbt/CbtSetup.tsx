@@ -13,13 +13,15 @@ import { Card, CardContent } from "@/components/ui/card";
 
 export interface CbtCourse {
   id: string;
-  name: string;
-  questionCount: number;
+  title?: string;
+  courseCode?: string;
+  name?: string;
+  questionCount?: number;
   questions?: any[];
 }
 
 interface CbtSetupProps {
-  courses: CbtCourse[];
+  courses?: CbtCourse[];
   onStart: (data: any) => void;
   loading?: boolean;
 }
@@ -71,7 +73,7 @@ export default function CbtSetup({ courses, onStart, loading }: CbtSetupProps) {
                 <SelectContent>
                 {courses?.map((c) => (
                     <SelectItem className="text-xs font-poppins" key={c.id} value={c.id}>
-                    {c.name} <span className="text-zinc-400  ml-1">({c.questionCount} questions)</span>
+                    {c.courseCode || c.title || c.name} <span className="text-zinc-400  ml-1">({c.questionCount || 0} questions)</span>
                     </SelectItem>
                 ))}
                 </SelectContent>

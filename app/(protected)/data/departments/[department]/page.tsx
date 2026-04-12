@@ -51,7 +51,7 @@ const Page = () => {
   } = useBooks({ departmentId: department, page: bookPage });
 
   const { data: facultyUsers } = useUsers(departmentInfo?.facultyId);
-  const facultyReps = (facultyUsers || []).filter((u: User) => u.role === "FACULTY REP" || u.role === "faculty-rep");
+  const facultyReps = (facultyUsers || []).filter((u: User) => u.role === "FACULTY REP");
 
   return (
     <>
@@ -75,7 +75,7 @@ const Page = () => {
                              <h3 className="font-semibold text-zinc-900 dark:text-zinc-100 truncate text-sm md:text-base font-open-sans">{rep.fullName}</h3>
                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-slate-100 text-slate-800 dark:bg-slate-900/50 dark:text-slate-300 whitespace-nowrap border border-slate-200 dark:border-slate-800">
                                 <ShieldCheck className="w-3 h-3" />
-                                {rep.unsafeMetadata?.repType || "Faculty Rep"}
+                                Faculty Rep
                              </span>
                           </div>
                           
@@ -90,7 +90,7 @@ const Page = () => {
                              </div>
                              <div className="flex items-center gap-1.5 text-xs text-zinc-600 dark:text-zinc-400 truncate sm:col-span-2">
                                 <GraduationCap className="w-3.5 h-3.5 text-zinc-400" />
-                                <span className="truncate">Level {rep.year} • {rep.department?.name}</span>
+                                <span className="truncate">Level {rep.year} • {rep.department?.departmentName}</span>
                              </div>
                           </div>
                        </div>

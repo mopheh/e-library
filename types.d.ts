@@ -13,9 +13,9 @@ export interface User {
   matricNo: string;
   gender: "MALE" | "FEMALE";
   address: string;
-  dateOfBirth?: string | null;
-  createdAt?: string;
-  lastActivityDate?: string;
+  dateOfBirth?: string | Date | null;
+  createdAt?: string | Date | null;
+  lastActivityDate?: string | Date | null;
   imageUrl?: string | null;
 }
 
@@ -27,8 +27,9 @@ export interface Faculty {
 
 export interface Department {
   id: string;
-  name: string;
-  facultyId: string;
+  name?: string;
+  departmentName?: string;
+  facultyId?: string;
   facultyName?: string;
 }
 
@@ -49,7 +50,7 @@ export interface Book {
   type: string;
   departmentId: string;
   department?: Department;
-  course?: string;
+  course?: string | null;
   parseStatus?: "pending" | "parsing" | "parsed" | "generating_questions" | "processing" | "completed" | "failed";
   fileUrl: string | null;
   coverUrl?: string | null;
@@ -57,8 +58,8 @@ export interface Book {
   pageCount?: number | null;
   postedBy: string;
   postedByDetails?: Partial<User>;
-  createdAt: string;
-  lastReadAt?: string;
+  createdAt: string | Date;
+  lastReadAt?: string | Date | null;
   readCount?: number;
 }
 

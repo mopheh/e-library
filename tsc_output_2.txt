@@ -1,0 +1,40 @@
+﻿app/(protected)/data/departments/[department]/page.tsx(109,28): error TS2322: Type '{ id: string; facultyName?: string | undefined; departmentName?: string | undefined; facultyId?: string | undefined; }' is not assignable to type 'Department'.
+  Types of property 'departmentName' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+app/(protected)/data/departments/[department]/page.tsx(138,26): error TS2322: Type '{ id: string; facultyName?: string | undefined; departmentName?: string | undefined; facultyId?: string | undefined; }' is not assignable to type 'Department'.
+  Types of property 'departmentName' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+app/(protected)/data/departments/[department]/page.tsx(160,45): error TS2322: Type 'import("C:/Users/USER/Downloads/e-library/types").Book' is not assignable to type 'Book'.
+  Types of property 'course' are incompatible.
+    Type 'string | null | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+app/(protected)/data/departments/[department]/page.tsx(188,26): error TS2322: Type '{ id: string; facultyName?: string | undefined; departmentName?: string | undefined; facultyId?: string | undefined; }' is not assignable to type 'Department'.
+  Types of property 'departmentName' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+app/(protected)/library/page.tsx(223,10): error TS2322: Type 'Book | undefined' is not assignable to type 'Book'.
+  Type 'undefined' is not assignable to type 'Book'.
+components/AddCourses.tsx(126,25): error TS2339: Property 'name' does not exist on type 'Department'.
+components/adminDashboard/AdminDashboard.tsx(204,44): error TS2339: Property 'name' does not exist on type 'Department'.
+components/library/BookPreviewModal.tsx(45,92): error TS2339: Property 'name' does not exist on type 'Department'.
+components/library/LibrarySaaSCard.tsx(74,45): error TS2339: Property 'name' does not exist on type 'Department'.
+components/library/LibrarySidebar.tsx(67,33): error TS2339: Property 'name' does not exist on type 'Department'.
+components/library/PersonalizedSection.tsx(18,24): error TS2345: Argument of type '{ id: string; title: string; description: string; type: string; fileUrl: string | null; fileSize: number | null; createdAt: Date | null; course: string | null; lastReadAt: Date | null; readCount: number; }[]' is not assignable to parameter of type 'SetStateAction<Book[]>'.
+  Type '{ id: string; title: string; description: string; type: string; fileUrl: string | null; fileSize: number | null; createdAt: Date | null; course: string | null; lastReadAt: Date | null; readCount: number; }[]' is not assignable to type 'Book[]'.
+    Type '{ id: string; title: string; description: string; type: string; fileUrl: string | null; fileSize: number | null; createdAt: Date | null; course: string | null; lastReadAt: Date | null; readCount: number; }' is missing the following properties from type 'Book': departmentId, postedBy
+components/library/PersonalizedSection.tsx(54,61): error TS18048: 'book.readCount' is possibly 'undefined'.
+components/Onboarding.tsx(84,81): error TS2339: Property 'name' does not exist on type 'Department'.
+components/Onboarding.tsx(141,9): error TS2322: Type 'string | undefined' is not assignable to type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+components/Onboarding.tsx(319,39): error TS2339: Property 'name' does not exist on type 'Department'.
+components/profile/ProfileForm.tsx(65,7): error TS2322: Type 'string | Date' is not assignable to type 'string | undefined'.
+  Type 'Date' is not assignable to type 'string'.
+components/profile/ProfileForm.tsx(95,34): error TS2345: Argument of type '(values: { firstName: string; lastName: string; gender?: string | undefined; year?: string | undefined; faculty?: string | undefined; department?: string | undefined; address?: string | undefined; phone?: string | undefined; matricNumber?: string | undefined; dob?: string | undefined; }) => Promise<...>' is not assignable to parameter of type 'SubmitHandler<TFieldValues>'.
+  Types of parameters 'values' and 'data' are incompatible.
+    Type 'TFieldValues' is not assignable to type '{ firstName: string; lastName: string; gender?: string | undefined; year?: string | undefined; faculty?: string | undefined; department?: string | undefined; address?: string | undefined; phone?: string | undefined; matricNumber?: string | undefined; dob?: string | undefined; }'.
+      Type 'FieldValues' is missing the following properties from type '{ firstName: string; lastName: string; gender?: string | undefined; year?: string | undefined; faculty?: string | undefined; department?: string | undefined; address?: string | undefined; phone?: string | undefined; matricNumber?: string | undefined; dob?: string | undefined; }': firstName, lastName
+components/profile/ProfileForm.tsx(188,27): error TS2339: Property 'name' does not exist on type 'Department'.
+lib/embeddings.ts(15,7): error TS2353: Object literal may only specify known properties, and 'outputDimensionality' does not exist in type 'EmbedContentParameters'.
+

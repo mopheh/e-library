@@ -19,7 +19,7 @@ const FacultyRow = ({
   const [openRepModal, setOpenRepModal] = useState(false);
 
   // Filter out the existing reps
-  const reps = (users || []).filter((u: User) => u.role === "FACULTY REP" || u.role === "faculty-rep");
+  const reps = (users || []).filter((u: User) => u.role === "FACULTY REP");
   const maxRepsReached = reps.length >= 2;
 
   return (

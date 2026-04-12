@@ -92,6 +92,7 @@ export default function AspirantVerify() {
     const result = await submitVerification({
       ...data,
       proofUrl: uploadedUrl,
+      subjectCombinations: [],
     });
 
     if (result.success) {

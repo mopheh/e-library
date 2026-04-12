@@ -85,7 +85,7 @@ const Page = () => {
   useEffect(() => {
     if (user && !department && !level) {
       setDepartment(user.departmentId);
-      setLevel(user.level);
+      setLevel(user.year);
     }
   }, [user, department, level]);
 
@@ -220,7 +220,7 @@ const Page = () => {
 
       <BookPreviewModal 
          isOpen={!!selectedBook}
-         book={selectedBook}
+         book={selectedBook || undefined}
          onClose={() => setSelectedBook(null)}
          onOpenReader={handleOpenReader}
       />

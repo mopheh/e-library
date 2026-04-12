@@ -5,7 +5,7 @@ import { BookOpen, Download, User, Calendar } from "lucide-react";
 import { Book } from "@/types";
 
 interface BookPreviewModalProps {
-  book: Book;
+  book?: Book | null;
   isOpen: boolean;
   onClose: () => void;
   onOpenReader: (id: string) => void;

@@ -138,7 +138,7 @@ const Onboarding = () => {
       const promise = createUser({
         //@ts-expect-error - Clerk user id mapping
         clerkId: user?.id,
-        email: user?.emailAddresses[0].emailAddress,
+        email: user?.emailAddresses[0].emailAddress || "",
         fullName: `${user?.firstName} ${user?.lastName}`,
         facultyId: data.faculty,
         departmentId: data.department,

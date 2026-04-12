@@ -4,7 +4,7 @@ import { PlusIcon } from "@heroicons/react/20/solid";
 import AddCoursesForm from "@/components/AddCourses";
 import FormModal from "@/components/FormDialogBody";
 import { UploadBookForm } from "@/components/adminDashboard/AddBook";
-import { Credentials, Department } from "@/types";
+import { User, Department, Course } from "@/types";
 
 const CustomList = ({
   children,
@@ -17,7 +17,7 @@ const CustomList = ({
   name: string;
   courses: Course[] | undefined;
   department: Department[] | null;
-  students?: Credentials[];
+  students?: User[];
 }) => {
   const [open, setOpen] = useState(false);
   return (

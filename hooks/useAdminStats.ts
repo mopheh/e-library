@@ -14,10 +14,11 @@ interface AdminStats {
 export function useAdminStats() {
   return useQuery<AdminStats>({
     queryKey: ["admin-stats"],
-    queryFn: async () => {
+    queryFn: async (): Promise<AdminStats> => {
       const res = await fetch("/api/admin/stats");
       if (!res.ok) throw new Error("Failed to fetch admin stats");
-      return res.json();
+      const data = await res.json();
+      return data;
     },
   });
 }

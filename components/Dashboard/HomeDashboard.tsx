@@ -1,9 +1,6 @@
-import React, { useEffect } from "react";
-import { useUser } from "@clerk/nextjs";
-import { useRouter } from "next/navigation";
+import React from "react";
 import { useDashboard } from "@/hooks/useDashboard";
 import KPICards from "./Analytics/KPICards";
-import WeeklyTrends from "./Analytics/WeeklyTrends";
 import ActivityHeatmap from "./Analytics/ActivityHeatmap";
 import GoalsCard from "./Analytics/GoalsCard";
 import AIInsights from "./Analytics/AIInsights";
@@ -12,23 +9,11 @@ import { useAnalytics } from "@/hooks/useAnalytics";
 import Charts from "./Charts";
 import { CourseRegistrationModal } from "@/components/Dashboard/CourseRegistration";
 import HomeDashboardSkeleton from "@/components/Dashboard/HomeDashboardSkeleton";
-import CourseDiscussions from "./CourseDiscussions";
 import { ExamPrepBanner } from "@/components/Dashboard/ExamPrepBanner";
-import { AcademicFeed } from "@/components/Dashboard/AcademicFeed";
 import AddedMaterials from "./AddedMaterials";
 
 const HomeDashboard = () => {
-  const today = new Date();
-  const resumptionDate = new Date(2025, 2, 3); // March 3, 2025
-  const examDate = new Date(2025, 9, 14);
-  const daysToExam = Math.max(
-    0,
-    Math.ceil((examDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)),
-  );
-
   const { data, isLoading: booksLoading } = useDashboard();
-  const { user, isSignedIn, isLoaded } = useUser();
-  const router = useRouter();
 
   const { data: analyticsData, isLoading: analyticsLoading } = useAnalytics();
 

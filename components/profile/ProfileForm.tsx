@@ -5,7 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import axios from "axios";
 import { toast } from "sonner";
 import { Loader2Icon } from "lucide-react";
-import { useUser } from "@clerk/nextjs";
+import { User, Faculty, Department } from "@/types";
 
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -38,7 +38,7 @@ const ProfileSchema = z.object({
 type ProfileFormValues = z.infer<typeof ProfileSchema>;
 
 interface ProfileFormProps {
-  profile: any;
+  profile: User;
   onSaved: () => void;
 }
 
@@ -79,9 +79,13 @@ export default function ProfileForm({ profile, onSaved }: ProfileFormProps) {
       await axios.put("/api/profile", values);
       toast.success("Profile updated successfully!");
       onSaved();
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
-      toast.error(err.response?.data?.error || "Failed to update profile");
+      if (axios.isAxiosError(err)) {
+        toast.error(err.response?.data?.error || "Failed to update profile");
+      } else {
+        toast.error("Failed to update profile");
+      }
     } finally {
       setLoading(false);
     }
@@ -119,9 +123,9 @@ export default function ProfileForm({ profile, onSaved }: ProfileFormProps) {
 
           <div className="space-y-2">
              <Label htmlFor="gender">Gender</Label>
-             <Select
+              <Select
                 value={watch("gender")}
-                onValueChange={(val: any) => setValue("gender", val, { shouldDirty: true, shouldValidate: true })}
+                onValueChange={(val: string) => setValue("gender", val, { shouldDirty: true, shouldValidate: true })}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select Gender" />
@@ -150,7 +154,7 @@ export default function ProfileForm({ profile, onSaved }: ProfileFormProps) {
             <Label>Faculty</Label>
             <Select
               value={watch("faculty")}
-              onValueChange={(val: any) => {
+              onValueChange={(val: string) => {
                   setValue("faculty", val, { shouldDirty: true, shouldValidate: true });
                   setValue("department", "", { shouldDirty: true, shouldValidate: true }); // reset department when faculty changes
               }}
@@ -159,7 +163,7 @@ export default function ProfileForm({ profile, onSaved }: ProfileFormProps) {
                 <SelectValue placeholder="Select Faculty" />
               </SelectTrigger>
               <SelectContent>
-                {faculties?.map((faculty: any) => (
+                {faculties?.map((faculty: Faculty) => (
                   <SelectItem key={faculty.id} value={faculty.id}>
                     {faculty.name}
                   </SelectItem>
@@ -172,14 +176,14 @@ export default function ProfileForm({ profile, onSaved }: ProfileFormProps) {
             <Label>Department</Label>
             <Select
               value={watch("department")}
-              onValueChange={(val: any) => setValue("department", val, { shouldDirty: true, shouldValidate: true })}
+              onValueChange={(val: string) => setValue("department", val, { shouldDirty: true, shouldValidate: true })}
               disabled={!departments?.length}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Select Department" />
               </SelectTrigger>
               <SelectContent>
-                {departments?.map((dept: any) => (
+                {departments?.map((dept: Department) => (
                   <SelectItem key={dept.id} value={dept.id}>
                     {dept.name}
                   </SelectItem>
@@ -192,7 +196,7 @@ export default function ProfileForm({ profile, onSaved }: ProfileFormProps) {
             <Label htmlFor="year">Level / Year</Label>
             <Select
                 value={watch("year")}
-                onValueChange={(val: any) => setValue("year", val, { shouldDirty: true, shouldValidate: true })}
+                onValueChange={(val: string) => setValue("year", val, { shouldDirty: true, shouldValidate: true })}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select Level" />

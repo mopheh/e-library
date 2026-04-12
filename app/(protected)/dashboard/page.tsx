@@ -1,16 +1,12 @@
 "use client"
-import React, { useEffect } from "react"
-import { useClerk, useUser } from "@clerk/nextjs"
-import { useRouter } from "next/navigation"
+import React from "react"
+import { useUser } from "@clerk/nextjs"
 import HomeDashboard from "@/components/Dashboard/HomeDashboard"
 import AspirantDashboard from "@/components/Dashboard/AspirantDashboard"
-import AdminDashboard from "@/components/adminDashboard/AdminDashboard"
 import { useUserData } from "@/hooks/useUsers"
 
 const Page = () => {
-  const { signOut } = useClerk()
-  const router = useRouter()
-  const { isSignedIn, isLoaded } = useUser()
+  const { isLoaded } = useUser()
   const { data: dbUser, isLoading: dbUserLoading } = useUserData()
 
   if (!isLoaded || dbUserLoading) {

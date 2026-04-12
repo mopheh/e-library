@@ -4,7 +4,6 @@ import { useForm, Controller, SubmitHandler } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
-import { useFileUpload } from "@/hooks/useFileUpload";
 import { toast } from "sonner";
 import { ClipboardPaste, CloudUpload, Link as LinkIcon } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -47,7 +46,7 @@ export function UploadBookForm({
   setOpen,
 }: {
   department: Department[] | null;
-  setOpen: Function;
+  setOpen: (open: boolean) => void;
 }) {
   const [loading, setLoading] = useState(false);
   const { createBook } = useCreateBook();
@@ -85,8 +84,6 @@ export function UploadBookForm({
     toast.info("Uploading...");
 
     try {
-      let fileUrl: string | undefined;
-
       if (data.source === "file" && data.fileUrl) {
         await createBook({
           fileUrl: data.fileUrl,
@@ -143,11 +140,11 @@ export function UploadBookForm({
         setValue("link", text);
         toast.success("Pasted from clipboard");
       }
-    } catch (err) {
+    } catch {
       toast.error("Clipboard access denied");
     }
   };
-  const onError = (errors: any) => {
+  const onError = (errors: unknown) => {
     console.error("❌ validation failed", errors);
   };
 

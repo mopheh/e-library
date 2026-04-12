@@ -8,7 +8,7 @@ import { eq } from "drizzle-orm";
 import { generateWithGemini } from "./gemini";
 
 // Helper: fetch with retry on 429
-async function fetchWithRetry(url: string, options: any, retries = 5) {
+async function fetchWithRetry(url: string, options: RequestInit, retries = 5) {
   for (let attempt = 0; attempt < retries; attempt++) {
     const res = await fetch(url, options);
     if (res.status !== 429) return res;
@@ -70,11 +70,20 @@ Text: ${textBatch}
       continue;
     }
 
-    let generated;
+    interface AIQuestion {
+      questionText: string;
+      type: "mcq" | "short_answer";
+      options: {
+        optionText: string;
+        isCorrect: boolean;
+      }[];
+    }
+
+    let generated: AIQuestion[];
     try {
       // Clean up markdown code blocks if present
       const cleaned = responseText.replace(/```json/g, "").replace(/```/g, "").trim();
-      generated = JSON.parse(cleaned || "[]");
+      generated = JSON.parse(cleaned || "[]") as AIQuestion[];
     } catch (err) {
       console.error("Failed to parse AI response:", responseText, err);
       continue;
@@ -92,7 +101,7 @@ Text: ${textBatch}
         .returning({ id: questions.id });
 
       await db.insert(options).values(
-        q.options.map((opt: any) => ({
+        q.options.map((opt: { optionText: string; isCorrect: boolean }) => ({
           questionId: savedQ.id,
           optionText: opt.optionText,
           isCorrect: opt.isCorrect,

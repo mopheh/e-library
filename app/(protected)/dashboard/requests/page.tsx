@@ -4,6 +4,7 @@ import { eq, desc } from "drizzle-orm";
 import { resourceRequests, users } from "@/database/schema";
 import { Search, Plus, BookOpen, Clock, CheckCircle } from "lucide-react";
 import { currentUser } from "@clerk/nextjs/server";
+import { User } from "@/types";
 
 export default async function ResourceRequestsPage() {
   const clerkUser = await currentUser();
@@ -56,7 +57,7 @@ export default async function ResourceRequestsPage() {
             <BookOpen className="w-10 h-10 mx-auto mb-4 text-zinc-300 dark:text-zinc-700" />
             <h3 className="text-xl font-medium mb-2">No Requests Yet</h3>
             <p className="text-zinc-500">
-              Can't find what you need? Be the first to submit a material request!
+              Can&apos;t find what you need? Be the first to submit a material request!
             </p>
           </div>
         ) : (
@@ -88,9 +89,9 @@ export default async function ResourceRequestsPage() {
               <div className="mt-4 pt-4 border-t border-zinc-100 dark:border-zinc-800 flex items-center justify-between text-xs text-zinc-500">
                 <div className="flex items-center gap-1.5 font-medium">
                   <div className="w-6 h-6 bg-zinc-200 dark:bg-zinc-800 rounded-full flex items-center justify-center font-bold">
-                    {(req.user as any)?.fullName?.charAt(0) || "U"}
+                    {(req.user as User | null)?.fullName?.charAt(0) || "U"}
                   </div>
-                  {(req.user as any)?.fullName?.split(" ")[0] || "Unknown"}
+                  {(req.user as User | null)?.fullName?.split(" ")[0] || "Unknown"}
                 </div>
                 <div className="flex items-center gap-1">
                    <Clock className="w-3.5 h-3.5" />

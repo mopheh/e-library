@@ -1,0 +1,608 @@
+﻿
+> e-library-@0.1.0 lint
+> next lint
+
+cmd : `next lint` is deprecated and will be removed in Next.js 16.
+At line:1 char:1
++ cmd /c npm run lint > lint_output.txt 2>&1
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (`next lint` is ... in Next.js 16.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+For new projects, use create-next-app to choose your preferred linter.
+For existing projects, migrate to the ESLint CLI:
+npx @next/codemod@canary next-lint-to-eslint-cli .
+
+ ΓÜá Mismatching @next/swc version, detected: 15.5.7 while Next.js is on 15.5.11. Please ensure these match
+
+./app/(auth)/sign-in/[[...sign-in]]/page.tsx
+5:8  Error: 'Image' is defined but never used.  @typescript-eslint/no-unused-vars
+7:8  Error: 'clsx' is defined but never used.  @typescript-eslint/no-unused-vars
+19:11  Error: 'isSignedIn' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+19:33  Error: 'user' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+20:10  Error: 'currentImage' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+21:10  Error: 'showForm' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+111:13  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from 
+`next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from 
+your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./app/(auth)/sign-up/[[...sign-up]]/page.tsx
+5:8  Error: 'Image' is defined but never used.  @typescript-eslint/no-unused-vars
+7:8  Error: 'clsx' is defined but never used.  @typescript-eslint/no-unused-vars
+20:10  Error: 'currentImage' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+21:10  Error: 'showForm' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+95:13  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from 
+`next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from 
+your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./app/(protected)/book/[id]/page.tsx
+2:17  Error: 'useEffect' is defined but never used.  @typescript-eslint/no-unused-vars
+20:25  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+20:49  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+24:12  Error: 'AiOutlineBook' is not defined.  react/jsx-no-undef
+29:24  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+45:38  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+45:69  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./app/(protected)/dashboard/admin/verifications/page.tsx
+16:44  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+25:14  Error: 'e' is defined but never used.  @typescript-eslint/no-unused-vars
+65:14  Error: 'error' is defined but never used.  @typescript-eslint/no-unused-vars
+118:67  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./app/(protected)/dashboard/community/[departmentId]/page.tsx
+4:30  Error: 'faculty' is defined but never used.  @typescript-eslint/no-unused-vars
+5:10  Error: 'Users' is defined but never used.  @typescript-eslint/no-unused-vars
+5:17  Error: 'BookOpen' is defined but never used.  @typescript-eslint/no-unused-vars
+6:8  Error: 'Image' is defined but never used.  @typescript-eslint/no-unused-vars
+93:23  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from 
+`next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from 
+your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./app/(protected)/dashboard/courses/[id]/page.tsx
+9:16  Error: 'CardContent' is defined but never used.  @typescript-eslint/no-unused-vars
+117:36  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+165:38  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./app/(protected)/dashboard/leaderboard/page.tsx
+159:29  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./app/(protected)/dashboard/page.tsx
+2:17  Error: 'useEffect' is defined but never used.  @typescript-eslint/no-unused-vars
+7:8  Error: 'AdminDashboard' is defined but never used.  @typescript-eslint/no-unused-vars
+11:11  Error: 'signOut' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+12:9  Error: 'router' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+13:11  Error: 'isSignedIn' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./app/(protected)/dashboard/requests/page.tsx
+5:41  Error: 'CheckCircle' is defined but never used.  @typescript-eslint/no-unused-vars
+59:18  Error: `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`.  react/no-unescaped-entities
+91:35  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+93:33  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./app/(protected)/dashboard/study-rooms/[roomId]/page.tsx
+18:44  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+20:50  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+46:61  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+47:20  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+48:29  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+52:50  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+56:52  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+60:40  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./app/(protected)/dashboard/tutor/[courseId]/page.tsx
+5:47  Error: 'Loader2' is defined but never used.  @typescript-eslint/no-unused-vars
+8:11  Error: 'courseId' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./app/(protected)/data/departments/[department]/page.tsx
+49:16  Error: 'booksLoading' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+50:12  Error: 'booksError' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+68:30  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from 
+`next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from 
+your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./app/(protected)/data/page.tsx
+3:8  Error: 'Sidebar' is defined but never used.  @typescript-eslint/no-unused-vars
+7:3  Error: Use "@ts-expect-error" instead of "@ts-ignore", as "@ts-ignore" will do nothing if the following line is 
+error-free.  @typescript-eslint/ban-ts-comment
+
+./app/(protected)/layout.tsx
+10:45  Error: React Hook "useState" is called in function "layout" that is neither a React function component nor a 
+custom React Hook function. React component names must start with an uppercase letter. React Hook names must start 
+with the word "use".  react-hooks/rules-of-hooks
+13:21  Error: React Hook "useRef" is called in function "layout" that is neither a React function component nor a 
+custom React Hook function. React component names must start with an uppercase letter. React Hook names must start 
+with the word "use".  react-hooks/rules-of-hooks
+14:20  Error: React Hook "usePathname" is called in function "layout" that is neither a React function component nor a 
+custom React Hook function. React component names must start with an uppercase letter. React Hook names must start 
+with the word "use".  react-hooks/rules-of-hooks
+
+./app/(protected)/library/page.tsx
+7:10  Error: 'addRecentlyViewedBook' is defined but never used.  @typescript-eslint/no-unused-vars
+54:19  Error: `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`.  react/no-unescaped-entities
+83:52  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+90:6  Warning: React Hook useEffect has missing dependencies: 'department' and 'level'. Either include them or remove 
+the dependency array.  react-hooks/exhaustive-deps
+172:49  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./app/(protected)/profile/page.tsx
+22:42  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./app/api/activity/route.ts
+7:27  Error: 'req' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./app/api/admin/stats/route.ts
+9:21  Error: 'sessionClaims' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./app/api/ai-insights/route.ts
+90:19  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./app/api/analytics/route.ts
+5:30  Error: 'lte' is defined but never used.  @typescript-eslint/no-unused-vars
+6:57  Error: 'startOfWeek' is defined but never used.  @typescript-eslint/no-unused-vars
+6:70  Error: 'endOfWeek' is defined but never used.  @typescript-eslint/no-unused-vars
+201:19  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./app/api/ask/route.ts
+88:19  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./app/api/aspirant/cbt/route.ts
+3:65  Error: 'users' is defined but never used.  @typescript-eslint/no-unused-vars
+49:18  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./app/api/b2/route.ts
+131:19  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./app/api/books/route.ts
+4:20  Error: 'PutObjectCommand' is defined but never used.  @typescript-eslint/no-unused-vars
+5:7  Error: 's3' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+17:3  Error: 'bookPages' is defined but never used.  @typescript-eslint/no-unused-vars
+26:16  Error: 'uuidv4' is defined but never used.  @typescript-eslint/no-unused-vars
+27:10  Error: 'supabase' is defined but never used.  @typescript-eslint/no-unused-vars
+53:7  Error: Use "@ts-expect-error" instead of "@ts-ignore", as "@ts-ignore" will do nothing if the following line is 
+error-free.  @typescript-eslint/ban-ts-comment
+103:42  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
+104:10  Error: 'parsePdfPages' is defined but never used.  @typescript-eslint/no-unused-vars
+105:10  Error: 'authorizeB2' is defined but never used.  @typescript-eslint/no-unused-vars
+105:23  Error: 'b2' is defined but never used.  @typescript-eslint/no-unused-vars
+106:10  Error: 'generateQuestionsFromBook' is defined but never used.  @typescript-eslint/no-unused-vars
+150:38  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+151:12  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+155:52  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+167:19  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./app/api/books/[id]/download/route.ts
+43:17  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./app/api/books/[id]/pages/route.ts
+23:17  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./app/api/books/[id]/proxy/route.ts
+92:17  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./app/api/courses/[courseId]/study-rooms/route.ts
+4:20  Error: 'and' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./app/api/courses/[courseId]/workspace/route.ts
+17:11  Error: 'user' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./app/api/departments/[departmentId]/courses/route.ts
+4:27  Error: 'req' is defined but never used.  @typescript-eslint/no-unused-vars
+7:12  Error: 'error' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./app/api/departments/[departmentId]/leaderboard/route.ts
+12:14  Error: 'count' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./app/api/goals/route.ts
+57:19  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+113:19  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./app/api/me/route.ts
+21:5  Error: Use "@ts-expect-error" instead of "@ts-ignore", as "@ts-ignore" will do nothing if the following line is 
+error-free.  @typescript-eslint/ban-ts-comment
+
+./app/api/notifications/route.ts
+7:27  Error: 'req' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./app/api/opportunities/route.ts
+15:9  Error: 'query' is never reassigned. Use 'const' instead.  prefer-const
+
+./app/api/profile/route.ts
+109:19  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+155:23  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+179:19  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./app/api/search/route.ts
+3:21  Error: 'sql' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./app/api/senior-qa/route.ts
+16:9  Error: 'query' is never reassigned. Use 'const' instead.  prefer-const
+
+./app/api/student/faculty-rep/route.ts
+8:27  Error: 'req' is defined but never used.  @typescript-eslint/no-unused-vars
+35:14  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./app/api/users/book-count/route.ts
+4:19  Error: 'gte' is defined but never used.  @typescript-eslint/no-unused-vars
+14:5  Error: Use "@ts-expect-error" instead of "@ts-ignore", as "@ts-ignore" will do nothing if the following line is 
+error-free.  @typescript-eslint/ban-ts-comment
+19:9  Error: 'today' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+39:27  Error: 'req' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./app/api/users/book-progress/route.ts
+52:19  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+101:21  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./app/api/users/courses/route.ts
+4:14  Error: 'and' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./app/api/users/reading-session/route.ts
+15:5  Error: Use "@ts-expect-error" instead of "@ts-ignore", as "@ts-ignore" will do nothing if the following line is 
+error-free.  @typescript-eslint/ban-ts-comment
+51:27  Error: 'req' is defined but never used.  @typescript-eslint/no-unused-vars
+98:9  Error: Use "@ts-expect-error" instead of "@ts-ignore", as "@ts-ignore" will do nothing if the following line is 
+error-free.  @typescript-eslint/ban-ts-comment
+
+./app/api/users/route.ts
+117:5  Error: Use "@ts-expect-error" instead of "@ts-ignore", as "@ts-ignore" will do nothing if the following line is 
+error-free.  @typescript-eslint/ban-ts-comment
+
+./app/layout.tsx
+10:7  Error: 'poppinsSans' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./app/not-found.tsx
+37:52  Error: `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`.  react/no-unescaped-entities
+
+./components/AddCourses.tsx
+35:18  Error: 'errors' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+41:11  Error: 'isError' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+41:20  Error: 'error' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./components/adminDashboard/AddBook.tsx
+7:10  Error: 'useFileUpload' is defined but never used.  @typescript-eslint/no-unused-vars
+50:12  Error: The `Function` type accepts any function-like value.
+Prefer explicitly defining any function parameters and return type.  @typescript-eslint/no-unsafe-function-type
+88:11  Error: 'fileUrl' is defined but never used.  @typescript-eslint/no-unused-vars
+146:14  Error: 'err' is defined but never used.  @typescript-eslint/no-unused-vars
+150:28  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./components/adminDashboard/AdminDashboard.tsx
+12:8  Error: 'MiniLoader' is defined but never used.  @typescript-eslint/no-unused-vars
+46:11  Error: 'users' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+47:16  Error: 'usersLoading' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+48:14  Error: 'usersError' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+49:12  Error: 'usersErr' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+64:6  Warning: React Hook useEffect has a missing dependency: 'user'. Either include it or remove the dependency 
+array.  react-hooks/exhaustive-deps
+74:6  Warning: React Hook useEffect has missing dependencies: 'departmentsErr?.message', 'facultiesErr?.message', and 
+'statsErr?.message'. Either include them or remove the dependency array.  react-hooks/exhaustive-deps
+
+./components/adminDashboard/Courses.tsx
+2:17  Error: 'useEffect' is defined but never used.  @typescript-eslint/no-unused-vars
+3:8  Error: 'Nav' is defined but never used.  @typescript-eslint/no-unused-vars
+4:8  Error: 'Welcome' is defined but never used.  @typescript-eslint/no-unused-vars
+5:8  Error: 'Stat' is defined but never used.  @typescript-eslint/no-unused-vars
+7:10  Error: 'useCourses' is defined but never used.  @typescript-eslint/no-unused-vars
+12:10  Error: 'getDepartmentWithFaculty' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./components/adminDashboard/CustomList.tsx
+4:8  Error: 'AddCoursesForm' is defined but never used.  @typescript-eslint/no-unused-vars
+12:3  Error: 'courses' is defined but never used.  @typescript-eslint/no-unused-vars
+14:3  Error: 'students' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./components/adminDashboard/department/AddFacultyForm.tsx
+25:6  Warning: React Hook useEffect has a missing dependency: 'error?.message'. Either include it or remove the 
+dependency array.  react-hooks/exhaustive-deps
+32:18  Error: 'errors' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+70:19  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./components/adminDashboard/department/DepartmentRow.tsx
+6:10  Error: 'Settings2' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./components/adminDashboard/faculty/AddRepModal.tsx
+9:81  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+15:45  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+33:25  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+65:62  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./components/adminDashboard/faculty/FacultyRow.tsx
+58:32  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from 
+`next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from 
+your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./components/adminDashboard/SkeletonRow.tsx
+3:31  Error: 'columns' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./components/adminDashboard/StudentRow.tsx
+3:8  Error: 'Link' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./components/aspirant/AspirantCbt.tsx
+4:18  Error: 'AnimatePresence' is defined but never used.  @typescript-eslint/no-unused-vars
+5:75  Error: 'BookOpen' is defined but never used.  @typescript-eslint/no-unused-vars
+9:10  Error: 'Checkbox' is defined but never used.  @typescript-eslint/no-unused-vars
+19:10  Error: 'capitalize' is defined but never used.  @typescript-eslint/no-unused-vars
+37:46  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+42:10  Error: 'isSyncing' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+171:14  Error: 'err' is defined but never used.  @typescript-eslint/no-unused-vars
+377:60  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+450:47  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./components/aspirant/AspirantConnect.tsx
+5:50  Error: 'BookOpen' is defined but never used.  @typescript-eslint/no-unused-vars
+5:60  Error: 'Clock' is defined but never used.  @typescript-eslint/no-unused-vars
+17:36  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+99:42  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+142:42  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./components/aspirant/AspirantVerify.tsx
+5:10  Error: 'UploadCloud' is defined but never used.  @typescript-eslint/no-unused-vars
+5:61  Error: 'FileText' is defined but never used.  @typescript-eslint/no-unused-vars
+9:10  Error: 'LEVEL_ENUM' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./components/aspirant/DepartmentPreview.tsx
+17:11  Error: 'user' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+18:36  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+189:86  Error: `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.  react/no-unescaped-entities
+189:94  Error: `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.  react/no-unescaped-entities
+
+./components/Dashboard/AcademicFeed.tsx
+3:28  Error: 'useState' is defined but never used.  @typescript-eslint/no-unused-vars
+11:10  Error: 'useParams' is defined but never used.  @typescript-eslint/no-unused-vars
+103:16  Error: `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`.  react/no-unescaped-entities
+
+./components/Dashboard/Activity.tsx
+3:10  Error: 'act' is defined but never used.  @typescript-eslint/no-unused-vars
+3:20  Error: 'useEffect' is defined but never used.  @typescript-eslint/no-unused-vars
+10:3  Error: 'FileText' is defined but never used.  @typescript-eslint/no-unused-vars
+11:3  Error: 'Bot' is defined but never used.  @typescript-eslint/no-unused-vars
+22:10  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+23:10  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+27:7  Error: 'activityIcons' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+67:64  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+68:22  Error: 'setActivities' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./components/Dashboard/AddedMaterials.tsx
+7:3  Error: 'TableCell' is defined but never used.  @typescript-eslint/no-unused-vars
+12:10  Error: 'BookOpen' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./components/Dashboard/Analytics/ActivityHeatmap.tsx
+3:10  Error: 'Tooltip' is defined but never used.  @typescript-eslint/no-unused-vars
+3:19  Error: 'TooltipContent' is defined but never used.  @typescript-eslint/no-unused-vars
+3:35  Error: 'TooltipProvider' is defined but never used.  @typescript-eslint/no-unused-vars
+3:52  Error: 'TooltipTrigger' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./components/Dashboard/Analytics/ContinueReading.tsx
+4:8  Error: 'Image' is defined but never used.  @typescript-eslint/no-unused-vars
+6:8  Error: 'ViewedBook' is defined but never used.  @typescript-eslint/no-unused-vars
+11:38  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./components/Dashboard/Analytics/GoalsCard.tsx
+4:24  Error: 'CheckCircle2' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./components/Dashboard/Analytics/KPICards.tsx
+2:20  Error: 'Clock' is defined but never used.  @typescript-eslint/no-unused-vars
+16:3  Error: 'minutesRead' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./components/Dashboard/AskSeniorsBoard.tsx
+90:27  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./components/Dashboard/Assistant.tsx
+53:6  Warning: React Hook useEffect has a missing dependency: 'loading'. Either include it or remove the dependency 
+array.  react-hooks/exhaustive-deps
+
+./components/Dashboard/BooksRow.tsx
+58:14  Error: 'e' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./components/Dashboard/BookWrap.tsx
+3:8  Error: 'NoBookWrap' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./components/Dashboard/cbt/CbtContainer.tsx
+16:46  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+17:10  Error: 'isRestoring' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+57:35  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+82:24  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+84:27  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+85:45  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+92:46  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./components/Dashboard/cbt/CbtQuestion.tsx
+7:69  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+15:39  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./components/Dashboard/cbt/CbtResult.tsx
+13:14  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+35:53  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./components/Dashboard/cbt/CbtSetup.tsx
+18:15  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+23:19  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./components/Dashboard/cbt/CbtSidebar.tsx
+9:4  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+16:28  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./components/Dashboard/cbt/CbtSubmitModal.tsx
+5:80  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./components/Dashboard/cbt/CbtTest.tsx
+16:4  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./components/Dashboard/Charts.tsx
+16:11  Error: 'Props' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./components/Dashboard/CourseDiscussions.tsx
+48:63  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+169:61  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./components/Dashboard/CourseRegistration.tsx
+103:47  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./components/Dashboard/ExamInsightsView.tsx
+6:29  Error: 'CardDescription' is defined but never used.  @typescript-eslint/no-unused-vars
+94:35  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./components/Dashboard/ExamPrepBanner.tsx
+4:41  Error: 'ChevronRight' is defined but never used.  @typescript-eslint/no-unused-vars
+5:10  Error: 'formatDistanceToNow' is defined but never used.  @typescript-eslint/no-unused-vars
+7:10  Error: 'useParams' is defined but never used.  @typescript-eslint/no-unused-vars
+56:17  Error: `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`.  react/no-unescaped-entities
+
+./components/Dashboard/HomeDashboard.tsx
+1:17  Error: 'useEffect' is defined but never used.  @typescript-eslint/no-unused-vars
+6:8  Error: 'WeeklyTrends' is defined but never used.  @typescript-eslint/no-unused-vars
+15:8  Error: 'CourseDiscussions' is defined but never used.  @typescript-eslint/no-unused-vars
+17:10  Error: 'AcademicFeed' is defined but never used.  @typescript-eslint/no-unused-vars
+22:9  Error: 'resumptionDate' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+24:9  Error: 'daysToExam' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+30:11  Error: 'user' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+30:17  Error: 'isSignedIn' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+30:29  Error: 'isLoaded' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+31:9  Error: 'router' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./components/Dashboard/LeaderboardTable.tsx
+4:10  Error: 'useQuery' is defined but never used.  @typescript-eslint/no-unused-vars
+6:16  Error: 'CardContent' is defined but never used.  @typescript-eslint/no-unused-vars
+6:29  Error: 'CardHeader' is defined but never used.  @typescript-eslint/no-unused-vars
+6:41  Error: 'CardTitle' is defined but never used.  @typescript-eslint/no-unused-vars
+17:36  Error: 'departmentId' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./components/Dashboard/MobileNav.tsx
+4:8  Error: 'Image' is defined but never used.  @typescript-eslint/no-unused-vars
+5:10  Error: 'useParams' is defined but never used.  @typescript-eslint/no-unused-vars
+6:10  Error: 'BookmarkIcon' is defined but never used.  @typescript-eslint/no-unused-vars
+11:3  Error: 'UserIcon' is defined but never used.  @typescript-eslint/no-unused-vars
+12:3  Error: 'MonitorPlay' is defined but never used.  @typescript-eslint/no-unused-vars
+13:3  Error: 'Medal' is defined but never used.  @typescript-eslint/no-unused-vars
+14:3  Error: 'Briefcase' is defined but never used.  @typescript-eslint/no-unused-vars
+30:11  Error: 'user' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+31:11  Error: 'signOut' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+36:10  Error: 'dropdownOpen' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+36:24  Error: 'setDropdownOpen' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./components/Dashboard/MobileRepFloatingButton.tsx
+3:10  Error: 'UserCircle' is defined but never used.  @typescript-eslint/no-unused-vars
+3:43  Error: 'PartyPopper' is defined but never used.  @typescript-eslint/no-unused-vars
+14:36  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+52:25  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./components/Dashboard/MyCourses.tsx
+5:10  Error: 'useParams' is defined but never used.  @typescript-eslint/no-unused-vars
+6:39  Error: 'FileText' is defined but never used.  @typescript-eslint/no-unused-vars
+82:20  Error: `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`.  react/no-unescaped-entities
+
+./components/Dashboard/Nav.tsx
+4:18  Error: 'SearchIcon' is defined but never used.  @typescript-eslint/no-unused-vars
+5:10  Error: 'BellIcon' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./components/Dashboard/Notifications/NotificationBell.tsx
+5:45  Error: 'DropdownMenuItem' is defined but never used.  @typescript-eslint/no-unused-vars
+10:56  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+40:53  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./components/Dashboard/PDFReader.tsx
+50:9  Error: 'containerRef' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+61:40  Error: 'loadingProgress' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+93:40  Error: 'ZoomPopover' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+118:33  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+209:24  Error: 'props' is defined but never used.  @typescript-eslint/no-unused-vars
+211:33  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+213:42  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+236:32  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+256:34  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+283:67  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+342:6  Warning: React Hook useEffect has a missing dependency: 'currentPage'. Either include it or remove the 
+dependency array.  react-hooks/exhaustive-deps
+377:6  Warning: React Hook useEffect has a missing dependency: 'bookId'. Either include it or remove the dependency 
+array.  react-hooks/exhaustive-deps
+
+./components/Dashboard/Response.tsx
+14:17  Error: 'node' is defined but never used.  @typescript-eslint/no-unused-vars
+20:18  Error: 'node' is defined but never used.  @typescript-eslint/no-unused-vars
+26:19  Error: 'node' is defined but never used.  @typescript-eslint/no-unused-vars
+32:16  Error: 'node' is defined but never used.  @typescript-eslint/no-unused-vars
+38:16  Error: 'node' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./components/Dashboard/SearchCommand.tsx
+14:39  Error: 'Search' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./components/Dashboard/Sidebar.tsx
+5:10  Error: 'useParams' is defined but never used.  @typescript-eslint/no-unused-vars
+20:10  Error: 'ModeToggle' is defined but never used.  @typescript-eslint/no-unused-vars
+39:11  Error: 'user' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+47:24  Error: 'setDropdownOpen' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./components/Dashboard/SidebarRepWidget.tsx
+14:36  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+65:25  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+95:30  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from 
+`next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from 
+your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+143:41  Error: `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`.  react/no-unescaped-entities
+
+./components/Dashboard/Stat.tsx
+2:8  Error: 'Image' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./components/Dashboard/Stats.tsx
+2:10  Error: 'useUser' is defined but never used.  @typescript-eslint/no-unused-vars
+3:8  Error: 'Stat' is defined but never used.  @typescript-eslint/no-unused-vars
+4:8  Error: 'Welcome' is defined but never used.  @typescript-eslint/no-unused-vars
+5:10  Error: 'useMyBooks' is defined but never used.  @typescript-eslint/no-unused-vars
+6:10  Error: 'useReadingSession' is defined but never used.  @typescript-eslint/no-unused-vars
+8:3  Error: 'HiOutlineBookOpen' is defined but never used.  @typescript-eslint/no-unused-vars
+9:3  Error: 'HiOutlineDocumentText' is defined but never used.  @typescript-eslint/no-unused-vars
+10:3  Error: 'HiOutlineCalendar' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./components/Dashboard/StudyRoomsList.tsx
+15:10  Error: 'useParams' is defined but never used.  @typescript-eslint/no-unused-vars
+133:29  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./components/Dashboard/SurvivalGuidesList.tsx
+137:31  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./components/Dashboard/UserStats.tsx
+20:10  Error: 'useEffect' is defined but never used.  @typescript-eslint/no-unused-vars
+62:9  Error: 'totalPages' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./components/Dashboard/ViewedBook.tsx
+11:39  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./components/profile/ProfileOverview.tsx
+7:12  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./components/shared/FileUploadDropzone.tsx
+3:17  Error: 'useCallback' is defined but never used.  @typescript-eslint/no-unused-vars
+85:19  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./components/ui/command.tsx
+26:11  Error: An interface declaring no members is equivalent to its supertype.  
+@typescript-eslint/no-empty-object-type
+79:6  Error: 'className' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./components/welcome-toast.tsx
+8:10  Error: 'progress' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./lib/ai-utils.ts
+10:18  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+21:19  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./lib/auth.ts
+30:43  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./lib/generateQuestions.ts
+11:16  Error: 'fetchWithRetry' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./lib/ocr.ts
+8:52  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+9:20  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+10:21  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+11:53  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+17:5  Warning: Unused eslint-disable directive (no problems were reported from 
+'@typescript-eslint/no-require-imports').
+19:12  Error: 'err' is defined but never used.  @typescript-eslint/no-unused-vars
+44:39  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+44:53  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+48:41  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+48:55  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+info  - Need to disable some ESLint rules? Learn more here: 
+https://nextjs.org/docs/app/api-reference/config/eslint#disabling-rules

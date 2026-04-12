@@ -1,9 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
+import { User } from "@/types";
 
 export const useDepartmentId = () => {
   return useQuery({
     queryKey: ["departmentId"],
-    queryFn: async () => {
+    queryFn: async (): Promise<string> => {
       const res = await fetch("/api/me");
       if (!res.ok) throw new Error("Failed to fetch department");
       const { departmentId } = await res.json();
@@ -15,7 +16,7 @@ export const useDepartmentId = () => {
 export const useUserData = () => {
   return useQuery({
     queryKey: ["mydata"],
-    queryFn: async () => {
+    queryFn: async (): Promise<User> => {
       const res = await fetch("/api/me");
       if (!res.ok) throw new Error("Failed to fetch data");
       const data = await res.json();
@@ -27,7 +28,7 @@ export const useUserData = () => {
 export const useAllUsers = () => {
   return useQuery({
     queryKey: ["allUsers"],
-    queryFn: async () => {
+    queryFn: async (): Promise<User[]> => {
       const res = await fetch("/api/users");
       const data = await res.json();
       return data;
@@ -54,7 +55,7 @@ export const useUsers = (facultyId?: string) => {
 
   return useQuery({
     queryKey,
-    queryFn: async () => {
+    queryFn: async (): Promise<User[]> => {
       const url = facultyId
         ? `/api/users?facultyId=${facultyId}`
         : `/api/users`;
@@ -74,7 +75,7 @@ export const useDepartmentUsers = (departmentId?: string) => {
 
   return useQuery({
     queryKey,
-    queryFn: async () => {
+    queryFn: async (): Promise<User[]> => {
       const url = departmentId
         ? `/api/users?departmentId=${departmentId}`
         : `/api/users`;

@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { FiBookOpen } from "react-icons/fi";
 
 const Preloader = () => {
   const [isDone, setIsDone] = useState(false);

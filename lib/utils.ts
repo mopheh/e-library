@@ -7,12 +7,12 @@ export function cn(...inputs: ClassValue[]) {
 }
 export const STORAGE_KEY = "recentlyViewedBooks";
 
-export const addRecentlyViewedBook = (book: { id: any; progress: number }) => {
+export const addRecentlyViewedBook = (book: { id: string; progress: number }) => {
   if (!book?.id) return;
 
   const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
 
-  const filtered = stored.filter((b: { id: any }) => b.id !== book.id); // avoid duplicates
+  const filtered = stored.filter((b: { id: string }) => b.id !== book.id); // avoid duplicates
 
   const updated = [book, ...filtered].slice(0, 5); // max 5 recent
 
@@ -56,7 +56,10 @@ export const extractTextFromPage = async (
   const pdf = await loadingTask.promise;
   const page = await pdf.getPage(pageNum);
   const content = await page.getTextContent();
-  return content.items.map((item: any) => item.str).join(" ");
+  interface TextItem {
+    str: string;
+  }
+  return content.items.map((item: unknown) => (item as TextItem).str).join(" ");
 };
 export function getMostVisiblePage(container: HTMLDivElement): number | null {
   const pageContainers = Array.from(
@@ -120,7 +123,7 @@ export const b2 = new B2({
 });
 
 export async function authorizeB2() {
-  //@ts-ignore
+  //@ts-expect-error - Internal property check
   if (!b2.authorizationToken) {
     await b2.authorize(); // gets auth + API URLs
   }

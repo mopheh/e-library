@@ -50,7 +50,7 @@ const AddCoursesForm: React.FC<Props> = ({ department, departmentId }) => {
         description: "Course has been created.",
         style: { color: "#22c55e", fontWeight: "bold" },
       },
-      error: (err) => ({
+      error: (err: Error) => ({
         message: "Error creating course",
         description: err.message || "Something went wrong",
         style: {
@@ -65,7 +65,7 @@ const AddCoursesForm: React.FC<Props> = ({ department, departmentId }) => {
       await promise;
       await queryClient.invalidateQueries({ queryKey: ["courses"] });
       reset();
-    } catch (err) {
+    } catch (err: unknown) {
       console.error("Failed to create course:", err);
     }
   };

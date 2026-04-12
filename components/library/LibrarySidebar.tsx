@@ -2,6 +2,7 @@ import React from "react";
 import { Filter, Layers, BookOpen, LibraryBig } from "lucide-react";
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion";
 import { cn } from "@/lib/utils";
+import { Department } from "@/types";
 
 export const LibrarySidebar = ({
   department,
@@ -18,7 +19,7 @@ export const LibrarySidebar = ({
   setLevel: (val: string) => void;
   type: string;
   setType: (val: string) => void;
-  departments: any[];
+  departments: Department[];
 }) => {
   return (
     <div className="w-full lg:w-72 shrink-0 flex flex-col gap-6">

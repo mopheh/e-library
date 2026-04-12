@@ -6,7 +6,7 @@ import BottomNav from "@/components/Dashboard/MobileNav";
 import MobileRepFloatingButton from "@/components/Dashboard/MobileRepFloatingButton";
 import { usePathname } from "next/navigation";
 
-export default function layout({ children }: { children: React.ReactNode }) {
+export default function Layout({ children }: { children: React.ReactNode }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);

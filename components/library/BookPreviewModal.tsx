@@ -1,10 +1,11 @@
 import React from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { formatBytes } from "@/lib/utils";
-import { BookOpen, Download, User, Calendar, ExternalLink } from "lucide-react";
+import { BookOpen, Download, User, Calendar } from "lucide-react";
+import { Book } from "@/types";
 
 interface BookPreviewModalProps {
-  book: any;
+  book: Book;
   isOpen: boolean;
   onClose: () => void;
   onOpenReader: (id: string) => void;

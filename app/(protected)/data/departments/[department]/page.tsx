@@ -9,7 +9,7 @@ import StudentRow from "@/components/adminDashboard/StudentRow";
 import { useBooks } from "@/hooks/useBooks";
 import { BooksRow } from "@/components/Dashboard/BooksRow";
 import { useParams } from "next/navigation";
-import { Book, Credentials } from "@/types";
+import { Book, User } from "@/types";
 import { useUsers } from "@/hooks/useUsers";
 import { Card, CardContent } from "@/components/ui/card";
 import { Mail, GraduationCap, Award, ShieldCheck } from "lucide-react";
@@ -51,7 +51,7 @@ const Page = () => {
   } = useBooks({ departmentId: department, page: bookPage });
 
   const { data: facultyUsers } = useUsers(departmentInfo?.facultyId);
-  const facultyReps = (facultyUsers || []).filter((u: any) => u.role === "FACULTY REP" || u.role === "faculty-rep");
+  const facultyReps = (facultyUsers || []).filter((u: User) => u.role === "FACULTY REP" || u.role === "faculty-rep");
 
   return (
     <>
@@ -59,7 +59,7 @@ const Page = () => {
          {/* Faculty Representatives Mini Profiles */}
         {!isFacultyRep && facultyReps.length > 0 && (
            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 font-poppins">
-              {facultyReps.map((rep: any) => (
+              {facultyReps.map((rep: User) => (
                  <Card key={rep.id} className="border-slate-100 dark:border-slate-900/50 bg-slate-50/50 dark:bg-slate-950/20 shadow-sm relative overflow-hidden">
                     <div className="absolute top-0 left-0 w-1.5 h-full bg-slate-500 rounded-l-xl"></div>
                     <CardContent className="p-4 flex items-start gap-4">
@@ -122,7 +122,7 @@ const Page = () => {
                   </thead>
                   <tbody>
                     {students &&
-                      students.map((student: Credentials) => (
+                      students.map((student: User) => (
                         <StudentRow key={student.id} student={student} />
                       ))}
                   </tbody>

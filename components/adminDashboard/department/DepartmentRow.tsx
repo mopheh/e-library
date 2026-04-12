@@ -12,7 +12,6 @@ const DepartmentRow = ({
   departmentId: string;
   name: string;
 }) => {
-  // @ts-ignore
   const { data: users, isLoading, isError } = useDepartmentUsers(departmentId);
 
   return (

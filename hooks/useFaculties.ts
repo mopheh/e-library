@@ -1,10 +1,5 @@
-// hooks/useFaculties.ts
 import { useQuery } from "@tanstack/react-query"
-
-export type Faculty = {
-  id: string
-  name: string
-}
+import { Faculty } from "@/types"
 
 const fetchFaculties = async ({
   page,

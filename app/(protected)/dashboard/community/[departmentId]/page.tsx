@@ -5,20 +5,21 @@ import { departments, users, faculty } from "@/database/schema";
 import { Users, BookOpen, MessageCircle, Info, Star } from "lucide-react";
 import Image from "next/image";
 
-export default async function DepartmentCommunityPage({
-  params,
-}: {
-  params: { departmentId: string };
+export default async function DepartmentCommunityPage(props: {
+  params: Promise<{ departmentId: string }>;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
+  const params = await props.params;
+  const { departmentId } = params;
   const department = await db.query.departments.findFirst({
-    where: eq(departments.id, params.departmentId),
+    where: eq(departments.id, departmentId),
     with: {
       faculty: true,
     },
   });
 
   const members = await db.query.users.findMany({
-    where: eq(users.departmentId, params.departmentId),
+    where: eq(users.departmentId, departmentId),
     limit: 12,
   });
 
@@ -89,9 +90,9 @@ export default async function DepartmentCommunityPage({
                     title={m.fullName}
                   >
                     {m.imageUrl ? (
-                      <img src={m.imageUrl} alt={m.fullName} className="w-full h-full rounded-full object-cover" />
+                      <img src={m.imageUrl} alt={m.fullName || "Member"} className="w-full h-full rounded-full object-cover" />
                     ) : (
-                      m.fullName.charAt(0).toUpperCase()
+                      m.fullName?.charAt(0).toUpperCase() || "U"
                     )}
                   </div>
                 ))

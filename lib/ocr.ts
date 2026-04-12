@@ -4,13 +4,24 @@ import fs from "fs";
 import os from "os";
 import path from "path";
 
-export async function extractTextWithOCR(pdf: any, pageNumber: number) {
-  let canvasModule: any;
+interface CanvasModule {
+  createCanvas: (width: number, height: number) => any;
+  Image: new () => any;
+  Canvas: new () => any;
+  ImageData: new (width: number, height: number) => any;
+}
+
+export async function extractTextWithOCR(pdf: pdfjsLib.PDFDocumentProxy, pageNumber: number) {
+  let canvasModule: CanvasModule | undefined;
   try {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
-    canvasModule = eval('require("canvas")');
+    canvasModule = eval('require("canvas")') as CanvasModule;
   } catch (err) {
     // ignore
+  }
+
+  if (!canvasModule) {
+    throw new Error("Canvas module is not available");
   }
 
   const { createCanvas, Image, Canvas, ImageData } = canvasModule;
@@ -30,11 +41,11 @@ export async function extractTextWithOCR(pdf: any, pageNumber: number) {
         context: _canvas.getContext("2d"),
       };
     }
-    reset(canvasAndContext: any, width: number, height: number) {
+    reset(canvasAndContext: { canvas: any; context: any }, width: number, height: number) {
       canvasAndContext.canvas.width = width;
       canvasAndContext.canvas.height = height;
     }
-    destroy(canvasAndContext: any) {
+    destroy(canvasAndContext: { canvas: any; context: any }) {
       canvasAndContext.canvas.width = 0;
       canvasAndContext.canvas.height = 0;
       canvasAndContext.canvas = null;
@@ -43,36 +54,37 @@ export async function extractTextWithOCR(pdf: any, pageNumber: number) {
   }
 
   // Inject Image, Canvas, ImageData into the global scope temporarily if PDF.js looks for it there 
-  const originalImage = (globalThis as any).Image;
-  const originalCanvas = (globalThis as any).Canvas;
-  const originalImageData = (globalThis as any).ImageData;
-  const originalCreateImageBitmap = (globalThis as any).createImageBitmap;
+  const global = globalThis as unknown as Record<string, unknown>;
+  const originalImage = global.Image;
+  const originalCanvas = global.Canvas;
+  const originalImageData = global.ImageData;
+  const originalCreateImageBitmap = global.createImageBitmap;
 
-  (globalThis as any).Image = Image;
-  (globalThis as any).Canvas = Canvas;
-  (globalThis as any).ImageData = ImageData;
+  global.Image = Image;
+  global.Canvas = Canvas;
+  global.ImageData = ImageData;
   
   // CRITICAL FIX: Node.js 20+ has a native createImageBitmap that node-canvas DOES NOT support. 
   // We must hide it so PDF.js doesn't generate ImageBitmaps that crash ctx.drawImage.
-  delete (globalThis as any).createImageBitmap;
+  delete global.createImageBitmap;
 
   try {
     await page.render({
-      canvasContext: context as any,
+      canvasContext: context,
       viewport,
       canvasFactory: new NodeCanvasFactory(),
     }).promise;
   } finally {
-    if (originalImage !== undefined) (globalThis as any).Image = originalImage;
-    else delete (globalThis as any).Image;
+    if (originalImage !== undefined) global.Image = originalImage;
+    else delete global.Image;
 
-    if (originalCanvas !== undefined) (globalThis as any).Canvas = originalCanvas;
-    else delete (globalThis as any).Canvas;
+    if (originalCanvas !== undefined) global.Canvas = originalCanvas;
+    else delete global.Canvas;
 
-    if (originalImageData !== undefined) (globalThis as any).ImageData = originalImageData;
-    else delete (globalThis as any).ImageData;
+    if (originalImageData !== undefined) global.ImageData = originalImageData;
+    else delete global.ImageData;
 
-    if (originalCreateImageBitmap !== undefined) (globalThis as any).createImageBitmap = originalCreateImageBitmap;
+    if (originalCreateImageBitmap !== undefined) global.createImageBitmap = originalCreateImageBitmap;
   }
 
   const imageBuffer = canvas.toBuffer("image/png");

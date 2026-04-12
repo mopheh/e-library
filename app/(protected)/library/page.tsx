@@ -4,7 +4,6 @@ import React, { useEffect, useState } from "react";
 import { useUserData } from "@/hooks/useUsers";
 import { useDepartments } from "@/hooks/useDepartments";
 import { useBooks } from "@/hooks/useBooks";
-import { addRecentlyViewedBook } from "@/lib/utils";
 import {
   Pagination,
   PaginationContent,
@@ -23,6 +22,7 @@ import { BookPreviewModal } from "@/components/library/BookPreviewModal";
 import { useDebounce } from "@/hooks/useDebounce";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Ghost, MailPlus, Loader2 } from "lucide-react";
+import { Book } from "@/types";
 
 const BooksGridSkeleton = () => (
    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6">
@@ -49,9 +49,9 @@ const EmptyState = ({ onReset }: { onReset: () => void }) => (
       <div className="w-20 h-20 bg-zinc-100 dark:bg-zinc-900 rounded-full flex items-center justify-center mb-6">
          <Ghost className="w-10 h-10 text-zinc-400" strokeWidth={1.5} />
       </div>
-      <h3 className="text-2xl font-bold font-cabin text-zinc-900 dark:text-white mb-3">No matching resources</h3>
+      <h3 className="text-2xl font-bold font-cabin text-zinc-900 dark:white mb-3">No matching resources</h3>
       <p className="text-xs font-poppins text-zinc-500 max-w-md mb-8">
-         We couldn't find any resources matching your exact criteria. Try adjusting your filters or request this material.
+         We couldn&apos;t find any resources matching your exact criteria. Try adjusting your filters or request this material.
       </p>
       <div className="flex items-center gap-4">
          <button 
@@ -80,14 +80,14 @@ const Page = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 12;
 
-  const [selectedBook, setSelectedBook] = useState<any>(null);
+  const [selectedBook, setSelectedBook] = useState<Book | null>(null);
 
   useEffect(() => {
     if (user && !department && !level) {
       setDepartment(user.departmentId);
       setLevel(user.level);
     }
-  }, [user]);
+  }, [user, department, level]);
 
   const { data: departments = [] } = useDepartments({ facultyId: user?.facultyId });
   const { data: booksData = { books: [], totalPages: 1 }, isLoading } = useBooks({
@@ -169,7 +169,7 @@ const Page = () => {
             ) : (
                <div className="space-y-10 pb-10">
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-                    {booksData.books.map((book: any) => (
+                    {booksData.books.map((book: Book) => (
                       <LibrarySaaSCard key={book.id} book={book} onPreview={setSelectedBook} />
                     ))}
                   </div>

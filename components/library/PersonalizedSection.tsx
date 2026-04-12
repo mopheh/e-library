@@ -4,9 +4,10 @@ import { formatBytes } from "@/lib/utils";
 import { BookOpen, MoveRight, Loader2 } from "lucide-react";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { useRouter } from "next/navigation";
+import { Book } from "@/types";
 
 export const PersonalizedSection = () => {
-  const [recentBooks, setRecentBooks] = useState<any[]>([]);
+  const [recentBooks, setRecentBooks] = useState<Book[]>([]);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 

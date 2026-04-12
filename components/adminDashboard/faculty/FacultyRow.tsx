@@ -5,6 +5,7 @@ import { useUsers } from "@/hooks/useUsers";
 import { Button } from "@/components/ui/button";
 import { UserPlus } from "lucide-react";
 import AddRepModal from "./AddRepModal";
+import { User } from "@/types";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 const FacultyRow = ({
@@ -18,7 +19,7 @@ const FacultyRow = ({
   const [openRepModal, setOpenRepModal] = useState(false);
 
   // Filter out the existing reps
-  const reps = (users || []).filter((u: any) => u.role === "FACULTY REP" || u.role === "faculty-rep");
+  const reps = (users || []).filter((u: User) => u.role === "FACULTY REP" || u.role === "faculty-rep");
   const maxRepsReached = reps.length >= 2;
 
   return (
@@ -46,7 +47,7 @@ const FacultyRow = ({
             {reps.length > 0 && (
               <div className="flex -space-x-2">
                  <TooltipProvider>
-                    {reps.map((rep: any, idx: number) => (
+                    {reps.map((rep: User, idx: number) => (
                       <Tooltip key={rep.id}>
                         <TooltipTrigger asChild>
                            <div 

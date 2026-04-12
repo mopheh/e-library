@@ -1,11 +1,11 @@
-"usw client";
+"use client";
 import React from "react";
 import Link from "next/link";
 import { TrashIcon } from "@heroicons/react/24/outline";
 import { EditIcon } from "lucide-react";
-import { Credentials } from "@/types";
+import { User } from "@/types";
 
-const StudentRow = ({ student }: { student: Credentials }) => {
+const StudentRow = ({ student }: { student: User }) => {
   return (
     <tr className="font-poppins text-xs py-3 text-zinc-800 dark:text-zinc-200 font-normal border-b border-zinc-200 dark:border-zinc-800">
       <td className=" py-4">{student.fullName}</td>

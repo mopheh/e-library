@@ -1,9 +1,10 @@
 import React from "react";
-import { formatBytes, addRecentlyViewedBook } from "@/lib/utils";
-import { BookOpen, Download, FileText, FileBadge, Calendar } from "lucide-react";
+import { formatBytes } from "@/lib/utils";
+import { BookOpen, FileBadge, Calendar } from "lucide-react";
 import { motion } from "framer-motion";
+import { Book } from "@/types";
 
-export const LibraryCard = ({ book, onPreview }: { book: any, onPreview: (book: any) => void }) => {
+export const LibraryCard = ({ book, onPreview }: { book: Book, onPreview: (book: Book) => void }) => {
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}

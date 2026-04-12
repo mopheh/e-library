@@ -1,8 +1,10 @@
 import React, { useState } from "react";
 import { formatBytes } from "@/lib/utils";
-import { BookOpen, Calendar, Eye, Download, Star, Bookmark } from "lucide-react";
+import { BookOpen, Eye, Download, Star, Bookmark } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Badge } from "@/components/ui/badge";
+import { Book } from "@/types";
+import Image from "next/image";
 
 const getTypeColor = (type?: string) => {
   switch (type?.toLowerCase()) {
@@ -19,7 +21,7 @@ const getTypeColor = (type?: string) => {
   }
 };
 
-export const LibrarySaaSCard = ({ book, onPreview }: { book: any, onPreview: (book: any) => void }) => {
+export const LibrarySaaSCard = ({ book, onPreview }: { book: Book, onPreview: (book: Book) => void }) => {
   const [saved, setSaved] = useState(false);
 
   // Fake metrics
@@ -37,7 +39,7 @@ export const LibrarySaaSCard = ({ book, onPreview }: { book: any, onPreview: (bo
           className="flex h-12 w-10 items-center justify-center rounded bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shrink-0 cursor-pointer overflow-hidden relative"
         >
           {book.coverUrl ? (
-            <img src={book.coverUrl} alt="Cover" className="object-cover w-full h-full" />
+            <Image src={book.coverUrl} alt="Cover" fill className="object-cover" />
           ) : (
             <BookOpen className="h-5 w-5 text-zinc-400" />
           )}

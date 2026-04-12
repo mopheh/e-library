@@ -1,45 +1,11 @@
 "use client";
 
 import { SignIn, useUser } from "@clerk/nextjs";
-import React, { useEffect, useState } from "react";
-import Image from "next/image";
+import React from "react";
 import { motion } from "framer-motion";
-import clsx from "clsx";
-
-const images = [
-  "/pic-1.jpg",
-  "/pic-2.jpg",
-  "/pic-3.jpg",
-  "/pic-4.jpg",
-  "/pic-5.jpg",
-  "/pic-6.jpg",
-];
 
 export default function Page() {
-  const { isSignedIn, isLoaded, user } = useUser();
-  const [currentImage, setCurrentImage] = useState(0);
-  const [showForm, setShowForm] = useState(false);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentImage((prev) => {
-        let next;
-        do {
-          next = Math.floor(Math.random() * images.length);
-        } while (next === prev);
-        return next;
-      });
-    }, 6000);
-    return () => clearInterval(interval);
-  }, []);
-
-  // Delay animation until Clerk SignIn is ready
-  useEffect(() => {
-    const checkClerkLoaded = setTimeout(() => {
-      setShowForm(true); // simulate delay for Clerk load
-    }, 400);
-    return () => clearTimeout(checkClerkLoaded);
-  }, []);
+  const { isLoaded } = useUser();
 
   return (
     <div className="relative min-h-screen w-full overflow-hidden bg-[#f9f6f1] dark:bg-zinc-900">

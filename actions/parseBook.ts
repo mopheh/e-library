@@ -30,7 +30,7 @@ export async function parsePdfPages(filePath: string, bookId: string) {
     const content = await page.getTextContent();
 
     let text = content.items
-      .map((item: any) => item.str ?? "")
+      .map((item) => ("str" in item ? (item as { str: string }).str : ""))
       .join(" ")
       .trim();
 
@@ -76,8 +76,8 @@ export async function parsePdfPages(filePath: string, bookId: string) {
         const embedding = await getEmbedding(page.textChunk);
         return {
           ...page,
-          // pgvector requires strings in "[0.1, 0.2, ...]" format for the 'vector' type in many drivers
-          embedding: embedding.length > 0 ? `[${embedding.join(",")}]` : null 
+          // Drizzle's vector() column accepts number[] directly — no manual serialization needed
+          embedding: embedding.length > 0 ? embedding : null,
         };
       })
     );

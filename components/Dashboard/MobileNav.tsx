@@ -60,7 +60,7 @@ export default function BottomNav({
       id: `/dashboard/ask-seniors`,
     },
   ];
-  const HIDDEN_ROUTES = ["/cbt", `/book`, "/library/read", "/viewer", `/dashboard/courses`, `/dashboard/study-rooms`];
+  const HIDDEN_ROUTES = ["/cbt", `/book`, "/library/read", "/viewer", `/dashboard/workspaces`, `/dashboard/study-rooms`];
   const hardHide = HIDDEN_ROUTES.some((route) => pathname.startsWith(route));
 
   const [mounted, setMounted] = useState(false);

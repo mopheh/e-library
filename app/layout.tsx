@@ -28,8 +28,8 @@ export default function RootLayout({
 }>) {
   return (
     <ClerkProvider>
-      <html lang="en">
-        <body className={`antialiased !overflow-x-hidden`}>
+      <html lang="en" suppressHydrationWarning>
+        <body className={`antialiased !overflow-x-hidden`} suppressHydrationWarning>
           <ThemeProvider
             attribute="class"
             defaultTheme="system"

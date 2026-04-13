@@ -140,9 +140,9 @@ const FeedCard = ({ item }: { item: FeedItem }) => {
       case "BOOK":
         return `/dashboard/book/${item.targetId}`; // targetId is bookId
       case "THREAD":
-        return `/dashboard/courses/${item.targetId}?tab=discussions`; // targetId is courseId
+        return `/dashboard/workspaces/${item.targetId}?tab=discussions`; // targetId is courseId
       case "GUIDE":
-        return `/dashboard/courses/${item.targetId}?tab=guides`; // targetId is courseId
+        return `/dashboard/workspaces/${item.targetId}?tab=guides`; // targetId is courseId
       default:
         return "#";
     }

@@ -129,40 +129,53 @@ export const StudyRoomsList = ({ courseId }: { courseId: string }) => {
           </Button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 gap-6">
           {rooms.map((room: any) => (
-            <Card key={room.id} className="flex flex-col h-full hover:shadow-lg transition-all border-gray-200 dark:border-zinc-800 overflow-hidden group">
-              <div className="h-2 bg-gradient-to-r from-indigo-400 to-indigo-600 w-full opacity-0 group-hover:opacity-100 transition-opacity"></div>
-              <CardHeader className="pb-3 flex-grow pt-5">
-                <div className="flex justify-between items-start mb-2">
-                   <div className="flex items-center gap-1.5 text-xs font-semibold px-2 py-1 bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400 rounded-md">
+            <Card key={room.id} className="flex flex-col h-full hover:shadow-2xl transition-all duration-300 border-zinc-200 dark:border-zinc-800 overflow-hidden group rounded-[2.5rem] bg-white/50 dark:bg-zinc-900/50 backdrop-blur-sm">
+              <div className="h-2.5 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 w-full opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+              
+              <CardHeader className="pb-4 flex-grow pt-8 px-8">
+                <div className="flex justify-between items-center mb-6">
+                   <div className="flex items-center gap-2 text-xs font-bold px-3 py-1.5 bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400 rounded-full border border-emerald-200 dark:border-emerald-800/50 uppercase tracking-widest">
                      <span className="relative flex h-2 w-2">
-                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                       <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                       <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
                      </span>
-                     Live
+                     Live Now
                    </div>
-                   <div className="flex items-center text-xs text-muted-foreground font-medium">
-                     <Users className="w-3.5 h-3.5 mr-1" /> {room.memberCount} joined
+                   <div className="flex items-center text-xs font-bold text-zinc-500 dark:text-zinc-400 bg-zinc-100 dark:bg-zinc-800 px-3 py-1.5 rounded-full border border-zinc-200 dark:border-zinc-700/50">
+                     <Users className="w-3.5 h-3.5 mr-1.5 text-indigo-500" /> {room.memberCount} Studying
                    </div>
                 </div>
-                <CardTitle className="text-lg line-clamp-1 font-poppins group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                
+                <CardTitle className="text-2xl md:text-3xl font-bold font-cabin tracking-tight group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors leading-tight">
                   {room.name}
                 </CardTitle>
-                <CardDescription className="line-clamp-2 text-sm mt-2 font-open-sans">
-                  {room.description || "No description provided."}
+                
+                <CardDescription className="line-clamp-3 text-base mt-4 font-open-sans text-zinc-600 dark:text-zinc-400 leading-relaxed">
+                  {room.description || "Join this collaborative space to master this course with your peers through real-time discussion and shared notes."}
                 </CardDescription>
               </CardHeader>
-              <CardContent className="py-0 pb-4">
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  Started by <span className="font-medium text-foreground">{room.host?.fullName || "Unknown"}</span> 
-                  • {formatDistanceToNow(new Date(room.createdAt))} ago
+
+              <CardContent className="py-0 pb-6 px-8 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                   <div className="w-10 h-10 rounded-full bg-indigo-100 dark:bg-indigo-900/40 flex items-center justify-center text-indigo-600 dark:text-indigo-400 font-bold text-sm border border-indigo-200 dark:border-indigo-800">
+                      {room.host?.fullName?.charAt(0) || "U"}
+                   </div>
+                   <div className="flex flex-col">
+                      <span className="text-[10px] uppercase font-bold text-zinc-400 tracking-tighter">Hosted by</span>
+                      <span className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">{room.host?.fullName || "Verified Student"}</span>
+                   </div>
+                </div>
+                <div className="text-[11px] font-medium text-zinc-400 dark:text-zinc-500 italic">
+                  {formatDistanceToNow(new Date(room.createdAt))} ago
                 </div>
               </CardContent>
-              <CardFooter className="pt-2 pb-5 border-t border-gray-100 dark:border-zinc-800 px-6 mt-auto bg-gray-50/50 dark:bg-zinc-900/20">
+
+              <CardFooter className="pt-6 pb-8 px-8 border-t border-zinc-100 dark:border-zinc-800/50 mt-auto bg-zinc-50/50 dark:bg-zinc-900/40">
                 <Link href={`/dashboard/study-rooms/${room.id}`} className="w-full">
-                  <Button className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold shadow-sm transition-all">
-                    {room.isMember ? "Return to Room" : "Join Room"}
+                  <Button className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-7 rounded-2xl shadow-xl shadow-indigo-500/20 transition-all hover:scale-[1.02] active:scale-95 text-base">
+                    {room.isMember ? "Continue Session" : "Join Study Group"}
                   </Button>
                 </Link>
               </CardFooter>

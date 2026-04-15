@@ -1,8 +1,18 @@
+"use client";
+
+import React from 'react';
+import Link from 'next/link';
+import { BookOpen, Users, HelpCircle } from 'lucide-react';
 import { Progress } from "@/components/ui/progress";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "../ui/card";
-import { Badge } from "../ui/badge";
-import { BookOpen, HelpCircle, Users } from "lucide-react";
-import Link from "next/link";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 
 interface Course {
   id: string;

@@ -1,0 +1,1 @@
+ALTER TABLE "student_connections" ADD COLUMN "updated_at" timestamp with time zone DEFAULT now();

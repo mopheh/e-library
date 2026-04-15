@@ -62,6 +62,7 @@ export const users = pgTable(
     role: ROLE_ENUM("role").default("STUDENT"),
     gender: GENDER_ENUM("gender").notNull(),
     address: varchar("address", { length: 255 }).notNull(),
+    interests: text("interests"),
 
     lastActivityDate: date("last_activity_date").defaultNow(),
     createdAt: timestamp("created_at", {
@@ -379,7 +380,7 @@ export const complaints = pgTable("complaints", {
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
 });
 
-export const notificationTypeEnum = pgEnum("notification_type", ["COMPLAINT", "SYSTEM", "GENERAL"]);
+export const notificationTypeEnum = pgEnum("notification_type", ["COMPLAINT", "SYSTEM", "GENERAL", "CONNECTION_REQUEST"]);
 
 export const notifications = pgTable("notifications", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -388,6 +389,7 @@ export const notifications = pgTable("notifications", {
     .references(() => users.id, { onDelete: "cascade" }), // recipient of notification
   type: notificationTypeEnum("type").default("GENERAL").notNull(),
   message: text("message").notNull(),
+  targetId: uuid("target_id"),
   isRead: boolean("is_read").default(false).notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 });
@@ -461,6 +463,25 @@ export const studentConnections = pgTable("student_connections", {
   aspirantId: uuid("aspirant_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   studentId: uuid("student_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   status: connectionStatusEnum("status").default("PENDING").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
+});
+
+export const chatRooms = pgTable("chat_rooms", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userOneId: uuid("user_one_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  userTwoId: uuid("user_two_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+}, (t) => ({
+  uniqRoom: uniqueIndex("chat_rooms_users_idx").on(t.userOneId, t.userTwoId),
+}));
+
+export const chatMessages = pgTable("chat_messages", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  roomId: uuid("room_id").notNull().references(() => chatRooms.id, { onDelete: "cascade" }),
+  senderId: uuid("sender_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  content: text("content").notNull(),
+  isRead: boolean("is_read").default(false).notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 });
 

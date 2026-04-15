@@ -8,6 +8,7 @@ export interface User {
   role: "STUDENT" | "ADMIN" | "FACULTY REP" | "ASPIRANT";
   facultyId: string;
   faculty?: Faculty;
+  facultyName?: string;
   departmentId: string;
   department?: Department;
   matricNo: string;

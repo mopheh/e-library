@@ -1,35 +1,47 @@
+import { pusherServer } from "@/lib/pusher";
+import { auth } from "@clerk/nextjs/server";
+import { db } from "@/database/drizzle";
+import { users, chatRooms } from "@/database/schema";
+import { eq, or, and } from "drizzle-orm";
 import { NextResponse } from "next/server";
-import { getCurrentUser } from "@/lib/auth";
-import Pusher from "pusher";
-
-const pusher = new Pusher({
-  appId: process.env.PUSHER_APP_ID!,
-  key: process.env.NEXT_PUBLIC_PUSHER_KEY!,
-  secret: process.env.PUSHER_SECRET!,
-  cluster: process.env.NEXT_PUBLIC_PUSHER_CLUSTER!,
-  useTLS: true,
-});
 
 export async function POST(req: Request) {
   try {
-    const user = await getCurrentUser();
-    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const { userId: clerkId } = await auth();
+    if (!clerkId) return new NextResponse("Unauthorized", { status: 401 });
 
-    const data = await req.text();
-    const [socketId, channelName] = data.split("&").map((str) => str.split("=")[1]);
+    const currentUser = await db.query.users.findFirst({
+        where: eq(users.clerkId, clerkId)
+    });
+    if (!currentUser) return new NextResponse("User not found", { status: 404 });
 
-    const presenceData = {
-      user_id: user.id,
-      user_info: {
-        name: user.fullName,
-      },
-    };
+    const body = await req.formData();
+    const socketId = body.get("socket_id") as string;
+    const channel = body.get("channel_name") as string;
 
-    const authResponse = pusher.authorizeChannel(socketId, channelName, presenceData);
+    // Expected channel format: private-chat-room-[roomId]
+    const roomId = channel.replace("private-chat-room-", "");
 
+    // Verify user is part of this chat room
+    const room = await db.query.chatRooms.findFirst({
+        where: and(
+            eq(chatRooms.id, roomId),
+            or(
+                eq(chatRooms.userOneId, currentUser.id),
+                eq(chatRooms.userTwoId, currentUser.id)
+            )
+        )
+    });
+
+    if (!room) {
+        return new NextResponse("Forbidden", { status: 403 });
+    }
+
+    const authResponse = pusherServer.authorizeChannel(socketId, channel);
     return NextResponse.json(authResponse);
+
   } catch (error) {
-    console.error("[PUSHER AUTH ERROR]", error);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    console.error("Pusher Auth Error:", error);
+    return new NextResponse("Internal Error", { status: 500 });
   }
 }

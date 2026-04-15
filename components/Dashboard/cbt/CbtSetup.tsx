@@ -52,7 +52,7 @@ export default function CbtSetup({ courses, onStart, loading }: CbtSetupProps) {
     <Card className="w-full max-w-lg mx-auto p-6 rounded-2xl shadow font-poppins bg-white dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800">
       <CardContent className="space-y-6">
         <div className="space-y-1">
-            <h2 className="text-xl font-semibold font-cabin tracking-tight text-zinc-900 dark:text-zinc-100">
+            <h2 className="text-xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100 italic uppercase">
             Start Assessment
             </h2>
             <p className="text-xs font-poppins text-zinc-500 dark:text-zinc-400">Configure your test parameters below.</p>

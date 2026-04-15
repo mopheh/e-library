@@ -32,7 +32,7 @@ const MyCoursesCard = ({ course }: { course: Course }) => {
   const mockProgress = Math.floor(Math.random() * 60) + 10;
   
   return (
-    <Card className="hover:shadow-xl transition-all duration-300 flex flex-col h-full bg-white dark:bg-zinc-950 border-gray-200 dark:border-zinc-800 group overflow-hidden relative">
+    <Card className="hover:shadow-xl transition-all duration-300 flex flex-col h-full bg-white dark:bg-zinc-950 border-gray-200 dark:border-zinc-800 group overflow-hidden relative font-poppins">
       <div className="absolute top-0 right-0 p-3 opacity-0 group-hover:opacity-100 transition-opacity z-10">
          <div className="bg-blue-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-lg">
            TOP COURSE
@@ -40,24 +40,24 @@ const MyCoursesCard = ({ course }: { course: Course }) => {
       </div>
       
       <CardHeader className="pb-2 flex-grow relative">
-        <div className="flex justify-between items-start font-poppins !font-light !text-xs mb-2">
+        <div className="flex justify-between items-start mb-2">
           <Badge variant="secondary" className="bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-200 border-none px-2 py-0.5">{course.courseCode}</Badge>
           <div className="flex items-center gap-1.5">
              <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-             <span className="text-[10px] text-zinc-500 font-medium uppercase tracking-wider">Active Workspace</span>
+             <span className="text-[10px] text-zinc-500 font-medium uppercase tracking-wider">Active</span>
           </div>
         </div>
-        <CardTitle className="text-xl line-clamp-2 font-cabin leading-tight group-hover:text-blue-600 transition-colors">{course.title}</CardTitle>
-        <CardDescription className="font-poppins text-xs font-light mt-1">{course.level} Level • {course.unitLoad} Units</CardDescription>
+        <CardTitle className="text-xl line-clamp-2 font-bold leading-tight group-hover:text-blue-600 transition-colors uppercase italic">{course.title}</CardTitle>
+        <CardDescription className="text-xs font-medium mt-1 uppercase italic opacity-70">{course.level} Level • {course.unitLoad} Units</CardDescription>
       </CardHeader>
       
       <CardContent className="pb-3 pt-2">
         <div className="space-y-4">
            {/* Progress Section */}
            <div className="space-y-1.5">
-              <div className="flex justify-between items-end text-[10px] font-poppins text-zinc-500">
+              <div className="flex justify-between items-end text-[10px] text-zinc-500 font-bold uppercase tracking-widest">
                  <span>Course Coverage</span>
-                 <span className="font-bold text-blue-600">{mockProgress}%</span>
+                 <span className="text-blue-600">{mockProgress}%</span>
               </div>
               <Progress value={mockProgress} className="h-1.5 bg-zinc-100 dark:bg-zinc-900 border-none" />
            </div>
@@ -82,7 +82,7 @@ const MyCoursesCard = ({ course }: { course: Course }) => {
       
       <CardFooter className="pt-2 pb-5 px-6">
         <Link href={`/dashboard/workspaces/${course.id}`} className="w-full">
-          <div className="w-full text-center bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-zinc-100 hover:bg-blue-600 hover:text-white hover:border-blue-600 py-3 rounded-xl text-xs font-bold font-poppins transition-all duration-300 shadow-sm group-hover:shadow-blue-500/10">
+          <div className="w-full text-center bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-zinc-100 hover:bg-blue-600 hover:text-white hover:border-blue-600 py-3 rounded-xl text-xs font-bold transition-all duration-300 shadow-sm group-hover:shadow-blue-500/10 uppercase tracking-widest italic">
             Open Workspace
           </div>
         </Link>
@@ -104,10 +104,10 @@ export const MyCourses = ({ courses, loading }: MyCoursesProps) => {
 
   if (!courses || courses.length === 0) {
     return (
-      <div className="text-center p-8 bg-gray-50 dark:bg-zinc-950 rounded-xl border border-dashed border-gray-300 dark:border-zinc-800">
+      <div className="text-center p-8 bg-gray-50 dark:bg-zinc-950 rounded-xl border border-dashed border-gray-300 dark:border-zinc-800 font-poppins">
         <BookOpen className="w-8 h-8 mx-auto text-muted-foreground mb-3" />
-        <h3 className="text-lg font-normal font-cabin text-foreground">No Courses Found</h3>
-        <p className="text-xs font-poppins text-muted-foreground mt-1">
+        <h3 className="text-lg font-bold text-foreground">No Courses Found</h3>
+        <p className="text-xs text-muted-foreground mt-1 font-medium">
           You haven't registered for any courses yet.
         </p>
       </div>

@@ -602,7 +602,7 @@ export const resourceRequests = pgTable("resource_requests", {
   id: uuid("id").primaryKey().defaultRandom(),
   userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   departmentId: uuid("department_id").notNull().references(() => departments.id, { onDelete: "cascade" }),
-  courseCode: varchar("course_code", { length: 255 }).notNull(),
+  courseId: uuid("course_id").notNull().references(() => courses.id, { onDelete: "cascade" }),
   description: text("description").notNull(),
   status: requestStatusEnum("status").default("PENDING").notNull(),
   fulfilledUrl: text("fulfilled_url"),
@@ -618,6 +618,10 @@ export const resourceRequestsRelations = relations(resourceRequests, ({ one }) =
   department: one(departments, {
     fields: [resourceRequests.departmentId],
     references: [departments.id],
+  }),
+  course: one(courses, {
+    fields: [resourceRequests.courseId],
+    references: [courses.id],
   }),
 }));
 
@@ -662,6 +666,29 @@ export const verificationRequestsRelations = relations(verificationRequests, ({ 
   }),
   reviewer: one(users, {
     fields: [verificationRequests.reviewedBy],
+    references: [users.id],
+  }),
+}));
+
+export const chatRoomsRelations = relations(chatRooms, ({ one, many }) => ({
+  userOne: one(users, {
+    fields: [chatRooms.userOneId],
+    references: [users.id],
+  }),
+  userTwo: one(users, {
+    fields: [chatRooms.userTwoId],
+    references: [users.id],
+  }),
+  messages: many(chatMessages),
+}));
+
+export const chatMessagesRelations = relations(chatMessages, ({ one }) => ({
+  room: one(chatRooms, {
+    fields: [chatMessages.roomId],
+    references: [chatRooms.id],
+  }),
+  sender: one(users, {
+    fields: [chatMessages.senderId],
     references: [users.id],
   }),
 }));

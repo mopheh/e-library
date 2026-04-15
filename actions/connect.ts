@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "@/database/drizzle";
-import { users, departmentCommunities, communityPosts, studentConnections, notifications, departments } from "@/database/schema";
+import { users, departmentCommunities, communityPosts, studentConnections, notifications, departments, chatRooms } from "@/database/schema";
 import { eq, desc, and, ne, inArray } from "drizzle-orm";
 import { auth, clerkClient } from "@clerk/nextjs/server";
 import { pusherServer } from "@/lib/pusher";
@@ -249,13 +249,25 @@ export async function respondToConnectionRequest(connectionId: string, status: "
             .set({ status, updatedAt: new Date() })
             .where(eq(studentConnections.id, connectionId));
 
-        // Notify the requester
+        // Notify the requester and create a chat room
         if (status === "ACCEPTED") {
             const requester = await db.query.users.findFirst({
                 where: eq(users.id, connection.aspirantId),
             });
 
             if (requester) {
+                // Ensure room exists
+                const [u1, u2] = [currentUser.id, requester.id].sort();
+                
+                try {
+                    await db.insert(chatRooms).values({
+                        userOneId: u1,
+                        userTwoId: u2,
+                    }).onConflictDoNothing();
+                } catch (err) {
+                    console.error("Chat room creation failed:", err);
+                }
+
                 const newNotif = await db.insert(notifications).values({
                     userId: requester.id,
                     type: "GENERAL",
@@ -264,7 +276,6 @@ export async function respondToConnectionRequest(connectionId: string, status: "
 
                 if (newNotif.length > 0) {
                     await pusherServer.trigger(`user-${requester.id}`, "new-notification", newNotif[0]);
-                    // Broadcast a specific event for the Connect UI to change "Pending" to "Linked" instantly
                     await pusherServer.trigger(`user-${requester.id}`, "connection-accepted", { peerId: currentUser.id });
                 }
             }

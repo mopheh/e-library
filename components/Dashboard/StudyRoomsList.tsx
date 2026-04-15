@@ -148,7 +148,7 @@ export const StudyRoomsList = ({ courseId }: { courseId: string }) => {
                    </div>
                 </div>
                 
-                <CardTitle className="text-2xl md:text-3xl font-bold font-cabin tracking-tight group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors leading-tight">
+                <CardTitle className="text-2xl md:text-3xl font-bold tracking-tight group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors leading-tight">
                   {room.name}
                 </CardTitle>
                 

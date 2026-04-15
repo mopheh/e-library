@@ -28,7 +28,7 @@ export function StatCard({
   return (
     <Card className={cn("overflow-hidden", className)}>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm tracking-tight font-open-sans font-medium text-muted-foreground">
+        <CardTitle className="text-sm tracking-tight font-poppins font-medium text-muted-foreground">
           {title}
         </CardTitle>
         <Icon className="h-4 w-4 text-muted-foreground" />
@@ -41,7 +41,7 @@ export function StatCard({
           </div>
         ) : (
           <>
-            <div className="text-2xl font-bold font-cairo">{value}</div>
+            <div className="text-2xl font-bold font-poppins">{value}</div>
             {(description || trend) && (
               <p className="text-xs font-poppins text-muted-foreground mt-1">
                 {trend && (

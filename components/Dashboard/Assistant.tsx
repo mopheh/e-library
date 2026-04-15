@@ -130,7 +130,7 @@ export default function AIChatAssistant({
       {/* Chat container */}
       <div 
         ref={scrollContainerRef}
-        className="flex-1 min-h-0 overflow-y-auto p-4 space-y-4 text-sm scroll-smooth font-cabin"
+        className="flex-1 min-h-0 overflow-y-auto p-4 space-y-4 text-sm scroll-smooth"
       >
         {messages.length === 0 && !loading && (
           <div className="h-full flex flex-col items-center justify-center text-center p-6">

@@ -165,6 +165,22 @@
     -webkit-appearance: none;
     margin: 0;
   }
+
+  .premium-bg {
+    @apply bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-from),_transparent_50%),_radial-gradient(circle_at_bottom_left,_var(--tw-gradient-to),_transparent_50%)] from-blue-50/50 to-emerald-50/50 dark:from-blue-950/20 dark:to-zinc-950;
+  }
+
+  .glass-card {
+    @apply bg-white/70 dark:bg-zinc-900/70 backdrop-blur-xl border border-white/20 dark:border-zinc-800/50 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-none;
+  }
+
+  .glass-morphism {
+    @apply backdrop-blur-md bg-white/40 dark:bg-black/40 border border-white/20 dark:border-white/10;
+  }
+
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-emerald-600 dark:from-blue-400 dark:to-emerald-400;
+  }
 }
 .rpv-core__icon, rpv-core__minimal-button {
   color: #4b5563;

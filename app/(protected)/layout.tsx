@@ -1,9 +1,10 @@
 "use client"
 import Sidebar from "@/components/Dashboard/Sidebar";
 import Nav from "@/components/Dashboard/Nav";
+import ChatSidebar from "@/components/Chat/ChatSidebar";
 import { useRef, useState } from "react";
 import BottomNav from "@/components/Dashboard/MobileNav";
-import MobileRepFloatingButton from "@/components/Dashboard/MobileRepFloatingButton";
+import MobileMessagingButton from "@/components/Dashboard/MobileMessagingButton";
 import { usePathname } from "next/navigation";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
@@ -30,10 +31,11 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       </div>
       {!pathname?.includes("/book/") && (
         <>
-          <MobileRepFloatingButton />
+          <MobileMessagingButton />
           <BottomNav scrollRef={scrollRef} toggleSidebar={toggleSidebar} />
         </>
       )}
+      <ChatSidebar />
     </>
   );
 }

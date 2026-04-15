@@ -11,10 +11,10 @@ import { CourseRegistrationModal } from "@/components/Dashboard/CourseRegistrati
 import HomeDashboardSkeleton from "@/components/Dashboard/HomeDashboardSkeleton";
 import { ExamPrepBanner } from "@/components/Dashboard/ExamPrepBanner";
 import AddedMaterials from "./AddedMaterials";
+import StudyCarousel from "./StudyCarousel";
 
 const HomeDashboard = () => {
   const { data, isLoading: booksLoading } = useDashboard();
-
   const { data: analyticsData, isLoading: analyticsLoading } = useAnalytics();
 
   if (booksLoading || analyticsLoading) {
@@ -22,78 +22,86 @@ const HomeDashboard = () => {
   }
 
   return (
-    <div className="flex-1 p-4 md:p-8 pt-6 space-y-6 bg-background">
+    <div className="flex-1 p-2 md:p-8 pt-6 space-y-8 premium-bg min-h-screen">
       <CourseRegistrationModal departmentId={data?.user?.departmentId} />
 
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-2">
-            {/* Date Picker or Filters could go here */}
+      {/* 0. Top Section: Carousel & Exam Prep */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        <div className="lg:col-span-8">
+           <StudyCarousel />
+        </div>
+        <div className="lg:col-span-4 h-full">
+           <ExamPrepBanner courses={data?.enrolledCourses || []} />
+           {(!data?.enrolledCourses || data.enrolledCourses.length === 0) && (
+              <div className="glass-card p-8 h-full rounded-[2rem] flex flex-col justify-center border-emerald-100 dark:border-emerald-900/30">
+                 <h3 className="text-xl font-bold text-zinc-800 dark:text-zinc-100 mb-2 font-poppins">Steady Progress</h3>
+                 <p className="text-sm text-zinc-500 font-poppins">You're doing great! Keep exploring materials to stay ahead of your courses.</p>
+              </div>
+           )}
         </div>
       </div>
       
-      {/* 0. Exam Prep Banner (Only shows if exams <= 14 days) */}
-      <ExamPrepBanner courses={data?.enrolledCourses || []} />
-
       {/* 1. Key Performance Indicators */}
-      <KPICards 
-        booksRead={(analyticsData as any)?.kpis?.booksRead || 0} 
-        minutesRead={(analyticsData as any)?.kpis?.minutesRead || 0} 
-        streak={(analyticsData as any)?.kpis?.streak || 0} 
-        daysToExam={(analyticsData as any)?.kpis?.daysToExam}
-        totalAiRequests={(analyticsData as any)?.kpis?.totalAiRequests}
-        loading={analyticsLoading}
-      />
+      <div className="glass-card p-2 rounded-[2.5rem]">
+        <KPICards 
+          booksRead={(analyticsData as any)?.kpis?.booksRead || 0} 
+          minutesRead={(analyticsData as any)?.kpis?.minutesRead || 0} 
+          streak={(analyticsData as any)?.kpis?.streak || 0} 
+          daysToExam={(analyticsData as any)?.kpis?.daysToExam}
+          totalAiRequests={(analyticsData as any)?.kpis?.totalAiRequests}
+          loading={analyticsLoading}
+        />
+      </div>
 
-      {/* 2. My Courses Workspace (Moved to Sidebar) */}
-
-      {/* 3. Main Grid Layout */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-7 gap-6">
+      {/* 2. Main Grid Layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-7 gap-8">
         
-        {/* Left Column (Trends & Activity) - Spans 4 columns on large screens */}
-        <div className="col-span-1 md:col-span-2 lg:col-span-4 space-y-6">
+        {/* Left Column (Trends & Activity) */}
+        <div className="lg:col-span-4 space-y-8">
             {/* Weekly Trends Chart */}
-            <div className="bg-white dark:bg-zinc-950 rounded-lg w-full p-3 h-[400px] relative overflow-hidden font-poppins">
-              <h3 className="text-base font-semibold mb-4 font-open-sans">
-                Reading Activity (Last 7 Days)
+            <div className="glass-card rounded-[2.5rem] w-full p-8 h-[450px] relative overflow-hidden font-poppins">
+              <h3 className="text-lg font-bold mb-6 font-poppins flex items-center gap-2">
+                <span className="w-2 h-2 bg-blue-600 rounded-full animate-pulse" />
+                Reading Activity
               </h3>
               <Charts />
             </div>
             
             {/* Recent Activity Heatmap */}
-            <div className="grid grid-cols-1 gap-6">
+            <div className="glass-card p-6 rounded-[2.5rem]">
                  <ActivityHeatmap data={analyticsData?.heatmap || []} loading={analyticsLoading} />
             </div>
-
-            {/* Daily Academic Feed */}
-            {/* <div className="mt-8">
-               <AcademicFeed />
-            </div> */}
         </div>
         
-        {/* Right Column (Goals, AI, Continue Reading) - Spans 3 columns on large screens */}
-        <div className="col-span-1 md:col-span-2 lg:col-span-3 space-y-6">
+        {/* Right Column (Goals, AI, Continue Reading) */}
+        <div className="lg:col-span-3 space-y-8">
             {/* Goals & AI Stacked */}
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-1 mt-6 lg:mt-0">
-                <GoalsCard />
-                <AIInsights />
+            <div className="grid gap-8 mt-6 lg:mt-0">
+                <div className="glass-card rounded-[2.5rem]">
+                  <GoalsCard />
+                </div>
+                <div className="glass-card rounded-[2.5rem]">
+                   <AIInsights />
+                </div>
             </div>
 
             {/* Continue Reading / Recently Viewed */}
-            <ContinueReading />
+            <div className="glass-card rounded-[2.5rem] overflow-hidden">
+               <ContinueReading />
+            </div>
         </div>
       </div>
 
-       {/* Discussions Section */}
-       {/* {data?.books?.[0]?.course && (
-         <div className="mt-8 border-t pt-8">
-           <CourseDiscussions courseId={data.books[0].courseId} courseName={data.books[0].course} />
-         </div>
-       )} */}
-
-       {/* 3. Browse / Suggestions Section (Legacy AddedMaterials) */}
-       {/* Replaced by Academic Feed above */}
-       <AddedMaterials books={data?.books || []} loading={booksLoading} />
+       {/* 3. Browse / Suggestions Section */}
+       <div className="pt-8">
+          <div className="flex items-center justify-between mb-6 px-4">
+             <h2 className="text-2xl font-bold font-poppins text-zinc-800 dark:text-zinc-100 italic">Recommended for You</h2>
+             <span className="text-sm font-medium text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20 px-4 py-1.5 rounded-full">New Arrivals</span>
+          </div>
+          <AddedMaterials books={data?.books || []} loading={booksLoading} />
+       </div>
     </div>
   );
 };
+
 export default HomeDashboard;

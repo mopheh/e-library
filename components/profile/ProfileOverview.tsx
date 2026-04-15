@@ -1,7 +1,4 @@
-import React from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { BookOpen, Download, BrainCircuit, Clock, Layers } from "lucide-react";
-import Image from "next/image";
+import FacultyRepSection from "./FacultyRepSection";
 
 interface ProfileOverviewProps {
   profile: any;
@@ -14,6 +11,7 @@ export default function ProfileOverview({ profile }: ProfileOverviewProps) {
     <div className="space-y-6">
       <Card>
         <CardContent className="p-6">
+          {/* ... existing card content ... */}
           <div className="flex flex-col md:flex-row items-center gap-6">
             <div className="w-24 h-24 relative rounded-full bg-zinc-100 dark:bg-zinc-800 overflow-hidden border-4 border-white dark:border-zinc-900 shadow-sm flex items-center justify-center">
               {profile?.avatarUrl ? (
@@ -86,6 +84,8 @@ export default function ProfileOverview({ profile }: ProfileOverviewProps) {
           icon={<BrainCircuit className="w-4 h-4 text-rose-500" />}
         />
       </div>
+
+      <FacultyRepSection />
     </div>
   );
 }

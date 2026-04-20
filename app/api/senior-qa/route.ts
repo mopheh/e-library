@@ -12,6 +12,7 @@ export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const targetLevel = searchParams.get("targetLevel") || "ALL";
 
+    // Departmental isolation: Only show questions from the user's department
     let query = db
       .select({
         id: seniorQa.id,
@@ -20,6 +21,7 @@ export async function GET(req: Request) {
         content: seniorQa.content,
         isAnonymous: seniorQa.isAnonymous,
         createdAt: seniorQa.createdAt,
+        upvotes: seniorQa.upvotes,
         authorName: users.fullName,
         authorRole: users.role,
         authorLevel: users.year,
@@ -27,15 +29,26 @@ export async function GET(req: Request) {
       .from(seniorQa)
       .leftJoin(users, eq(seniorQa.authorId, users.id));
 
-    // Filter by department
     if (user.departmentId) {
-       query.where(eq(seniorQa.departmentId, user.departmentId));
+      query.where(eq(seniorQa.departmentId, user.departmentId));
     }
     
     const rawData = await query.orderBy(desc(seniorQa.createdAt));
 
-    // Filter by target level if specified
-    const data = targetLevel !== "ALL" ? rawData.filter(q => q.targetLevel === targetLevel || q.targetLevel === "ALL") : rawData;
+    // Refine and Redact sensitive info
+    const data = rawData
+      .filter(q => targetLevel === "ALL" || q.targetLevel === targetLevel || q.targetLevel === "ALL")
+      .map(q => {
+        if (q.isAnonymous) {
+          return {
+            ...q,
+            authorName: "Anonymous Student",
+            authorRole: "Student",
+            authorLevel: "---",
+          };
+        }
+        return q;
+      });
 
     return NextResponse.json(data);
   } catch (error) {

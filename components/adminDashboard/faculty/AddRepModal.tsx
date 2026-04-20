@@ -5,16 +5,22 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { toast } from "sonner";
 import { useUsers } from "@/hooks/useUsers";
 import { Input } from "@/components/ui/input";
+import { User } from "@/types";
 
-export default function AddRepModal({ open, onCancel, facultyId, facultyName }: any) {
+export default function AddRepModal({ open, onCancel, facultyId, facultyName }: {
+    open: boolean;
+    onCancel: () => void;
+    facultyId: string;
+    facultyName: string;
+}) {
     const { data: users, isLoading } = useUsers(facultyId); // Fetch users belonging to this faculty
     const [searchQuery, setSearchQuery] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     // Filter users visually based on email or name
-    const filteredUsers = users?.filter((u: any) => 
+    const filteredUsers = users?.filter((u: User) => 
         u.email.toLowerCase().includes(searchQuery.toLowerCase()) || 
-        u.fullName.toLowerCase().includes(searchQuery.toLowerCase())
+        u.fullName?.toLowerCase().includes(searchQuery.toLowerCase())
     ) || [];
 
     const handleAssign = async (userId: string) => {
@@ -30,8 +36,9 @@ export default function AddRepModal({ open, onCancel, facultyId, facultyName }: 
             
             toast.success("Faculty Representative assigned successfully!");
             onCancel(); // close modal
-        } catch (error: any) {
-            toast.error(error.message);
+        } catch (error: unknown) {
+            const message = error instanceof Error ? error.message : "An error occurred";
+            toast.error(message);
         } finally {
             setIsSubmitting(false);
         }
@@ -62,7 +69,7 @@ export default function AddRepModal({ open, onCancel, facultyId, facultyName }: 
                             <p className="text-sm text-center text-zinc-500 py-4">No students found in this faculty.</p>
                         )}
 
-                        {!isLoading && filteredUsers.map((u: any) => (
+                        {!isLoading && filteredUsers.map((u: User) => (
                             <div key={u.id} className="flex items-center justify-between p-2 hover:bg-zinc-50 dark:hover:bg-zinc-900 rounded-lg border border-transparent hover:border-zinc-200 dark:hover:border-zinc-800 transition-colors">
                                 <div>
                                     <p className="text-sm font-medium font-poppins">{u.fullName}</p>

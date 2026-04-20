@@ -6,10 +6,11 @@ import { MessageCircle, UserPlus, Filter, Award, BookOpen, Clock, Search, Lock }
 import UpgradePromptModal from "./UpgradePromptModal";
 import { getConnectData } from "@/actions/connect";
 import { formatDistanceToNow } from "date-fns";
-import { useParams } from "next/navigation";
+import { useUserData } from "@/hooks/useUsers";
 
 export default function AspirantConnect() {
-  const { role } = useParams();
+  const { data: userData } = useUserData();
+  const role = userData?.role?.toLowerCase() || "student";
   const isAspirant = role === "aspirant";
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [activeTab, setActiveTab] = useState("mentors");

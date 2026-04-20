@@ -5,9 +5,10 @@ dotenv.config({ path: ".env.worker" });
 import { bookCourses, bookPages, options, questions } from "@/database/schema";
 import { db } from "@/workers/db";
 import { eq } from "drizzle-orm";
+import { generateWithGemini } from "./gemini";
 
 // Helper: fetch with retry on 429
-async function fetchWithRetry(url: string, options: any, retries = 5) {
+async function fetchWithRetry(url: string, options: RequestInit, retries = 5) {
   for (let attempt = 0; attempt < retries; attempt++) {
     const res = await fetch(url, options);
     if (res.status !== 429) return res;
@@ -62,34 +63,29 @@ Instructions:
 Text: ${textBatch}
 `;
 
-    const res = await fetchWithRetry(
-      "https://openrouter.ai/api/v1/chat/completions",
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model: "openai/gpt-5.2",
-          max_tokens: 800,
-          messages: [{ role: "user", content: prompt }],
-        }),
-      },
-    );
-
-    const data = await res.json();
-    console.log(data);
-    if (!data.choices || data.choices.length === 0) {
+    const responseText = await generateWithGemini(prompt);
+    
+    if (!responseText) {
       console.warn("No AI response for this batch");
       continue;
     }
 
-    let generated;
+    interface AIQuestion {
+      questionText: string;
+      type: "mcq" | "short_answer";
+      options: {
+        optionText: string;
+        isCorrect: boolean;
+      }[];
+    }
+
+    let generated: AIQuestion[];
     try {
-      generated = JSON.parse(data.choices[0].message.content || "[]");
+      // Clean up markdown code blocks if present
+      const cleaned = responseText.replace(/```json/g, "").replace(/```/g, "").trim();
+      generated = JSON.parse(cleaned || "[]") as AIQuestion[];
     } catch (err) {
-      console.error("Failed to parse AI response:", err);
+      console.error("Failed to parse AI response:", responseText, err);
       continue;
     }
 
@@ -105,7 +101,7 @@ Text: ${textBatch}
         .returning({ id: questions.id });
 
       await db.insert(options).values(
-        q.options.map((opt: any) => ({
+        q.options.map((opt: { optionText: string; isCorrect: boolean }) => ({
           questionId: savedQ.id,
           optionText: opt.optionText,
           isCorrect: opt.isCorrect,

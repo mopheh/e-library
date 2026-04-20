@@ -1,45 +1,11 @@
 "use client";
 
 import { SignUp, useUser } from "@clerk/nextjs";
-import React, { useEffect, useState } from "react";
-import Image from "next/image";
+import React from "react";
 import { motion } from "framer-motion";
-import clsx from "clsx";
-
-const images = [
-  "/pic-1.jpg",
-  "/pic-2.jpg",
-  "/pic-3.jpg",
-  "/pic-4.jpg",
-  "/pic-5.jpg",
-  "/pic-6.jpg",
-];
 
 export default function Page() {
   const { isLoaded } = useUser();
-  const [currentImage, setCurrentImage] = useState(0);
-  const [showForm, setShowForm] = useState(false);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentImage((prev) => {
-        let next;
-        do {
-          next = Math.floor(Math.random() * images.length);
-        } while (next === prev);
-        return next;
-      });
-    }, 6000);
-    return () => clearInterval(interval);
-  }, []);
-
-  // Delay animation until Clerk SignIn is ready
-  useEffect(() => {
-    const checkClerkLoaded = setTimeout(() => {
-      setShowForm(true); // simulate delay for Clerk load
-    }, 400); // adjust if needed
-    return () => clearTimeout(checkClerkLoaded);
-  }, [isLoaded]);
 
   return (
     <div className="relative min-h-screen w-full overflow-hidden  bg-[#f9f6f1] dark:bg-zinc-900">
@@ -58,6 +24,8 @@ export default function Page() {
             className="shadow-xl rounded-xl p-8 w-fit mx-4"
           >
             <SignUp
+              forceRedirectUrl="/dashboard"
+              fallbackRedirectUrl="/dashboard"
               appearance={{
                 variables: {
                   colorPrimary: "#016630",

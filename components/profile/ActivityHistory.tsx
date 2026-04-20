@@ -1,10 +1,11 @@
 import React from "react";
 import { formatDistanceToNow } from "date-fns";
-import { BookOpen, BrainCircuit, Activity, Download } from "lucide-react";
+import { BookOpen, BrainCircuit, Activity as ActivityIcon, Download } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Activity } from "@/types";
 
 interface ActivityHistoryProps {
-  activities: any[];
+  activities: Activity[];
 }
 
 export default function ActivityHistory({ activities }: ActivityHistoryProps) {
@@ -12,7 +13,7 @@ export default function ActivityHistory({ activities }: ActivityHistoryProps) {
     return (
       <Card>
         <CardContent className="flex flex-col items-center justify-center p-12 text-zinc-500">
-          <Activity className="w-12 h-12 mb-4 text-zinc-300 dark:text-zinc-700" />
+          <ActivityIcon className="w-12 h-12 mb-4 text-zinc-300 dark:text-zinc-700" />
           <p>No recent activity to show.</p>
         </CardContent>
       </Card>
@@ -28,11 +29,11 @@ export default function ActivityHistory({ activities }: ActivityHistoryProps) {
       case "ai_request":
         return <BrainCircuit className="w-4 h-4 text-rose-500" />;
       default:
-        return <Activity className="w-4 h-4 text-zinc-500" />;
+        return <ActivityIcon className="w-4 h-4 text-zinc-500" />;
     }
   };
 
-  const formatActivityMessage = (act: any) => {
+  const formatActivityMessage = (act: Activity) => {
     switch (act.type) {
       case "read_book":
         return "Started reading a new book or document.";

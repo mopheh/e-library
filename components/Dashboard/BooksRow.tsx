@@ -20,14 +20,7 @@ import { FiDownload } from "react-icons/fi";
 import { WifiOff, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
-type Book = {
-  id: string;
-  title: string;
-  course: string;
-  type: string;
-  fileUrl: string;
-  createdAt: string;
-};
+import { Book } from "@/types";
 
 export const BooksRow = ({ book }: { book: Book }) => {
   const router = useRouter();
@@ -42,6 +35,7 @@ export const BooksRow = ({ book }: { book: Book }) => {
     setIsDownloading(true);
     toast.info("Downloading book for offline access...");
     try {
+      if (!book.fileUrl) throw new Error("No file URL");
       let downloadUrl = book.fileUrl;
       if (downloadUrl.includes("backblazeb2.com")) {
         const authResponse = await fetch(`/api/books/${book.id}/download`);
@@ -95,7 +89,7 @@ export const BooksRow = ({ book }: { book: Book }) => {
       <TableCell
         className="font-normal cursor-pointer flex items-center gap-2"
         onClick={() => {
-          router.push(`/student/book/${book.id}`);
+          router.push(`/dashboard/book/${book.id}`);
           addRecentlyViewedBook({ ...book, progress: 0 });
         }}
       >
@@ -139,15 +133,16 @@ export const BooksRow = ({ book }: { book: Book }) => {
           <DropdownMenuContent align="end">
             <DropdownMenuItem
               onClick={() => {
-                router.push(`/student/book/${book.id}`);
+                router.push(`/dashboard/book/${book.id}`);
                 addRecentlyViewedBook({ ...book, progress: 0 });
               }}
             >
               <FaBookOpen className="h-4 w-4 mr-2" /> Read
             </DropdownMenuItem>
             <DropdownMenuItem
+              disabled={!book.fileUrl}
               onClick={() =>
-                downloadFile(book.fileUrl, book.id, `${book.title}.pdf`)
+                book.fileUrl && downloadFile(book.fileUrl, book.id, `${book.title}.pdf`)
               }
             >
               <FiDownload className="h-4 w-4 mr-2" /> Download file

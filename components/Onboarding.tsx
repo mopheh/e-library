@@ -136,9 +136,9 @@ const Onboarding = () => {
     setIsSubmitting(true);
     try {
       const promise = createUser({
-        //@ts-ignore
+        //@ts-expect-error - Clerk user id mapping
         clerkId: user?.id,
-        email: user?.emailAddresses[0].emailAddress,
+        email: user?.emailAddresses[0].emailAddress || "",
         fullName: `${user?.firstName} ${user?.lastName}`,
         facultyId: data.faculty,
         departmentId: data.department,
@@ -176,7 +176,7 @@ const Onboarding = () => {
         }),
       });
 
-      router.push(`/${data.accountType.toLowerCase()}/dashboard`);
+      router.push("/dashboard");
     } catch (e) {
       console.error(e);
       setIsSubmitting(false);
@@ -190,7 +190,7 @@ const Onboarding = () => {
         {/* Progress Bar Header */}
         <div className="mb-8">
            <h1 className="text-2xl font-bold font-open-sans mb-2 tracking-tight">Setup Your Account</h1>
-           <p className="text-zinc-500 text-sm mb-6">Let's get you ready to explore UniVault's academic ecosystem.</p>
+           <p className="text-zinc-500 text-sm mb-6">Let&apos;s get you ready to explore UniVault&apos;s academic ecosystem.</p>
            
            <div className="flex items-center gap-2 mb-2">
               {[1, 2, 3].map((i) => (

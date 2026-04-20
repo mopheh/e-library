@@ -86,7 +86,12 @@ export function SearchCommand({ open, setOpen }: SearchCommandProps) {
                     Searching...
                 </div>
             ) : (
-                "No results found."
+                <div className="py-6 flex flex-col items-center justify-center gap-3">
+                  <p className="text-sm text-zinc-500">No results found.</p>
+                  <button onClick={() => handleSelect(() => router.push('/dashboard/requests'))} className="bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 px-4 py-2 rounded-lg text-xs font-semibold hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-colors">
+                    Request Material
+                  </button>
+                </div>
             )}
         </CommandEmpty>
          
@@ -100,7 +105,7 @@ export function SearchCommand({ open, setOpen }: SearchCommandProps) {
                             <CommandItem 
                                 key={book.id} 
                                 value={`book-${book.title}`} // unique value for accessibility
-                                onSelect={() => handleSelect(() => router.push(`/student/books/${book.id}`))}
+                                onSelect={() => handleSelect(() => router.push(`/dashboard/books/${book.id}`))}
                             >
                                 <BookOpen className="mr-2 h-4 w-4 text-muted-foreground" />
                                 <div className="flex flex-col">
@@ -120,7 +125,7 @@ export function SearchCommand({ open, setOpen }: SearchCommandProps) {
                             <CommandItem 
                                 key={course.id} 
                                 value={`course-${course.title}`}
-                                onSelect={() => handleSelect(() => router.push(`/student/courses`))}
+                                onSelect={() => handleSelect(() => router.push(`/dashboard/courses`))}
                             >
                                 <FileText className="mr-2 h-4 w-4 text-muted-foreground" />
                                 <span>{course.code} - {course.title}</span>

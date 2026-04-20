@@ -33,17 +33,49 @@ export async function processJob(job: {
     const tmpPath = path.join(os.tmpdir(), `book_${bookId}_${Date.now()}.pdf`);
 
     try {
-      const res = await fetch(book.fileUrl);
-      if (!res.ok) throw new Error(`Failed to fetch PDF: ${res.statusText}`);
+      let downloadUrl = book.fileUrl;
       
-      if (!res.body) throw new Error("Response body is null");
+      if (downloadUrl.includes("backblazeb2.com") || downloadUrl.includes("univault-books")) {
+        const { authorizeB2, b2 } = await import("@/lib/utils");
+        await authorizeB2();
       
-      const fileStream = fs.createWriteStream(tmpPath);
-      await new Promise<void>((resolve, reject) => {
-        res.body!.pipe(fileStream);
-        res.body!.on("error", reject);
-        fileStream.on("finish", () => resolve());
-      });
+        const urlObj = new URL(downloadUrl);
+        const parts = urlObj.pathname.split("/");
+        const bucketIndex = parts.indexOf("univault-books");
+        const fileName = (bucketIndex !== -1 && bucketIndex + 1 < parts.length)
+          ? parts.slice(bucketIndex + 1).join("/")
+          : parts.pop() || "";
+
+        const { data: auth } = await b2.getDownloadAuthorization({
+          bucketId: process.env.B2_BUCKET_ID!,
+          fileNamePrefix: fileName,
+          validDurationInSeconds: 60 * 60,
+        });
+
+        downloadUrl = `${downloadUrl}?Authorization=${auth.authorizationToken}`;
+      }
+
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 600000); // 10 minute timeout (600s)
+
+      try {
+        const res = await fetch(downloadUrl, { signal: controller.signal });
+        if (!res.ok) throw new Error(`Failed to fetch PDF: ${res.status} ${res.statusText}`);
+
+        if (!res.body) throw new Error("Response body is null");
+
+        const fileStream = fs.createWriteStream(tmpPath);
+        await new Promise<void>((resolve, reject) => {
+          res.body!.pipe(fileStream);
+          res.body!.on("error", (err: any) => {
+             console.error(`Page stream error: ${err.message}`);
+             reject(err);
+          });
+          fileStream.on("finish", () => resolve());
+        });
+      } finally {
+        clearTimeout(timeout);
+      }
 
       const pageCount = await parsePdfPages(tmpPath, bookId);
 

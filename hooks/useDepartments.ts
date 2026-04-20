@@ -1,8 +1,6 @@
 import { useQuery } from "@tanstack/react-query"
-export type Department = {
-  id: string
-  name: string
-}
+import { Department } from "@/types"
+
 export const useDepartments = ({
   facultyId,
   page,
@@ -40,7 +38,7 @@ export const useDepartment = (departmentId?: string) => {
   const queryKey = ["departments", departmentId]
   return useQuery({
     queryKey,
-    queryFn: async (): Promise<Department[]> => {
+    queryFn: async (): Promise<Department> => {
       const url = `/api/departments?departmentId=${departmentId}`
       const res = await fetch(url)
       const data = await res.json()

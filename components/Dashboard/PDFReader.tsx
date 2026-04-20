@@ -58,6 +58,16 @@ const PDFStudyView = ({ fileUrl, bookId }: PDFStudyViewProps) => {
   const [pageText, setPageText] = useState("");
   const [displayUrl, setDisplayUrl] = useState<string | Uint8Array>(fileUrl);
 
+  const { data: dbProgress, isLoading: loadingProgress } = useQuery({
+    queryKey: ["book-progress", bookId],
+    queryFn: async () => {
+      const res = await fetch(`/api/users/book-progress?bookId=${bookId}`);
+      if (!res.ok) throw new Error("Failed to fetch progress");
+      return res.json();
+    },
+    staleTime: 1000 * 60 * 5, // 5 mins
+  });
+
   useEffect(() => {
     const loadDefaultUrl = async () => {
       // First check if it's stored for offline use
@@ -70,10 +80,12 @@ const PDFStudyView = ({ fileUrl, bookId }: PDFStudyViewProps) => {
           return;
         }
       }
-      setDisplayUrl(fileUrl);
+      
+      // Use the proxy endpoint to bypass CORS and simplify signed URL management
+      setDisplayUrl(`/api/books/${bookId}/proxy`);
     };
     loadDefaultUrl();
-  }, [fileUrl, bookId]);
+  }, [bookId]);
 
   const { data: pages } = useBookPages(bookId);
 
@@ -95,8 +107,8 @@ const PDFStudyView = ({ fileUrl, bookId }: PDFStudyViewProps) => {
 
   const { data: annotations = [] } = useQuery({
     queryKey: ["annotations", bookId],
-    queryFn: async () => {
-      const res = await fetch(`/api/books/${bookId}/annotations`);
+    queryFn: async ({ signal }) => {
+      const res = await fetch(`/api/books/${bookId}/annotations`, { signal });
       if (!res.ok) return [];
       return res.json();
     },
@@ -225,11 +237,18 @@ const PDFStudyView = ({ fileUrl, bookId }: PDFStudyViewProps) => {
         const container = pluginFunctions.getPagesContainer();
         if (container) {
             container.addEventListener("scroll", handleScroll);
-             // Initial restore
-            const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
-            const found = stored.find((b: { id: string }) => b.id === bookId);
-            if (found) {
-                const scrollY = (found.progress / 100) * (container.scrollHeight - container.clientHeight);
+            // Initial restore - prefer DB, fallback to localStorage
+            let initialPercent = 0;
+            if (dbProgress && dbProgress.progress > 0) {
+              initialPercent = dbProgress.progress;
+            } else {
+                const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+                const found = stored.find((b: { id: string }) => b.id === bookId);
+                if (found) initialPercent = found.progress;
+            }
+
+            if (initialPercent > 0) {
+                const scrollY = (initialPercent / 100) * (container.scrollHeight - container.clientHeight);
                 container.scrollTo(0, scrollY);
             }
         }
@@ -283,7 +302,7 @@ const PDFStudyView = ({ fileUrl, bookId }: PDFStudyViewProps) => {
         targetId: bookId,
         meta: { action: "OPENED" },
       }),
-    });
+    }).catch(err => console.debug("Analytics fetch failed:", err));
   }, [bookId]);
 
   // POST reading session every minute
@@ -302,7 +321,7 @@ const PDFStudyView = ({ fileUrl, bookId }: PDFStudyViewProps) => {
             pagesRead,
             duration,
           }),
-        });
+        }).catch(err => console.debug("Analytics session failed:", err));
 
         fetch("/api/activity", {
           method: "POST",
@@ -312,7 +331,7 @@ const PDFStudyView = ({ fileUrl, bookId }: PDFStudyViewProps) => {
             targetId: bookId,
             meta: { pagesRead, duration, currentPage },
           }),
-        });
+        }).catch(err => console.debug("Analytics activity failed:", err));
 
         sessionStart.current = now;
         viewedPages.current.clear();
@@ -322,6 +341,27 @@ const PDFStudyView = ({ fileUrl, bookId }: PDFStudyViewProps) => {
     return () => clearInterval(interval);
   }, [bookId]);
 
+  // Sync progress to DB every 30 seconds
+  const lastSyncedProgress = useRef<number>(0);
+  useEffect(() => {
+    const syncInterval = setInterval(() => {
+      if (Math.abs(scrollPercent - lastSyncedProgress.current) > 2) {
+        fetch("/api/users/book-progress", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+             bookId,
+             progress: Math.round(scrollPercent),
+             lastPage: currentPage
+          })
+        }).then(() => {
+           lastSyncedProgress.current = scrollPercent;
+        }).catch(err => console.debug("Progress sync failed:", err));
+      }
+    }, 30 * 1000);
+    return () => clearInterval(syncInterval);
+  }, [bookId, scrollPercent, currentPage]);
+
   useEffect(() => {
     const countAsRead = setTimeout(
       () => {
@@ -329,7 +369,7 @@ const PDFStudyView = ({ fileUrl, bookId }: PDFStudyViewProps) => {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ bookId }),
-        });
+        }).catch(err => console.debug("Book count analytics failed:", err));
       },
       2 * 60 * 1000,
     );
@@ -385,21 +425,27 @@ const PDFStudyView = ({ fileUrl, bookId }: PDFStudyViewProps) => {
 
          <div className="flex-1 relative bg-zinc-50 dark:bg-zinc-950/50">
             <div className="absolute inset-0 overflow-hidden">
-                <Worker workerUrl="/pdf.worker.min.js">
-                  <Viewer
-                    fileUrl={displayUrl}
-                    defaultScale={1.2}
-                    renderLoader={renderLoader}
-                    plugins={[
-                      zoomPluginInstance,
-                      pageNavPluginInstance,
-                      searchPluginInstance,
-                      bookmarkPluginInstance,
-                      highlightPluginInstance
-                    ]}
-                    onPageChange={(e) => setCurrentPage(e.currentPage)}
-                  />
-                </Worker>
+                {displayUrl ? (
+                  <Worker workerUrl="/pdf.worker.min.js">
+                    <Viewer
+                      fileUrl={displayUrl}
+                      defaultScale={1.2}
+                      renderLoader={renderLoader}
+                      plugins={[
+                        zoomPluginInstance,
+                        pageNavPluginInstance,
+                        searchPluginInstance,
+                        bookmarkPluginInstance,
+                        highlightPluginInstance
+                      ]}
+                      onPageChange={(e) => setCurrentPage(e.currentPage)}
+                    />
+                  </Worker>
+                ) : (
+                  <div className="flex items-center justify-center h-full">
+                    {renderLoader(0)}
+                  </div>
+                )}
             </div>
          </div>
       </div>
@@ -408,7 +454,7 @@ const PDFStudyView = ({ fileUrl, bookId }: PDFStudyViewProps) => {
       <div className={`hidden md:flex border-l border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 transition-all duration-300 ease-in-out h-full overflow-hidden ${
           isSidebarOpen ? "w-[35%] opacity-100 translate-x-0" : "w-0 opacity-0 translate-x-full"
       }`}>
-         {sidebarMode === "assistant" && <AIChatAssistant pageText={pageText} />}
+         {sidebarMode === "assistant" && <AIChatAssistant pageText={pageText} bookId={bookId} />}
          {sidebarMode === "outline" && (
              <div className="w-full h-full font-poppins p-4 overflow-y-auto bg-white dark:bg-zinc-900 border-l border-zinc-200 dark:border-zinc-800">
                 <h3 className="text-sm font-cabin font-semibold mb-4 text-zinc-600 dark:text-zinc-300">Table of Contents</h3>
@@ -444,15 +490,21 @@ const PDFStudyView = ({ fileUrl, bookId }: PDFStudyViewProps) => {
                   </div>
                 </div>
                 <div className="flex-1 overflow-hidden relative"> 
-                    <Worker workerUrl="/pdf.worker.min.js">
-                        <Viewer
-                        fileUrl={fileUrl}
-                        defaultScale={0.8}
-                        onPageChange={(e) => setCurrentPage(e.currentPage)}
-                        renderLoader={renderLoader}
-                        plugins={[zoomPluginInstance, pageNavPluginInstance, scrollPluginInstance, searchPluginInstance, bookmarkPluginInstance, highlightPluginInstance]}
-                        />
-                    </Worker>
+                    {displayUrl ? (
+                      <Worker workerUrl="/pdf.worker.min.js">
+                          <Viewer
+                          fileUrl={displayUrl}
+                          defaultScale={0.8}
+                          onPageChange={(e) => setCurrentPage(e.currentPage)}
+                          renderLoader={renderLoader}
+                          plugins={[zoomPluginInstance, pageNavPluginInstance, scrollPluginInstance, searchPluginInstance, bookmarkPluginInstance, highlightPluginInstance]}
+                          />
+                      </Worker>
+                    ) : (
+                      <div className="flex items-center justify-center h-full">
+                        {renderLoader(0)}
+                      </div>
+                    )}
                 </div>
               </div>
             </TabsContent>

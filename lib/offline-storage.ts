@@ -29,7 +29,7 @@ export const checkIsPdfOffline = async (bookId: string): Promise<boolean> => {
     const key = `${OFFLINE_DB_PREFIX}${bookId}`;
     const allKeys = await keys();
     return allKeys.includes(key);
-  } catch (error) {
+  } catch {
     return false;
   }
 };

@@ -1,12 +1,12 @@
-import { useQuery } from "@tanstack/react-query"
-import { ParamValue } from "next/dist/server/request/params"
+import { useQuery, UseQueryResult } from "@tanstack/react-query"
+import { Course } from "@/types"
 
 export const useCourses = ({
   departmentId,
   page,
   limit,
 }: {
-  departmentId?: ParamValue
+  departmentId?: string
   page?: number
   limit?: number
 }) => {
@@ -35,13 +35,13 @@ export const useCourses = ({
     enabled: !departmentId || !!departmentId,
   })
 }
-async function fetchCbtCourses() {
+async function fetchCbtCourses(): Promise<Course[]> {
   const res = await fetch("/api/cbt/courses");
   if (!res.ok) throw new Error("Failed to fetch courses");
   return res.json();
 }
 
-export function useCbtCourses() {
+export function useCbtCourses(): UseQueryResult<Course[], Error> {
   return useQuery({
     queryKey: ["cbt-courses"],
     queryFn: fetchCbtCourses,

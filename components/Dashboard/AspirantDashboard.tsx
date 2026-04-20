@@ -45,7 +45,7 @@ export default function AspirantDashboard() {
             Start preparing for your Post-UTME, connect with current students, and explore your future department at UniVault.
           </motion.p>
           <motion.div variants={itemVariants} className="flex flex-wrap gap-4">
-            <Link href="/aspirant/cbt">
+            <Link href="/dashboard/cbt">
               <button className="bg-white text-blue-600 px-6 py-3 rounded-full font-semibold hover:bg-zinc-100 transition-colors flex items-center gap-2 shadow-lg">
                 <Zap className="w-5 h-5" /> Start Mock CBT
               </button>
@@ -125,7 +125,7 @@ export default function AspirantDashboard() {
               <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-4">
                 Talk to students already studying your intended course. Ask about exams, life on campus, and more.
               </p>
-              <Link href="/aspirant/connect">
+              <Link href="/dashboard/connect">
                 <button className="w-full bg-zinc-50 dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 py-3 rounded-xl text-sm font-semibold transition-colors">
                   Find a Mentor
                 </button>

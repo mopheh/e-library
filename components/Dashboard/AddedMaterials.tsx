@@ -11,14 +11,7 @@ import {
 } from "@/components/ui/table";
 import { BookOpen, FolderOpen } from "lucide-react";
 
-type Book = {
-  id: string;
-  title: string;
-  course: string;
-  fileUrl: string;
-  type: string;
-  createdAt: string;
-};
+import { Book } from "@/types";
 
 export default function AddedMaterials({
   books,

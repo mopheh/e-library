@@ -2,6 +2,7 @@ import * as pdfjsLib from "pdfjs-dist/legacy/build/pdf.js";
 import { db } from "@/database/drizzle";
 import { bookPages } from "@/database/schema";
 import { extractTextWithOCR } from "@/lib/ocr";
+import { getEmbedding } from "@/lib/embeddings";
 
 import * as path from "path";
 
@@ -29,7 +30,7 @@ export async function parsePdfPages(filePath: string, bookId: string) {
     const content = await page.getTextContent();
 
     let text = content.items
-      .map((item: any) => item.str ?? "")
+      .map((item) => ("str" in item ? (item as { str: string }).str : ""))
       .join(" ")
       .trim();
 
@@ -67,10 +68,21 @@ export async function parsePdfPages(filePath: string, bookId: string) {
 
   const BATCH_SIZE = 10;
 
-  for (let i = 0; i < pages.length; i += BATCH_SIZE) {
-    const batch = pages.slice(i, i + BATCH_SIZE);
+  for (let i = 0; i < nonEmpty.length; i += BATCH_SIZE) {
+    const batch = nonEmpty.slice(i, i + BATCH_SIZE);
 
-    await db.insert(bookPages).values(batch);
+    const batchWithEmbeddings = await Promise.all(
+      batch.map(async (page) => {
+        const embedding = await getEmbedding(page.textChunk);
+        return {
+          ...page,
+          // Drizzle's vector() column accepts number[] directly — no manual serialization needed
+          embedding: embedding.length > 0 ? embedding : null,
+        };
+      })
+    );
+
+    await db.insert(bookPages).values(batchWithEmbeddings);
   }
 
   return numPages;

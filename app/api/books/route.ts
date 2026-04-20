@@ -1,20 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import * as pdfjsLib from "pdfjs-dist";
-import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
-const s3 = new S3Client({
-  region: "us-east-005", // backblaze default region
-  endpoint: process.env.B2_ENDPOINT,
-  credentials: {
-    accessKeyId: process.env.B2_KEY_ID!,
-    secretAccessKey: process.env.B2_APP_KEY!,
-  },
-});
 
 // import { bookSchema } from "@/components/AddBook";
 import {
   bookCourses,
-  bookPages,
   books,
   courses,
   jobs,
@@ -22,9 +12,6 @@ import {
 } from "@/database/schema";
 import { db } from "@/database/drizzle";
 import { and, eq, sql, desc } from "drizzle-orm";
-
-import { v4 as uuidv4 } from "uuid";
-import { supabase } from "@/lib/supabase";
 
 export async function GET(req: NextRequest) {
   try {
@@ -50,7 +37,7 @@ export async function GET(req: NextRequest) {
     if (type) conditions.push(eq(books.type, type));
     if (courseId) conditions.push(eq(bookCourses.courseId, courseId));
     if (level) {
-      // @ts-ignore
+      // @ts-expect-error - level is a string in schema but being matched here
       conditions.push(eq(courses.level, level));
     }
 
@@ -71,6 +58,7 @@ export async function GET(req: NextRequest) {
         createdAt: books.createdAt,
         type: books.type,
         fileUrl: books.fileUrl,
+        fileSize: books.fileSize,
         course: courses.courseCode,
         level: courses.level,
       })
@@ -99,10 +87,8 @@ export async function GET(req: NextRequest) {
 }
 
 // tell pdfjs to use worker-less mode (important for Next.js)
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 pdfjsLib.GlobalWorkerOptions.workerSrc = require("pdfjs-dist/build/pdf.worker.min.js");
-import { parsePdfPages } from "@/actions/parseBook";
-import { authorizeB2, b2 } from "@/lib/utils";
-import { generateQuestionsFromBook } from "@/lib/generateQuestions";
 
 export const runtime = "nodejs";
 
@@ -129,7 +115,7 @@ export async function POST(req: Request) {
 
     const body = await req.json();
 
-    const { title, description, departmentId, type, courseIds, fileUrl, link } =
+    const { title, description, departmentId, type, courseIds, fileUrl, link, fileSize } =
       body;
 
     if (!fileUrl && !link) {
@@ -144,13 +130,14 @@ export async function POST(req: Request) {
         departmentId,
         type,
         fileUrl,
+        fileSize,
         postedBy: user.id,
-        parseStatus: "processing" as any,
-      } as any)
+        parseStatus: "processing",
+      })
       .returning();
 
     if (courseIds?.length) {
-      const courseLinks = courseIds.map((courseId: any) => ({
+      const courseLinks = courseIds.map((courseId: string) => ({
         bookId: createdBook.id,
         courseId,
       }));
@@ -162,10 +149,10 @@ export async function POST(req: Request) {
     });
 
     return NextResponse.json({ ...createdBook }, { status: 201 });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("[POST /api/books]", error);
     return NextResponse.json(
-      { error: error?.message || "Failed to create book" },
+      { error: error instanceof Error ? error.message : "Failed to create book" },
       { status: 500 },
     );
   }

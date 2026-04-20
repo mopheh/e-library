@@ -2,17 +2,19 @@ import { NextResponse } from "next/server";
 import { db } from "@/database/drizzle";
 import { books, bookCourses, courses, threads, users, questions } from "@/database/schema";
 import { eq, desc, sql } from "drizzle-orm";
-import { getCurrentUser } from "@/lib/auth";
+import { requireRole } from "@/lib/auth";
 
 export async function GET(
   req: Request,
   { params }: { params: Promise<{ courseId: string }> }
 ) {
   try {
-    const user = await getCurrentUser();
-    if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const authCheck = await requireRole(["STUDENT", "ADMIN", "FACULTY REP"]);
+    if (!authCheck.authorized) {
+      return NextResponse.json({ error: authCheck.error }, { status: authCheck.status });
     }
+    
+    const user = authCheck.user;
 
     const { courseId } = await params;
 
@@ -43,7 +45,8 @@ export async function GET(
       .innerJoin(bookCourses, eq(books.id, bookCourses.bookId))
       .leftJoin(users, eq(books.postedBy, users.id))
       .where(eq(bookCourses.courseId, courseId))
-      .orderBy(desc(books.createdAt));
+      .orderBy(desc(books.createdAt))
+      .limit(50);
 
     const courseThreads = await db
       .select({
@@ -59,7 +62,8 @@ export async function GET(
       .from(threads)
       .leftJoin(users, eq(threads.authorId, users.id))
       .where(eq(threads.courseId, courseId))
-      .orderBy(desc(threads.createdAt));
+      .orderBy(desc(threads.createdAt))
+      .limit(30);
 
     const questionsCount = await db
       .select({ count: sql<number>`count(*)` })

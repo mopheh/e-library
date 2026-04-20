@@ -1,33 +1,38 @@
 import { db } from "@/database/drizzle";
-import { readingSessions, userBooks, users } from "@/database/schema";
-import { auth } from "@clerk/nextjs/server";
+import { readingSessions, userBooks, users, studentCourses, courses } from "@/database/schema";
+import { getCurrentUser } from "@/lib/auth";
 import { NextResponse } from "next/server";
 import { and, desc, eq, gte, lte, sql } from "drizzle-orm";
 import { format, subDays, eachDayOfInterval, isSameDay, startOfWeek, endOfWeek, parseISO } from "date-fns";
 
 export async function GET() {
   try {
-    const { userId: clerkId } = await auth();
-    if (!clerkId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    // Get internal user ID and department
-    const [user] = await db
-      .select({ 
-        id: users.id,
-        departmentId: users.departmentId
-      })
-      .from(users)
-      .where(eq(users.clerkId, clerkId))
-      .limit(1);
-
+    const user = await getCurrentUser();
     if (!user) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const userId = user.id;
     const departmentId = user.departmentId;
+
+    // 0. Fetch enrolled courses for dynamic metadata (like exam dates)
+    const userCourses = await db
+      .select({
+        id: courses.id,
+        examDate: courses.examDate
+      })
+      .from(studentCourses)
+      .innerJoin(courses, eq(studentCourses.courseId, courses.id))
+      .where(eq(studentCourses.userId, userId));
+
+    const soonestExam = userCourses
+      .filter(c => c.examDate)
+      .map(c => new Date(c.examDate!))
+      .sort((a, b) => a.getTime() - b.getTime())[0];
+
+    const daysToExam = soonestExam 
+      ? Math.max(0, Math.ceil((soonestExam.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)))
+      : null;
 
     // 1. KPIs
     // Total Books Read
@@ -43,6 +48,13 @@ export async function GET() {
       .from(readingSessions)
       .where(eq(readingSessions.userId, userId));
     const totalMinutesRead = Number(timeReadRes[0]?.totalMinutes || 0);
+
+    // AI Usage Tracking
+    const aiUsageRes = await db
+      .select({ totalAi: sql<number>`sum(${userBooks.aiRequests})` })
+      .from(userBooks)
+      .where(eq(userBooks.userId, userId));
+    const totalAiRequests = Number(aiUsageRes[0]?.totalAi || 0);
 
     // Current Streak Calculation
     // Fetch distinct dates for user's reading sessions, ordered by date desc
@@ -175,6 +187,8 @@ export async function GET() {
             booksRead: totalBooksRead,
             minutesRead: totalMinutesRead,
             streak,
+            daysToExam,
+            totalAiRequests,
         },
         heatmap: heatmapData.map(h => ({ 
           date: h.date, 

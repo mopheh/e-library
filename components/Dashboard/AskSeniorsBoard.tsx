@@ -177,25 +177,25 @@ export const AskSeniorsBoard = () => {
           <div className="w-10 h-10 bg-indigo-100 dark:bg-indigo-900 rounded-full flex items-center justify-center mb-4">
             <Sparkles className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
           </div>
-          <h3 className="font-poppins font-bold text-lg mb-2 text-indigo-950 dark:text-indigo-100">Ask the Seniors</h3>
-          <p className="text-sm text-indigo-800/80 dark:text-indigo-300 font-open-sans">
+          <h3 className="font-cabin font-medium tracking-tight text-lg mb-2 text-indigo-950 dark:text-indigo-100">Ask the Seniors</h3>
+          <p className="text-xs text-indigo-800/80 font-light dark:text-indigo-300 font-poppins">
             Have questions about a difficult course, career paths, or navigating campus? Ask the seniors in your department.
           </p>
         </div>
 
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
-            <Button className="w-full bg-black text-white hover:bg-black/90 dark:bg-white dark:text-black dark:hover:bg-zinc-200 shadow-sm font-semibold rounded-xl h-12">
+            <Button className="w-full bg-black text-xs font-normal text-white hover:bg-black/90 dark:bg-white dark:text-black dark:hover:bg-zinc-200 shadow-sm font-poppins rounded-xl h-12">
               <Plus className="w-4 h-4 mr-2" /> Ask a Question
             </Button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-[500px]">
             <DialogHeader>
-              <DialogTitle className="font-poppins font-bold">Ask the Seniors</DialogTitle>
+              <DialogTitle className="font-poppins font-normal">Ask the Seniors</DialogTitle>
             </DialogHeader>
             <div className="space-y-5 py-4">
               <div className="space-y-2">
-                <Label>Who are you asking?</Label>
+                <Label className="font-light font-poppins text-xs">Who are you asking?</Label>
                 <Select value={targetLevel} onValueChange={setTargetLevel}>
                   <SelectTrigger className="rounded-xl">
                     <SelectValue placeholder="Select target level" />
@@ -210,14 +210,14 @@ export const AskSeniorsBoard = () => {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="title">Question Summary</Label>
-                <Input id="title" className="rounded-xl" placeholder="e.g. How to prepare for MTH 101?" value={title} onChange={(e) => setTitle(e.target.value)} />
+                <Label htmlFor="title" className="font-light font-poppins text-xs">Question Summary</Label>
+                <Input id="title" className="rounded-xl text-xs" placeholder="e.g. How to prepare for MTH 101?" value={title} onChange={(e) => setTitle(e.target.value)} />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="content">Details</Label>
+                <Label htmlFor="content" className="font-light font-poppins text-xs">Details</Label>
                 <Textarea 
                   id="content" 
-                  className="min-h-[120px] rounded-xl resize-none" 
+                  className="min-h-[120px] rounded-xl resize-none text-xs" 
                   placeholder="Elaborate on your question here..." 
                   value={content} 
                   onChange={(e) => setContent(e.target.value)} 
@@ -225,18 +225,18 @@ export const AskSeniorsBoard = () => {
               </div>
               <div className="flex items-center justify-between bg-zinc-50 dark:bg-zinc-900 p-3 rounded-xl border border-zinc-200 dark:border-zinc-800">
                 <div className="space-y-0.5">
-                  <Label htmlFor="anonymous" className="text-sm font-semibold">Post Anonymously</Label>
-                  <p className="text-xs text-muted-foreground">Your name will be hidden from everyone.</p>
+                  <Label htmlFor="anonymous" className="text-xs font-poppins font-medium">Post Anonymously</Label>
+                  <p className="text-xs text-muted-foreground font-light font-poppins">Your name will be hidden from everyone.</p>
                 </div>
                 <Switch id="anonymous" checked={isAnonymous} onCheckedChange={setIsAnonymous} />
               </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setOpen(false)} className="rounded-xl">Cancel</Button>
+              <Button variant="outline" onClick={() => setOpen(false)} className="rounded-xl font-poppins text-xs font-medium">Cancel</Button>
               <Button 
                 onClick={() => postQuestion.mutate()} 
                 disabled={!title || !content || postQuestion.isPending}
-                className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl"
+                className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-poppins text-xs font-medium"
               >
                 {postQuestion.isPending ? "Posting..." : <><Send className="w-4 h-4 mr-2" /> Post Question</>}
               </Button>
@@ -245,9 +245,9 @@ export const AskSeniorsBoard = () => {
         </Dialog>
 
         <div className="space-y-3">
-          <Label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Filter by Level</Label>
+          <Label className="text-xs font-semibold font-poppins text-muted-foreground uppercase tracking-wider">Filter by Level</Label>
           <Tabs value={filter} onValueChange={setFilter} orientation="vertical" className="w-full">
-            <TabsList className="flex flex-col h-auto bg-transparent items-start space-y-1 p-0">
+            <TabsList className="flex flex-col h-auto font-manrope text-xs font-light bg-transparent items-start space-y-1 p-0">
               <TabsTrigger value="ALL" className="w-full justify-start rounded-lg px-3 py-2 data-[state=active]:bg-zinc-100 dark:data-[state=active]:bg-zinc-800 data-[state=active]:shadow-none">Everyone</TabsTrigger>
               <TabsTrigger value="400" className="w-full justify-start rounded-lg px-3 py-2 data-[state=active]:bg-emerald-50 text-emerald-700 dark:text-emerald-400 dark:data-[state=active]:bg-emerald-900/20 data-[state=active]:shadow-none">To: 400 Lvl</TabsTrigger>
               <TabsTrigger value="500" className="w-full justify-start rounded-lg px-3 py-2 data-[state=active]:bg-amber-50 text-amber-700 dark:text-amber-400 dark:data-[state=active]:bg-amber-900/20 data-[state=active]:shadow-none">To: 500 Lvl</TabsTrigger>
@@ -279,8 +279,8 @@ export const AskSeniorsBoard = () => {
             <div className="bg-zinc-50 dark:bg-zinc-900 w-16 h-16 flex items-center justify-center rounded-full mx-auto mb-4">
               <MessageCircle className="w-8 h-8 text-zinc-400" />
             </div>
-            <h3 className="text-lg font-medium text-foreground mb-1 font-poppins">No questions found</h3>
-            <p className="text-sm text-muted-foreground max-w-sm mx-auto font-open-sans">
+            <h3 className="text-lg font-medium tracking-tight text-foreground mb-1 font-cabin">No questions found</h3>
+            <p className="text-xs text-muted-foreground max-w-sm mx-auto font-poppins font-light">
               Be the first to ask a question to your seniors, or try adjusting your filters.
             </p>
           </div>
@@ -303,18 +303,18 @@ export const AskSeniorsBoard = () => {
                     )}
                     <div>
                       <div className="flex items-center gap-2">
-                         <p className="text-sm font-semibold font-poppins text-foreground">
-                          {q.isAnonymous ? "Anonymous Student" : q.authorName}
+                         <p className="text-xs font-semibold font-poppins text-foreground">
+                          {q.authorName}
                         </p>
                         {q.targetLevel !== "ALL" && (
-                          <Badge variant="secondary" className="bg-indigo-50 text-indigo-700 hover:bg-indigo-100 dark:bg-indigo-900/30 dark:text-indigo-400 border-0 h-5 px-1.5 text-[10px]">
+                          <Badge variant="secondary" className="bg-indigo-50 font-normal text-indigo-700 hover:bg-indigo-100 dark:bg-indigo-900/30 dark:text-indigo-400 border-0 h-5 px-1.5 text-[10px]">
                             To: {q.targetLevel} Lvl
                           </Badge>
                         )}
                       </div>
                      
-                      <p className="text-xs text-muted-foreground font-open-sans">
-                        {!q.isAnonymous && <span className="mr-1">{q.authorLevel} Level •</span>}
+                      <p className="text-[10px] font-light text-muted-foreground font-poppins">
+                        {q.authorRole === "Student" && <span>{q.authorLevel} Level •</span>}
                         {formatDistanceToNow(new Date(q.createdAt))} ago
                       </p>
                     </div>
@@ -324,10 +324,10 @@ export const AskSeniorsBoard = () => {
                   </Button>
                 </div>
                 
-                <h4 className="font-bold text-lg font-poppins mb-2 text-foreground">
+                <h4 className="font-semibold text-lg font-karla mb-2 text-foreground">
                   {q.title}
                 </h4>
-                <p className="text-sm text-slate-600 dark:text-slate-400 font-open-sans line-clamp-3 mb-5">
+                <p className="text-xs text-slate-600 dark:text-slate-400 font-poppins line-clamp-3 mb-5">
                   {q.content}
                 </p>
 
@@ -341,9 +341,9 @@ export const AskSeniorsBoard = () => {
                          upvoteMutation.mutate(q.id);
                        }}
                        disabled={upvoteMutation.isPending}
-                       className="text-muted-foreground hover:text-indigo-600 dark:hover:text-indigo-400 h-8 px-2 -ml-2 rounded-lg"
+                       className="text-muted-foreground hover:text-indigo-600 dark:hover:text-indigo-400 h-8 px-2 -ml-2 rounded-lg text-xs font-medium font-poppins"
                      >
-                        <ThumbsUp className="w-4 h-4 mr-2" /> {q.upvotes || 0} Upvotes
+                        <ThumbsUp className="w-4 h-4 mr-1" /> {q.upvotes || 0} Upvotes
                      </Button>
                      <Button 
                        variant="ghost" 
@@ -352,9 +352,9 @@ export const AskSeniorsBoard = () => {
                          e.stopPropagation();
                          setExpandedQuestion(expandedQuestion === q.id ? null : q.id);
                        }}
-                       className="text-muted-foreground hover:text-indigo-600 dark:hover:text-indigo-400 h-8 px-2 rounded-lg"
+                       className="text-muted-foreground hover:text-indigo-600 dark:hover:text-indigo-400 h-8 px-2 rounded-lg text-xs font-medium font-poppins"
                      >
-                        <MessageCircle className="w-4 h-4 mr-2" /> {expandedQuestion === q.id ? 'Close Replies' : 'Reply'}
+                        <MessageCircle className="w-4 h-4 mr-1" /> {expandedQuestion === q.id ? 'Close Replies' : 'Reply'}
                      </Button>
                   </div>
                   

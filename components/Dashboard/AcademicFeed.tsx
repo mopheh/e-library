@@ -23,7 +23,6 @@ interface FeedItem {
 }
 
 export const AcademicFeed = () => {
-  const { role } = useParams() as { role: string };
   const { ref, inView } = useInView();
 
   const fetchFeed = async ({ pageParam = 1 }) => {
@@ -90,7 +89,7 @@ export const AcademicFeed = () => {
       
       <div className="space-y-4">
         {items.map((item, i) => (
-          <FeedCard key={`${item.itemId}-${i}`} item={item} role={role} />
+          <FeedCard key={`${item.itemId}-${i}`} item={item} />
         ))}
       </div>
 
@@ -109,7 +108,7 @@ export const AcademicFeed = () => {
   );
 };
 
-const FeedCard = ({ item, role }: { item: FeedItem; role: string }) => {
+const FeedCard = ({ item }: { item: FeedItem }) => {
   const getIcon = () => {
     switch (item.type) {
       case "BOOK":
@@ -139,11 +138,11 @@ const FeedCard = ({ item, role }: { item: FeedItem; role: string }) => {
   const getHref = () => {
     switch (item.type) {
       case "BOOK":
-        return `/${role}/book/${item.targetId}`; // targetId is bookId
+        return `/dashboard/book/${item.targetId}`; // targetId is bookId
       case "THREAD":
-        return `/${role}/dashboard/courses/${item.targetId}?tab=discussions`; // targetId is courseId
+        return `/dashboard/courses/${item.targetId}?tab=discussions`; // targetId is courseId
       case "GUIDE":
-        return `/${role}/dashboard/courses/${item.targetId}?tab=guides`; // targetId is courseId
+        return `/dashboard/courses/${item.targetId}?tab=guides`; // targetId is courseId
       default:
         return "#";
     }

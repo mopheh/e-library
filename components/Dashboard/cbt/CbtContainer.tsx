@@ -10,8 +10,11 @@ import CbtSetup from "@/components/Dashboard/cbt/CbtSetup";
 
   // const sampleQuestions = ... (removed)
 
+const STORAGE_KEY = "univault_student_cbt_session";
+
 export default function CbtContainer() {
   const [setupData, setSetupData] = useState<any>(null);
+  const [isRestoring, setIsRestoring] = useState(true);
   const [stage, setStage] = useState<
     "setup" | "instructions" | "test" | "result"
   >("setup");
@@ -26,6 +29,29 @@ export default function CbtContainer() {
   const handleAnswer = (questionId: number, optionText: string) => {
     setAnswers((prev) => ({ ...prev, [questionId]: optionText }));
   };
+
+  // Restore state on mount
+  useEffect(() => {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      try {
+        const { setupData: s, answers: a, stage: st } = JSON.parse(saved);
+        setSetupData(s);
+        setAnswers(a);
+        setStage(st);
+      } catch (err) {
+        console.error("Failed to restore CBT session:", err);
+      }
+    }
+    setIsRestoring(false);
+  }, []);
+
+  // Save state on change
+  useEffect(() => {
+    if (setupData && stage !== "setup" && stage !== "result") {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ setupData, answers, stage }));
+    }
+  }, [setupData, answers, stage]);
 
   // Reset state when starting fresh
   const handleSetupStart = (data: any) => {
@@ -91,6 +117,7 @@ export default function CbtContainer() {
 
         setScore(newScore);
         setStage("result");
+        localStorage.removeItem(STORAGE_KEY);
     } catch (error) {
         console.error("Submission error:", error);
         toast.error("Failed to save your score. Please check your connection.");

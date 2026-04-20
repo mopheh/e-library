@@ -1,0 +1,21 @@
+﻿
+> e-library-@0.1.0 build
+> next build --no-lint
+
+   Γû▓ Next.js 15.5.11
+   - Environments: .env
+
+   Creating an optimized production build ...
+> [PWA] Compile server
+> [PWA] Compile server
+> [PWA] Compile client (static)
+> [PWA] Auto register service worker with: C:\Users\USER\Downloads\e-library\node_modules\next-pwa\register.js
+> [PWA] Service worker: C:\Users\USER\Downloads\e-library\public\sw.js
+> [PWA]   url: /sw.js
+> [PWA]   scope: /
+> [PWA] Fallback to precache routes when fetch failed from cache or network:
+> [PWA]   document (page): /offline
+> [PWA]   image: /icons/android-chrome-192x192.png
+ Γ£ô Compiled successfully in 2.7min
+   Checking validity of types ...
+

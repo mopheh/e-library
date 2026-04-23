@@ -31,7 +31,7 @@ export async function GET(req: NextRequest) {
 
     const results = rawResults.map((r) => ({
       ...r.users,
-      department: r.department,
+      department: r.departments,
     }));
 
     const repClerkIds = results

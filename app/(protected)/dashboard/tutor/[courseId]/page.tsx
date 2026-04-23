@@ -98,12 +98,13 @@ export default function CourseTutorPage() {
                   ? "bg-indigo-600 text-white rounded-tr-none border-indigo-500" 
                   : "bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 rounded-tl-none text-zinc-800 dark:text-zinc-200"
                 }`}>
-                   <ReactMarkdown 
-                    remarkPlugins={[remarkGfm]}
-                    className="prose prose-sm dark:prose-invert max-w-none break-words"
-                   >
-                     {msg.content}
-                   </ReactMarkdown>
+                    <div className="prose prose-sm dark:prose-invert max-w-none break-words">
+                      <ReactMarkdown 
+                       remarkPlugins={[remarkGfm]}
+                      >
+                        {msg.content}
+                      </ReactMarkdown>
+                    </div>
                 </div>
 
                 {msg.sources && msg.sources.length > 0 && (

@@ -59,7 +59,7 @@ export default function AspirantConnect() {
     if (res.success) {
       setData(res.data);
       // Show expertise prompt if current student has no interests
-      if (!isAspirant && !res.data.interests) {
+      if (!isAspirant && res.data && !res.data.interests) {
         setShowExpertisePrompt(true);
       }
     }

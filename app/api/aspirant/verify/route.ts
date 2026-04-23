@@ -57,8 +57,8 @@ export async function POST(req: Request) {
         approvedDepartmentId,
         approvedFacultyId,
         subjectCombinations,
-        admissionYear,
-        level,
+        admissionYear: admissionYear.toString(),
+        level: level as any,
       })
       .returning();
 

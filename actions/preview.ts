@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "@/database/drizzle";
-import { departments, books, users, courses, departmentCourses } from "@/database/schema";
+import { departments, books, users, courses } from "@/database/schema";
 import { eq, sql, inArray } from "drizzle-orm";
 import { auth } from "@clerk/nextjs/server";
 
@@ -40,9 +40,8 @@ export async function getDepartmentPreview(departmentId: string) {
        title: courses.title
     })
     .from(courses)
-    .innerJoin(departmentCourses, eq(courses.id, departmentCourses.courseId))
     .where(
-      sql`${departmentCourses.departmentId} = ${departmentId} AND ${courses.level} = '100'`
+      sql`${courses.departmentId} = ${departmentId} AND ${courses.level} = '100'`
     )
     .limit(6);
 

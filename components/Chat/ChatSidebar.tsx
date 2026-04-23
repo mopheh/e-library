@@ -66,11 +66,17 @@ export default function ChatSidebar() {
                                     </div>
                                 </div>
                                 <div className="flex-1 min-h-0">
-                                    <ChatWindow 
-                                        roomId={activeRoomId} 
-                                        currentUserId={currentUserId} 
-                                        otherUserName={activeRoom?.otherUser?.fullName || "Chat"} 
-                                    />
+                                    {currentUserId ? (
+                                        <ChatWindow 
+                                            roomId={activeRoomId} 
+                                            currentUserId={currentUserId} 
+                                            otherUserName={activeRoom?.otherUser?.fullName || "Chat"} 
+                                        />
+                                    ) : (
+                                        <div className="flex items-center justify-center h-full">
+                                            <Loader2 className="w-6 h-6 animate-spin" />
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         ) : (

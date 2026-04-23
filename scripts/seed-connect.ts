@@ -1,6 +1,7 @@
 import { drizzle } from "drizzle-orm/neon-http";
 import { neon } from "@neondatabase/serverless";
-import { users, departments, faculty, departmentCommunities } from "../database/schema";
+import { users, departments, departmentCommunities } from "../database/schema";
+import * as schema from "../database/schema";
 import * as dotenv from "dotenv";
 import { eq } from "drizzle-orm";
 
@@ -8,7 +9,7 @@ import { eq } from "drizzle-orm";
 dotenv.config({ path: ".env" });
 
 const sql = neon(process.env.DATABASE_URL!);
-const db = drizzle(sql);
+const db = drizzle(sql, { schema });
 
 /**
  * 🚀 STUDENT CONNECT SEED SCRIPT
@@ -66,13 +67,14 @@ async function seedConnect() {
         const selectedInterests = shuffled.slice(0, 3).join(", ");
 
         await db.insert(users).values({
+          clerkId: `seed_clerk_${Math.floor(Math.random() * 1000000)}`,
           fullName: `${name} (${level}L)`,
           email: email,
           matricNo: `UV/${dept.name.substring(0,3).toUpperCase()}/${Math.floor(1000 + Math.random() * 9000)}`,
           role: Math.random() > 0.8 ? "FACULTY REP" : "STUDENT",
           facultyId: dept.facultyId,
           departmentId: dept.id,
-          year: level,
+          year: level as any,
           gender: Math.random() > 0.5 ? "MALE" : "FEMALE",
           address: "UniVault Campus Residence",
           interests: selectedInterests,

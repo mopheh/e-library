@@ -102,15 +102,16 @@ export default function ChatWindow({ roomId, currentUserId, otherUserName, other
         setMessages(prev => [...prev, tempMsg]);
 
         const res = await sendMessage(roomId, content);
-        if (res.success) {
+        if (res.success && res.data) {
             // Replace optimistic message with the real one from server
+            const serverMsg = res.data;
             setMessages(prev => {
                 // If Pusher already added the message, just remove the temp one
-                if (prev.some(m => m.id === res.data.id)) {
+                if (prev.some(m => m.id === serverMsg.id)) {
                     return prev.filter(m => m.id !== tempId);
                 }
                 // Otherwise, replace the temp message with the real one
-                return prev.map(m => m.id === tempId ? res.data : m);
+                return prev.map(m => m.id === tempId ? serverMsg : m);
             });
         } else {
             // Remove optimistic message and show error

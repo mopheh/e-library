@@ -133,6 +133,7 @@ export async function getConnectData() {
         peers: peersWithStatus,
         recentDiscussions,
         departmentId: currentUser.departmentId,
+        interests: currentUser.interests,
       },
     };
   } catch (error) {

@@ -46,7 +46,7 @@ export async function GET(req: NextRequest) {
     if (type) conditions.push(eq(books.type, type));
     if (courseId) conditions.push(eq(bookCourses.courseId, courseId));
     if (level) {
-      conditions.push(eq(courses.level, level));
+      conditions.push(eq(courses.level, level as any));
     }
 
     const countResult = await db
@@ -116,7 +116,7 @@ export async function POST(req: Request) {
       .insert(books)
       .values({
         title,
-        description: description ?? null,
+        description: description ?? "",
         departmentId,
         type,
         fileUrl,

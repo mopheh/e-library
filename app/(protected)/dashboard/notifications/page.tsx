@@ -59,7 +59,7 @@ export default function NotificationsPage() {
       if (res.success) {
         toast.success(status === "ACCEPTED" ? "Connection accepted!" : "Request declined");
         if (res.roomId) {
-            setHandledRequests(prev => ({ ...prev, [connectionId]: { status, roomId: res.roomId } }));
+            setHandledRequests(prev => ({ ...prev, [connectionId]: { status, roomId: res.roomId as string } }));
         }
       } else {
         toast.error(res.error || "Action failed");

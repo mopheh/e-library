@@ -1,46 +1,36 @@
-import { NextRequest, NextResponse } from "next/server"
-import { db } from "@/database/drizzle"
-import { courses, departmentCourses } from "@/database/schema"
-import { eq } from "drizzle-orm"
+import { NextRequest, NextResponse } from "next/server";
+import { db } from "@/database/drizzle";
+import { courses } from "@/database/schema";
+import { eq, and } from "drizzle-orm";
 
 export async function GET(req: NextRequest) {
   try {
-    const { searchParams } = new URL(req.url)
-    const departmentId = searchParams.get("departmentId")
+    const { searchParams } = new URL(req.url);
+    const departmentId = searchParams.get("departmentId");
 
-    const skip = Number(searchParams.get("skip")) || 0
-    const limit = Number(searchParams.get("limit")) || 1000
+    const skip = Number(searchParams.get("skip")) || 0;
+    const limit = Number(searchParams.get("limit")) || 1000;
 
     if (departmentId) {
+      // Simplified: Query courses directly using departmentId foreign key
       const result = await db
-        .select({
-          id: courses.id,
-          courseCode: courses.courseCode,
-          title: courses.title,
-          unitLoad: courses.unitLoad,
-          level: courses.level,
-          semester: courses.semester,
-          departmentId: courses.departmentId,
-        })
-        .from(departmentCourses)
-        .innerJoin(courses, eq(departmentCourses.courseId, courses.id))
-        .where(eq(departmentCourses.departmentId, departmentId))
+        .select()
+        .from(courses)
+        .where(eq(courses.departmentId, departmentId))
         .limit(limit)
-        .offset(skip)
+        .offset(skip);
 
-        console.log(result)
-
-      return NextResponse.json(result)
+      return NextResponse.json(result);
     }
 
-    // Case: Fetch all departments
-    const allCourses = await db.select().from(courses)
-    return NextResponse.json(allCourses)
+    // Case: Fetch all courses
+    const allCourses = await db.select().from(courses);
+    return NextResponse.json(allCourses);
   } catch (error) {
-    console.error("[GET /api/departments]", error)
+    console.error("[GET /api/courses]", error);
     return NextResponse.json(
-      { error: "Failed to fetch departments" },
+      { error: "Failed to fetch courses" },
       { status: 500 }
-    )
+    );
   }
 }

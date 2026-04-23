@@ -2,7 +2,7 @@
 
 import { db } from "@/database/drizzle";
 import { verificationRequests, users, departments, faculty } from "@/database/schema";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, and } from "drizzle-orm";
 import { auth, clerkClient } from "@clerk/nextjs/server";
 
 export async function getVerificationRequests() {
@@ -14,8 +14,13 @@ export async function getVerificationRequests() {
       where: eq(users.clerkId, userId),
     });
 
-    if (!adminUser || adminUser.role !== "ADMIN") {
+    if (!adminUser || (adminUser.role !== "ADMIN" && adminUser.role !== "FACULTY REP")) {
       throw new Error("Unauthorized");
+    }
+
+    const conditions = [eq(verificationRequests.status, "PENDING")];
+    if (adminUser.role === "FACULTY REP" && adminUser.facultyId) {
+        conditions.push(eq(verificationRequests.approvedFacultyId, adminUser.facultyId));
     }
 
     // 1. Fetch pending requests with user and department details
@@ -37,6 +42,7 @@ export async function getVerificationRequests() {
            name: departments.name,
          },
          faculty: {
+           id: faculty.id,
            name: faculty.name,
          }
       })
@@ -44,7 +50,7 @@ export async function getVerificationRequests() {
       .innerJoin(users, eq(verificationRequests.userId, users.id))
       .leftJoin(departments, eq(verificationRequests.approvedDepartmentId, departments.id))
       .leftJoin(faculty, eq(verificationRequests.approvedFacultyId, faculty.id))
-      .where(eq(verificationRequests.status, "PENDING"))
+      .where(and(...conditions))
       .orderBy(desc(verificationRequests.createdAt));
 
     // 2. Fetch clerk profile images

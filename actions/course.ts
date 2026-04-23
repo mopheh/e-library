@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "@/database/drizzle";
-import { courses, departmentCourses } from "@/database/schema";
+import { courses } from "@/database/schema";
 import { eq } from "drizzle-orm";
 
 type Courses = {
@@ -29,19 +29,20 @@ export const createCourses = async (data: Courses) => {
     }
 
     // @ts-ignore
-    const [course] = await db.insert(courses).values(data).returning();
-    const relations = data.departments.map((deptId) => ({
-      courseId: course.id,
-      departmentId: deptId,
-    }));
-
-    // @ts-ignore
-    await db.insert(departmentCourses).values(relations);
+    await db.insert(courses).values({
+      courseCode: data.courseCode,
+      title: data.title,
+      departmentId: data.departmentId,
+      unitLoad: data.unitLoad,
+      semester: data.semester as any,
+      level: data.level as any,
+    });
   } catch (e) {
     const message = e instanceof Error ? e.message : "Unknown error occurred";
     throw new Error(message);
   }
 };
+
 export const getCoursesByDepartment = async (departmentId: string) => {
   return db
     .select({
@@ -49,7 +50,7 @@ export const getCoursesByDepartment = async (departmentId: string) => {
       title: courses.title,
       courseCode: courses.courseCode,
     })
-    .from(departmentCourses)
-    .innerJoin(courses, eq(departmentCourses.courseId, courses.id))
-    .where(eq(departmentCourses.departmentId, departmentId));
+    .from(courses)
+    .where(eq(courses.departmentId, departmentId));
 };
+

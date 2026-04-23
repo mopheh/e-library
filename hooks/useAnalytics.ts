@@ -5,6 +5,8 @@ interface AnalyticsData {
     booksRead: number;
     minutesRead: number;
     streak: number;
+    daysToExam?: number;
+    totalAiRequests?: number;
   };
   heatmap: { date: string; count: number; value: number }[];
   weeklyTrends: { date: string; minutes: number; day: string }[];

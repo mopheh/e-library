@@ -309,6 +309,41 @@
       "when": 1775815623403,
       "tag": "0043_premium_northstar",
       "breakpoints": true
+    },
+    {
+      "idx": 44,
+      "version": "7",
+      "when": 1776114368567,
+      "tag": "0044_messy_ben_grimm",
+      "breakpoints": true
+    },
+    {
+      "idx": 45,
+      "version": "7",
+      "when": 1776199560904,
+      "tag": "0045_heavy_scourge",
+      "breakpoints": true
+    },
+    {
+      "idx": 46,
+      "version": "7",
+      "when": 1776258964641,
+      "tag": "0046_greedy_doorman",
+      "breakpoints": true
+    },
+    {
+      "idx": 47,
+      "version": "7",
+      "when": 1776961238632,
+      "tag": "0047_slippery_doctor_strange",
+      "breakpoints": true
+    },
+    {
+      "idx": 48,
+      "version": "7",
+      "when": 1776967695786,
+      "tag": "0048_outstanding_marvel_apes",
+      "breakpoints": true
     }
   ]
 }

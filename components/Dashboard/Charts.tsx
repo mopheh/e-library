@@ -13,9 +13,7 @@ import { useReadingSession } from "@/hooks/useUsers";
 import { useIsDarkMode } from "../is-dark";
 import { Skeleton } from "@/components/ui/skeleton";
 
-interface Props {
-  data: { date: string; pagesRead: number; departmentAverage: number }[];
-}
+
 
 export default function Charts() {
   const isDark = useIsDarkMode();
@@ -87,10 +85,10 @@ export default function Charts() {
               fontSize: 12,
               color: isDark ? "#d1d5db" : "#4b5563", // zinc-300 vs zinc-600
             }}
-            formatter={(value: number, name: string) => [
+            formatter={(value: any, name: any) => [
               `${value} pages`, 
               name === "pagesRead" ? "You" : "Dept Avg"
-            ]}
+            ] as [string, string]}
           />
 
           <Area

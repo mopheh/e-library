@@ -32,7 +32,7 @@ export const ExamPrepBanner = ({ courses }: { courses: ExamCourse[] }) => {
   const closest = upcomingExams[0];
 
   return (
-    <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-red-600 via-red-500 to-orange-500 p-6 text-white shadow-lg mb-6 shadow-red-500/20">
+    <div className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-r from-red-600 via-red-500 to-orange-500 p-8 text-white shadow-lg shadow-red-500/20">
       {/* Background Decorative Pattern */}
       <div className="absolute right-0 top-0 -mt-16 -mr-16 opacity-10 blur-2xl">
         <BrainCircuit className="h-64 w-64" />
@@ -59,7 +59,7 @@ export const ExamPrepBanner = ({ courses }: { courses: ExamCourse[] }) => {
         </div>
 
         <div className="flex w-full shrink-0 flex-col gap-3 md:w-auto sm:flex-row">
-          <Link href={`/dashboard/courses/${closest.id}?tab=quizzes`} className="w-full md:w-auto">
+          <Link href={`/dashboard/workspaces/${closest.id}?tab=quizzes`} className="w-full md:w-auto">
             <Button
               variant="secondary"
               className="w-full bg-white text-red-600 hover:bg-red-50 shadow-sm border-0 font-bold"
@@ -68,7 +68,7 @@ export const ExamPrepBanner = ({ courses }: { courses: ExamCourse[] }) => {
               Generate Mock Exam
             </Button>
           </Link>
-          <Link href={`/dashboard/courses/${closest.id}`} className="w-full md:w-auto">
+          <Link href={`/dashboard/workspaces/${closest.id}`} className="w-full md:w-auto">
             <Button
               variant="outline"
               className="w-full border-red-300 text-white hover:bg-red-700/50 bg-transparent"

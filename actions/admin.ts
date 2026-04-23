@@ -72,13 +72,18 @@ export async function approveVerification(requestId: string) {
     if (requestArray.length === 0) throw new Error("Request not found");
     const requestItem = requestArray[0];
 
-    // Verify Admin
+    // Verify Manager (Admin or Faculty Rep)
     const adminUser = await db.query.users.findFirst({
       where: eq(users.clerkId, clerkId),
     });
 
-    if (!adminUser || adminUser.role !== "ADMIN") {
-      throw new Error("Unauthorized. Admins only.");
+    if (!adminUser || (adminUser.role !== "ADMIN" && adminUser.role !== "FACULTY REP")) {
+      throw new Error("Unauthorized. Only Admins and Faculty Representatives can review verifications.");
+    }
+
+    // Role-based Access Control for Faculty Reps
+    if (adminUser.role === "FACULTY REP" && adminUser.facultyId !== requestItem.approvedFacultyId) {
+      throw new Error("Unauthorized. You can only verify aspirants for your own faculty.");
     }
 
     // 1. Update the request status
@@ -147,8 +152,18 @@ export async function rejectVerification(requestId: string) {
       where: eq(users.clerkId, clerkId),
     });
 
-    if (!adminUser || adminUser.role !== "ADMIN") {
-      throw new Error("Unauthorized. Admins only.");
+    if (!adminUser || (adminUser.role !== "ADMIN" && adminUser.role !== "FACULTY REP")) {
+      throw new Error("Unauthorized. Only Admins and Faculty Representatives can review verifications.");
+    }
+
+    // Check Faculty Rep specific access
+    if (adminUser.role === "FACULTY REP") {
+        const fullRequest = await db.query.verificationRequests.findFirst({
+            where: eq(verificationRequests.id, requestId)
+        });
+        if (fullRequest?.approvedFacultyId !== adminUser.facultyId) {
+            throw new Error("Unauthorized. You can only review aspirants for your own faculty.");
+        }
     }
 
     // 1. Update status

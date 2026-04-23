@@ -1,4 +1,7 @@
+"use client";
+
 import { useQuery } from "@tanstack/react-query";
+
 import { User } from "@/types";
 
 export const useDepartmentId = () => {

@@ -20,6 +20,7 @@ export default async function ResourceRequestsPage() {
     where: eq(resourceRequests.departmentId, dbUser.departmentId),
     with: {
       user: true,
+      course: true,
     },
     orderBy: [desc(resourceRequests.createdAt)],
     limit: 50,
@@ -29,7 +30,7 @@ export default async function ResourceRequestsPage() {
     <div className="p-4 md:p-8 space-y-8 font-poppins bg-zinc-50 dark:bg-zinc-950 min-h-screen">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold font-open-sans">Resource Requests</h1>
+          <h1 className="text-3xl font-bold">Resource Requests</h1>
           <p className="text-zinc-500 mt-2">
             Ask for specific past questions or textbooks. Faculty reps will fulfill them.
           </p>
@@ -68,18 +69,18 @@ export default async function ResourceRequestsPage() {
             >
               {req.status === "FULFILLED" && (
                  <div className="absolute top-0 right-0 bg-emerald-500 text-white text-[10px] font-bold px-3 py-1 rounded-bl-xl shadow-sm">
-                   FULFILLED
+                    FULFILLED
                  </div>
               )}
               {req.status === "PENDING" && (
                  <div className="absolute top-0 right-0 bg-amber-500 text-white text-[10px] font-bold px-3 py-1 rounded-bl-xl shadow-sm">
-                   PENDING
+                    PENDING
                  </div>
               )}
               
               <div>
                 <h3 className="text-xl font-bold mb-2 flex items-center gap-2 text-blue-600 dark:text-blue-400">
-                   <BookOpen className="w-5 h-5" /> {req.courseCode}
+                   <BookOpen className="w-5 h-5" /> {req.course?.courseCode || "N/A"}
                 </h3>
                 <p className="text-zinc-600 dark:text-zinc-400 text-sm mb-4 line-clamp-3 leading-relaxed">
                   {req.description}

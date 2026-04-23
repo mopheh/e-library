@@ -1,158 +1,168 @@
-// /app/api/user/logReadingSession/route.ts
-
+// /app/api/users/reading-session/route.ts
 import { db } from "@/database/drizzle";
-import { eq, and, gte } from "drizzle-orm";
-import { NextRequest } from "next/server";
+import { and, eq, gte, sql } from "drizzle-orm";
+import { NextRequest, NextResponse } from "next/server";
 import { readingSessions, users } from "@/database/schema";
-import { format, startOfDay, subDays } from "date-fns";
 import { auth } from "@clerk/nextjs/server";
+import { z } from "zod";
+import { format, subDays } from "date-fns";
+
+// ── Zod Schemas ────────────────────────────────────────────────────────────────
+
+const postSchema = z.object({
+  bookId: z.string().uuid("bookId must be a valid UUID"),
+  pagesRead: z.number().int().nonnegative().default(0),
+  duration: z.number().int().nonnegative().default(0),
+});
+
+// ── Helper: resolve internal user from Clerk ID ────────────────────────────────
+
+async function resolveUser(clerkId: string) {
+  const [user] = await db
+    .select({ id: users.id, departmentId: users.departmentId })
+    .from(users)
+    .where(eq(users.clerkId, clerkId))
+    .limit(1);
+  return user ?? null;
+}
+
+// ── POST — log a reading session (upsert per user+book+date) ──────────────────
 
 export async function POST(req: NextRequest) {
-  const { userId } = await auth();
-  const [user] = await db
-    .select({ id: users.id })
-    .from(users)
-    // @ts-ignore
-    .where(eq(users.clerkId, userId));
-  const id = user.id;
-  const { bookId, pagesRead, duration } = await req.json();
-  console.log({ bookId, pagesRead, duration });
-  const today = new Date().toISOString().split("T")[0];
-
-  // Check if a session for today already exists
-  const existing = await db
-    .select()
-    .from(readingSessions)
-    .where(
-      and(
-        eq(readingSessions.userId, id),
-        eq(readingSessions.bookId, bookId),
-        eq(readingSessions.date, today),
-      ),
-    )
-    .limit(1);
-
-  if (existing.length > 0) {
-    await db
-      .update(readingSessions)
-      .set({ 
-        pagesRead: existing[0].pagesRead + pagesRead,
-        duration: (existing[0].duration || 0) + duration 
-      })
-      .where(eq(readingSessions.id, existing[0].id));
-  } else {
-    await db
-      .insert(readingSessions)
-      .values({ userId: id, bookId, date: today, pagesRead, duration });
+  // P0 auth guard — must check before any DB query
+  const { userId: clerkId } = await auth();
+  if (!clerkId) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  return new Response("Logged successfully", { status: 200 });
-}
-export async function GET(req: NextRequest) {
-  const { userId } = await auth();
-  if (!userId) {
-    return new Response(JSON.stringify({ error: "Unauthorized" }), {
-      status: 401,
-    });
+  // Validate request body with Zod
+  let parsed: z.infer<typeof postSchema>;
+  try {
+    const body = await req.json();
+    parsed = postSchema.parse(body);
+  } catch (err) {
+    if (err instanceof z.ZodError) {
+      return NextResponse.json(
+        { error: "Validation failed", issues: err.errors },
+        { status: 400 },
+      );
+    }
+    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
   }
-  const [user] = await db
-    .select({ 
-      id: users.id, 
-      departmentId: users.departmentId 
-    })
-    .from(users)
-    .where(eq(users.clerkId, userId))
-    .limit(1);
-    
+
+  const { bookId, pagesRead, duration } = parsed;
+
+  // Resolve internal user — run once, reuse id
+  const user = await resolveUser(clerkId);
   if (!user) {
-    return new Response(JSON.stringify({ error: "User not found" }), {
-      status: 404,
-    });
+    return NextResponse.json({ error: "User not found" }, { status: 404 });
   }
 
-  const id = user.id;
-  const departmentId = user.departmentId;
-
-  const today = startOfDay(new Date());
-  const daysAgo = subDays(today, 6); // past 7 days including today
+  const today = new Date().toISOString().split("T")[0]; // yyyy-mm-dd
 
   try {
-    const sessions = await db
-      .select({
-        date: readingSessions.createdAt,
-        pagesRead: readingSessions.pagesRead,
+    // Atomic upsert: insert new or accumulate into existing session for today
+    await db
+      .insert(readingSessions)
+      .values({
+        userId: user.id,
+        bookId,
+        date: today,
+        pagesRead,
+        duration,
       })
-      .from(readingSessions)
-      .where(
-        and(
-          eq(readingSessions.userId, id),
-          gte(readingSessions.createdAt, daysAgo),
-        ),
-      );
+      .onConflictDoUpdate({
+        // requires a unique index on (userId, bookId, date) — add below if not present
+        target: [readingSessions.userId, readingSessions.bookId, readingSessions.date],
+        set: {
+          pagesRead: sql`${readingSessions.pagesRead} + ${pagesRead}`,
+          duration: sql`${readingSessions.duration} + ${duration}`,
+          updatedAt: new Date(),
+        },
+      });
 
-    // Group by date (yyyy-mm-dd) and sum pagesRead
-    const dailyTotals: Record<string, number> = {};
+    return NextResponse.json({ success: true }, { status: 200 });
+  } catch (error) {
+    console.error("[POST /api/users/reading-session]", error);
+    return NextResponse.json({ error: "Failed to log session" }, { status: 500 });
+  }
+}
 
-    sessions.forEach(
-      ({ date, pagesRead }: { date: Date | null; pagesRead: number }) => {
-        // @ts-ignore
-        const dayKey = new Date(date).toISOString().split("T")[0]; // yyyy-mm-dd
-        dailyTotals[dayKey] = (dailyTotals[dayKey] || 0) + pagesRead;
-      },
-    );
-    // Get Department Averages if departmentId exists
-    const deptDailyTotals: Record<string, { totalPages: number, users: Set<string> }> = {};
-    
-    if (departmentId) {
-      const deptSessions = await db
+// ── GET — last 7 days reading data for user + dept average ────────────────────
+
+export async function GET(req: NextRequest) {
+  const { userId: clerkId } = await auth();
+  if (!clerkId) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const user = await resolveUser(clerkId);
+  if (!user) {
+    return NextResponse.json({ error: "User not found" }, { status: 404 });
+  }
+
+  const sevenDaysAgo = format(subDays(new Date(), 6), "yyyy-MM-dd");
+
+  try {
+    // Run both DB queries in parallel — no need to await sequentially
+    const [userSessions, deptSessions] = await Promise.all([
+      // 1. User's own aggregated reading per day (SQL-level group-by)
+      db
         .select({
-          date: readingSessions.createdAt,
-          pagesRead: readingSessions.pagesRead,
-          userId: readingSessions.userId,
+          date: readingSessions.date,
+          pagesRead: sql<number>`sum(${readingSessions.pagesRead})`.as("pagesRead"),
         })
         .from(readingSessions)
-        .innerJoin(users, eq(readingSessions.userId, users.id))
         .where(
           and(
-            eq(users.departmentId, departmentId),
-            gte(readingSessions.createdAt, daysAgo)
-          )
-        );
+            eq(readingSessions.userId, user.id),
+            gte(readingSessions.date, sevenDaysAgo),
+          ),
+        )
+        .groupBy(readingSessions.date),
 
-      deptSessions.forEach(({ date, pagesRead, userId }: { date: Date | null; pagesRead: number; userId: string }) => {
-        if (!date) return;
-        const dayKey = new Date(date).toISOString().split("T")[0];
-        if (!deptDailyTotals[dayKey]) {
-           deptDailyTotals[dayKey] = { totalPages: 0, users: new Set() };
-        }
-        deptDailyTotals[dayKey].totalPages += pagesRead;
-        deptDailyTotals[dayKey].users.add(userId);
-      });
-    }
+      // 2. Department averages per day (SQL-level group-by with distinct users)
+      user.departmentId
+        ? db
+            .select({
+              date: readingSessions.date,
+              totalPages: sql<number>`sum(${readingSessions.pagesRead})`.as("totalPages"),
+              uniqueUsers: sql<number>`count(distinct ${readingSessions.userId})`.as("uniqueUsers"),
+            })
+            .from(readingSessions)
+            .innerJoin(users, eq(readingSessions.userId, users.id))
+            .where(
+              and(
+                eq(users.departmentId, user.departmentId!),
+                gte(readingSessions.date, sevenDaysAgo),
+              ),
+            )
+            .groupBy(readingSessions.date)
+        : Promise.resolve([]),
+    ]);
 
-    const result = Array.from({ length: 7 }).map((_, i) => {
-      const date = subDays(today, 6 - i);
-      const key = format(date, "yyyy-MM-dd");
-      
-      let deptAverage = 0;
-      if (deptDailyTotals[key]) {
-         const userCount = deptDailyTotals[key].users.size || 1;
-         deptAverage = Math.round(deptDailyTotals[key].totalPages / userCount);
-      }
+    // Build lookup maps for O(1) access
+    const userMap = new Map(userSessions.map((s) => [s.date, Number(s.pagesRead)]));
+    const deptMap = new Map(
+      (deptSessions as any[]).map((s) => [
+        s.date,
+        Math.round(Number(s.totalPages) / Math.max(Number(s.uniqueUsers), 1)),
+      ]),
+    );
 
+    // Build full 7-day result with zero-fill for missing days
+    const result = Array.from({ length: 7 }, (_, i) => {
+      const key = format(subDays(new Date(), 6 - i), "yyyy-MM-dd");
       return {
         date: key,
-        pagesRead: dailyTotals[key] || 0,
-        departmentAverage: deptAverage,
+        pagesRead: userMap.get(key) ?? 0,
+        departmentAverage: deptMap.get(key) ?? 0,
       };
     });
-    console.log(result);
 
-    return new Response(JSON.stringify(result), { status: 200 });
+    return NextResponse.json(result, { status: 200 });
   } catch (error) {
-    console.error("GET reading session error:", error);
-    return new Response(JSON.stringify({ error: "Server error" }), {
-      status: 500,
-    });
+    console.error("[GET /api/users/reading-session]", error);
+    return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 }

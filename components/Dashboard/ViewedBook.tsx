@@ -16,7 +16,7 @@ const ViewedBook = ({ book }: { book: any }) => {
         <div className="flex gap-2">
           <FaBook size={40} className="text-zinc-500" />
           <div className="flex flex-col gap-2">
-            <h2 className="text-sm font-cabin font-medium">{book.title}</h2>
+            <h2 className="text-sm font-semibold">{book.title}</h2>
             <div className="flex gap-3 text-xs items-center font-poppins">
               <div className="text-xs flex gap-2 items-center">
                 <FaGraduationCap className="text-zinc-500" />

@@ -45,10 +45,10 @@ const WeeklyTrends = ({ data }: WeeklyTrendsProps) => {
               <Tooltip
                 cursor={{ fill: "rgba(0,0,0,0.05)" }}
                 contentStyle={{ borderRadius: "8px", border: "none", boxShadow: "0 4px 12px rgba(0,0,0,0.1)" }}
-                formatter={(value: number, name: string) => [
+                formatter={(value: any, name: any) => [
                   `${value}m`, 
                   name === "minutes" ? "You" : "Dept Avg"
-                ]}
+                ] as [string, string]}
               />
               <Bar 
                 dataKey="minutes" 

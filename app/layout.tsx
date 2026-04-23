@@ -28,8 +28,8 @@ export default function RootLayout({
 }>) {
   return (
     <ClerkProvider>
-      <html lang="en">
-        <body className={`antialiased !overflow-x-hidden`}>
+      <html lang="en" suppressHydrationWarning>
+        <body className={`antialiased !overflow-x-hidden`} suppressHydrationWarning>
           <ThemeProvider
             attribute="class"
             defaultTheme="system"
@@ -39,7 +39,17 @@ export default function RootLayout({
             <Providers>{children}</Providers>
             <ServiceWorkerRegister />
             <OfflineIndicator />
-            <Toaster position="top-center" richColors duration={4000} />
+            <Toaster 
+              position="top-center" 
+              richColors 
+              duration={4000} 
+              toastOptions={{
+                className: "font-poppins bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xl border border-zinc-200 dark:border-zinc-800 rounded-[2rem] shadow-2xl transition-all",
+                style: {
+                  boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)"
+                }
+              }}
+            />
           </ThemeProvider>
         </body>
       </html>

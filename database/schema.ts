@@ -62,6 +62,7 @@ export const users = pgTable(
     role: ROLE_ENUM("role").default("STUDENT"),
     gender: GENDER_ENUM("gender").notNull(),
     address: varchar("address", { length: 255 }).notNull(),
+    interests: text("interests"),
 
     lastActivityDate: date("last_activity_date").defaultNow(),
     createdAt: timestamp("created_at", {
@@ -83,7 +84,7 @@ export const faculty = pgTable("faculty", {
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
 });
 
-export const departments = pgTable("department", {
+export const departments = pgTable("departments", {
   id: uuid("id").primaryKey().notNull().unique().defaultRandom(),
   name: varchar("name", { length: 255 }).notNull().unique(),
   facultyId: uuid("faculty_id")
@@ -103,15 +104,8 @@ export const courses = pgTable("courses", {
     .notNull()
     .references(() => departments.id, { onDelete: "cascade" }),
 });
-export const departmentCourses = pgTable("department_courses", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  departmentId: uuid("department_id")
-    .notNull()
-    .references(() => departments.id, { onDelete: "cascade" }),
-  courseId: uuid("course_id")
-    .notNull()
-    .references(() => courses.id, { onDelete: "cascade" }),
-});
+// Removed redundant departmentCourses table (courses.departmentId is used instead)
+
 
 export const studentCourses = pgTable(
   "student_courses",
@@ -245,7 +239,7 @@ export const userBooks = pgTable(
 export const readingSessions = pgTable(
   "reading_sessions",
   {
-    id: uuid("id").notNull().unique().defaultRandom(),
+    id: uuid("id").primaryKey().notNull().defaultRandom(),
 
     userId: uuid("user_id")
       .notNull()
@@ -379,7 +373,7 @@ export const complaints = pgTable("complaints", {
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
 });
 
-export const notificationTypeEnum = pgEnum("notification_type", ["COMPLAINT", "SYSTEM", "GENERAL"]);
+export const notificationTypeEnum = pgEnum("notification_type", ["COMPLAINT", "SYSTEM", "GENERAL", "CONNECTION_REQUEST", "MESSAGE"]);
 
 export const notifications = pgTable("notifications", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -388,6 +382,7 @@ export const notifications = pgTable("notifications", {
     .references(() => users.id, { onDelete: "cascade" }), // recipient of notification
   type: notificationTypeEnum("type").default("GENERAL").notNull(),
   message: text("message").notNull(),
+  targetId: uuid("target_id"),
   isRead: boolean("is_read").default(false).notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 });
@@ -461,6 +456,25 @@ export const studentConnections = pgTable("student_connections", {
   aspirantId: uuid("aspirant_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   studentId: uuid("student_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   status: connectionStatusEnum("status").default("PENDING").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
+});
+
+export const chatRooms = pgTable("chat_rooms", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userOneId: uuid("user_one_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  userTwoId: uuid("user_two_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+}, (t) => ({
+  uniqRoom: uniqueIndex("chat_rooms_users_idx").on(t.userOneId, t.userTwoId),
+}));
+
+export const chatMessages = pgTable("chat_messages", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  roomId: uuid("room_id").notNull().references(() => chatRooms.id, { onDelete: "cascade" }),
+  senderId: uuid("sender_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  content: text("content").notNull(),
+  isRead: boolean("is_read").default(false).notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 });
 
@@ -581,7 +595,7 @@ export const resourceRequests = pgTable("resource_requests", {
   id: uuid("id").primaryKey().defaultRandom(),
   userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   departmentId: uuid("department_id").notNull().references(() => departments.id, { onDelete: "cascade" }),
-  courseCode: varchar("course_code", { length: 255 }).notNull(),
+  courseId: uuid("course_id").notNull().references(() => courses.id, { onDelete: "cascade" }),
   description: text("description").notNull(),
   status: requestStatusEnum("status").default("PENDING").notNull(),
   fulfilledUrl: text("fulfilled_url"),
@@ -597,6 +611,10 @@ export const resourceRequestsRelations = relations(resourceRequests, ({ one }) =
   department: one(departments, {
     fields: [resourceRequests.departmentId],
     references: [departments.id],
+  }),
+  course: one(courses, {
+    fields: [resourceRequests.courseId],
+    references: [courses.id],
   }),
 }));
 
@@ -642,6 +660,114 @@ export const verificationRequestsRelations = relations(verificationRequests, ({ 
   reviewer: one(users, {
     fields: [verificationRequests.reviewedBy],
     references: [users.id],
+  }),
+}));
+
+export const chatRoomsRelations = relations(chatRooms, ({ one, many }) => ({
+  userOne: one(users, {
+    fields: [chatRooms.userOneId],
+    references: [users.id],
+  }),
+  userTwo: one(users, {
+    fields: [chatRooms.userTwoId],
+    references: [users.id],
+  }),
+  messages: many(chatMessages),
+}));
+
+export const chatMessagesRelations = relations(chatMessages, ({ one }) => ({
+  room: one(chatRooms, {
+    fields: [chatMessages.roomId],
+    references: [chatRooms.id],
+  }),
+  sender: one(users, {
+    fields: [chatMessages.senderId],
+    references: [users.id],
+  }),
+}));
+
+// ── Previously-missing relations ──────────────────────────────────────────────
+
+export const userBooksRelations = relations(userBooks, ({ one }) => ({
+  user: one(users, {
+    fields: [userBooks.userId],
+    references: [users.id],
+  }),
+  book: one(books, {
+    fields: [userBooks.bookId],
+    references: [books.id],
+  }),
+}));
+
+export const readingSessionsRelations = relations(readingSessions, ({ one }) => ({
+  user: one(users, {
+    fields: [readingSessions.userId],
+    references: [users.id],
+  }),
+  book: one(books, {
+    fields: [readingSessions.bookId],
+    references: [books.id],
+  }),
+}));
+
+export const bookPagesRelations = relations(bookPages, ({ one }) => ({
+  book: one(books, {
+    fields: [bookPages.bookId],
+    references: [books.id],
+  }),
+}));
+
+export const annotationsRelations = relations(annotations, ({ one }) => ({
+  book: one(books, {
+    fields: [annotations.bookId],
+    references: [books.id],
+  }),
+  user: one(users, {
+    fields: [annotations.userId],
+    references: [users.id],
+  }),
+}));
+
+export const questionsRelations = relations(questions, ({ one, many }) => ({
+  course: one(courses, {
+    fields: [questions.courseId],
+    references: [courses.id],
+  }),
+  options: many(options),
+  topics: many(questionTopics),
+}));
+
+export const optionsRelations = relations(options, ({ one }) => ({
+  question: one(questions, {
+    fields: [options.questionId],
+    references: [questions.id],
+  }),
+}));
+
+export const cbtSessionsRelations = relations(sessions, ({ one, many }) => ({
+  user: one(users, {
+    fields: [sessions.userId],
+    references: [users.id],
+  }),
+  course: one(courses, {
+    fields: [sessions.courseId],
+    references: [courses.id],
+  }),
+  answers: many(answers),
+}));
+
+export const answersRelations = relations(answers, ({ one }) => ({
+  session: one(sessions, {
+    fields: [answers.sessionId],
+    references: [sessions.id],
+  }),
+  question: one(questions, {
+    fields: [answers.questionId],
+    references: [questions.id],
+  }),
+  selectedOption: one(options, {
+    fields: [answers.selectedOptionId],
+    references: [options.id],
   }),
 }));
 

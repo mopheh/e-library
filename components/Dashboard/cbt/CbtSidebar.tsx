@@ -9,7 +9,7 @@ export default function CbtSidebar({
 }: any) {
   return (
     <div className="space-y-3">
-      <h2 className="font-normal text-lg font-cabin dark:text-zinc-200">
+      <h2 className="font-bold text-lg dark:text-zinc-200">
         Questions
       </h2>
       <div className="grid grid-cols-5 gap-2">

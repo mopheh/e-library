@@ -457,8 +457,8 @@ const PDFStudyView = ({ fileUrl, bookId }: PDFStudyViewProps) => {
          {sidebarMode === "assistant" && <AIChatAssistant pageText={pageText} bookId={bookId} />}
          {sidebarMode === "outline" && (
              <div className="w-full h-full font-poppins p-4 overflow-y-auto bg-white dark:bg-zinc-900 border-l border-zinc-200 dark:border-zinc-800">
-                <h3 className="text-sm font-cabin font-semibold mb-4 text-zinc-600 dark:text-zinc-300">Table of Contents</h3>
-                <div className="text-xs font-poppins">
+                <h3 className="text-sm font-semibold mb-4 text-zinc-600 dark:text-zinc-300">Table of Contents</h3>
+                <div className="text-xs">
                    <Bookmarks />
                 </div>
              </div>

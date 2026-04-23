@@ -77,10 +77,10 @@ export default function UserStats({
         <CardContent>
           <p className="text-2xl font-bold tracking-tight">{pagesRead}</p>
           <ResponsiveContainer width="100%" height={60}>
-            <LineChart data={data?.length ? data : readingProgress}>
+            <LineChart data={(data?.length ? data : readingProgress) as any}>
               <Line
                 type="monotone"
-                dataKey="pages"
+                dataKey={data?.length ? "pagesRead" : "pages"}
                 stroke="#3b82f6"
                 strokeWidth={2}
                 dot={false}

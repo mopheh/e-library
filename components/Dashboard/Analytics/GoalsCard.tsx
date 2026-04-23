@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -31,12 +33,12 @@ const GoalsCard = () => {
   };
 
   return (
-    <Card className="h-full flex flex-col">
+    <Card className="h-full flex flex-col font-poppins">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
             <div className="space-y-1">
-                <CardTitle className="text-base font-open-sans font-semibold">Weekly Goals</CardTitle>
-                <CardDescription className="font-poppins text-xs">Track your reading targets</CardDescription>
+                <CardTitle className="text-base font-semibold">Weekly Goals</CardTitle>
+                <CardDescription className="text-xs">Track your reading targets</CardDescription>
             </div>
             <Dialog open={isOpen} onOpenChange={setIsOpen}>
                 <DialogTrigger asChild>
@@ -46,9 +48,9 @@ const GoalsCard = () => {
                 </DialogTrigger>
                 <DialogContent>
                     <DialogHeader>
-                        <DialogTitle className="font-open-sans font-semibold">Set Weekly Goal</DialogTitle>
+                        <DialogTitle className="font-semibold">Set Weekly Goal</DialogTitle>
                     </DialogHeader>
-                    <div className="grid gap-4 py-4 font-poppins">
+                    <div className="grid gap-4 py-4">
                         <div className="grid gap-2">
                             <Label htmlFor="type">Goal Type</Label>
                             <Select value={type} onValueChange={setType}>
@@ -97,10 +99,10 @@ const GoalsCard = () => {
             goals.map((goal) => (
               <div key={goal.id} className="space-y-2">
                 <div className="flex justify-between text-xs">
-                    <span className="font-medium text-muted-foreground font-poppins">
+                    <span className="font-medium text-muted-foreground">
                         {goal.type === "books_read" ? "Books" : "Minutes"}
                     </span>
-                    <span className="font-bold font-cabin text-xs">
+                    <span className="font-bold text-xs font-poppins text-zinc-800 dark:text-zinc-200">
                         {goal.currentProgress || 0} / {goal.target}
                     </span>
                 </div>
@@ -110,7 +112,7 @@ const GoalsCard = () => {
           ) : (
             <div className="flex flex-col items-center justify-center py-6 text-center space-y-2">
                 <Target className="h-8 w-8 text-muted-foreground/50" />
-                <p className="text-xs text-muted-foreground font-poppins">No active goals.</p>
+                <p className="text-xs text-muted-foreground">No active goals.</p>
             </div>
           )}
         </div>

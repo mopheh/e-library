@@ -110,8 +110,8 @@ export const OpportunitiesBoard = () => {
           </DialogTrigger>
           <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
-              <DialogTitle className="font-cabin font-bold">Post an Opportunity</DialogTitle>
-              <DialogDescription className="font-open-sans">
+              <DialogTitle className="font-bold">Post an Opportunity</DialogTitle>
+              <DialogDescription>
                 Found a great opportunity? Share it with students in your department.
               </DialogDescription>
             </DialogHeader>

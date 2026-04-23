@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import Pusher from "pusher-js";
-import { Bell, UserPlus, Zap, CheckCircle2, ArrowRight, ShieldCheck } from "lucide-react";
+import { Bell, UserPlus, Zap, CheckCircle2, ArrowRight, ShieldCheck, MessageSquare } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { formatDistanceToNow } from "date-fns";
@@ -68,10 +68,17 @@ export default function NotificationBell() {
     const getIcon = (type: string) => {
         switch (type) {
             case 'CONNECTION_REQUEST': return <UserPlus className="w-3 h-3 text-blue-600" />;
+            case 'MESSAGE': return <MessageSquare className="w-3 h-3 text-indigo-600" />;
             case 'SYSTEM': return <ShieldCheck className="w-3 h-3 text-amber-600" />;
             case 'GENERAL': return <CheckCircle2 className="w-3 h-3 text-green-600" />;
             default: return <Bell className="w-3 h-3 text-zinc-400" />;
         }
+    }
+
+    const getLink = (notif: any) => {
+        if (notif.type === 'MESSAGE' && notif.targetId) return `/dashboard/messages?roomId=${notif.targetId}`;
+        if (notif.type === 'CONNECTION_REQUEST') return `/dashboard/notifications`;
+        return null;
     }
 
     return (
@@ -101,23 +108,34 @@ export default function NotificationBell() {
                         </div>
                     ) : (
                         <div className="flex flex-col">
-                            {notifications.slice(0, 5).map((notif) => (
-                                <div key={notif.id} className={`p-4 text-sm border-b dark:border-zinc-800 last:border-0 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors ${notif.isRead ? 'opacity-60' : ''}`}>
-                                    <div className="flex gap-3">
-                                        <div className="mt-1 p-2 rounded-lg bg-zinc-100 dark:bg-zinc-800 h-fit">
-                                            {getIcon(notif.type)}
-                                        </div>
-                                        <div className="space-y-1">
-                                            <p className="text-xs font-semibold text-zinc-900 dark:text-zinc-100 leading-tight">
-                                                {notif.message}
-                                            </p>
-                                            <p className="text-[10px] text-zinc-400 font-medium">
-                                                {formatDistanceToNow(new Date(notif.createdAt), { addSuffix: true })}
-                                            </p>
+                            {notifications.slice(0, 5).map((notif) => {
+                                const link = getLink(notif);
+                                const Content = (
+                                    <div className={`p-4 text-sm border-b dark:border-zinc-800 last:border-0 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors ${notif.isRead ? 'opacity-60' : ''}`}>
+                                        <div className="flex gap-3">
+                                            <div className="mt-1 p-2 rounded-lg bg-zinc-100 dark:bg-zinc-800 h-fit">
+                                                {getIcon(notif.type)}
+                                            </div>
+                                            <div className="space-y-1">
+                                                <p className="text-xs font-semibold text-zinc-900 dark:text-zinc-100 leading-tight">
+                                                    {notif.message}
+                                                </p>
+                                                <p className="text-[10px] text-zinc-400 font-medium">
+                                                    {formatDistanceToNow(new Date(notif.createdAt), { addSuffix: true })}
+                                                </p>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                            ))}
+                                );
+
+                                return link ? (
+                                    <Link key={notif.id} href={link}>
+                                        {Content}
+                                    </Link>
+                                ) : (
+                                    <div key={notif.id}>{Content}</div>
+                                );
+                            })}
                         </div>
                     )}
                 </div>

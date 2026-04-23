@@ -32,7 +32,7 @@ export const ExamPrepBanner = ({ courses }: { courses: ExamCourse[] }) => {
   const closest = upcomingExams[0];
 
   return (
-    <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-red-600 via-red-500 to-orange-500 p-6 text-white shadow-lg mb-6 shadow-red-500/20">
+    <div className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-r from-red-600 via-red-500 to-orange-500 p-8 text-white shadow-lg shadow-red-500/20">
       {/* Background Decorative Pattern */}
       <div className="absolute right-0 top-0 -mt-16 -mr-16 opacity-10 blur-2xl">
         <BrainCircuit className="h-64 w-64" />

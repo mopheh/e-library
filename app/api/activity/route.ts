@@ -3,12 +3,22 @@ import { activities, books, users } from "@/database/schema";
 import { eq, desc } from "drizzle-orm";
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
+import { z } from "zod";
+
+const activitySchema = z.object({
+  type: z.string().min(1, "type is required"),
+  targetId: z.string().uuid().optional().nullable(),
+  meta: z.record(z.unknown()).optional().nullable(),
+});
 
 export async function GET(req: Request) {
   const { userId } = await auth();
   if (!userId)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  const [user] = await db.select().from(users).where(eq(users.clerkId, userId));
+
+  const [user] = await db.select({ id: users.id }).from(users).where(eq(users.clerkId, userId)).limit(1);
+  if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
+
   const feed = await db
     .select({
       id: activities.id,
@@ -26,37 +36,45 @@ export async function GET(req: Request) {
     .orderBy(desc(activities.createdAt))
     .limit(20);
 
-  return Response.json(feed);
+  return NextResponse.json(feed);
 }
 
 export async function POST(req: Request) {
   try {
-    const { userId } = await auth(); // logged in user
+    const { userId } = await auth();
     if (!userId)
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
     const [user] = await db
-      .select()
+      .select({ id: users.id })
       .from(users)
-      .where(eq(users.clerkId, userId));
+      .where(eq(users.clerkId, userId))
+      .limit(1);
 
     if (!user) {
-      return NextResponse.json({ error: "User not found" }, { status: 401 });
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
-    const body = await req.json();
+
+    // Zod validation
+    const result = activitySchema.safeParse(await req.json());
+    if (!result.success) {
+      return NextResponse.json(
+        { error: "Validation failed", issues: result.error.errors },
+        { status: 400 },
+      );
+    }
+    const { type, targetId, meta } = result.data;
 
     await db.insert(activities).values({
       userId: user.id,
-      type: body.type,
-      targetId: body.targetId ?? null,
-      meta: body.meta ?? null,
+      type,
+      targetId: targetId ?? null,
+      meta: meta ?? null,
     });
 
     return NextResponse.json({ success: true });
   } catch (err) {
-    console.error(err);
-    return NextResponse.json(
-      { error: "Failed to log activity" },
-      { status: 500 }
-    );
+    console.error("[POST /api/activity]", err);
+    return NextResponse.json({ error: "Failed to log activity" }, { status: 500 });
   }
 }

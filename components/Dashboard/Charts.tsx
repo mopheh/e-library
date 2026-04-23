@@ -13,9 +13,7 @@ import { useReadingSession } from "@/hooks/useUsers";
 import { useIsDarkMode } from "../is-dark";
 import { Skeleton } from "@/components/ui/skeleton";
 
-interface Props {
-  data: { date: string; pagesRead: number; departmentAverage: number }[];
-}
+
 
 export default function Charts() {
   const isDark = useIsDarkMode();

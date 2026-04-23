@@ -1,12 +1,12 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import { getRecentlyViewedBooks } from "@/lib/utils";
-import { ArrowRight, BookOpen } from "lucide-react";
+import { ArrowRight, BookOpen, Clock } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import Link from "next/link";
 
 const ContinueReading = () => {
   const [books, setBooks] = useState<any[]>([]);
@@ -15,58 +15,95 @@ const ContinueReading = () => {
   useEffect(() => {
     const recentlyViewed = getRecentlyViewedBooks();
     setBooks(recentlyViewed);
-    // Simulate slight loading to match dashboard feel
     setTimeout(() => {
-        setIsLoading(false);
+      setIsLoading(false);
     }, 400);
   }, []);
 
   return (
-    <Card className="h-fit font-poppins border-none shadow-none bg-transparent">
-      <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <CardTitle className="text-lg font-bold">Continue Reading</CardTitle>
-        <Button variant="ghost" size="sm" className="text-xs text-muted-foreground hover:text-primary">
-          View All <ArrowRight className="ml-1 h-3 w-3" />
+    <div className="space-y-6 pt-3">
+      <div className="flex items-center justify-between px-3">
+        <h3 className="text-lg font-bold font-cabin text-zinc-900 dark:text-zinc-100 tracking-tight">
+          Continue Reading
+        </h3>
+        <Button variant="ghost" size="sm" className="text-[12px] font-poppins font-normal text-blue-600 hover:text-blue-700 hover:bg-transparent">
+          View All <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
         </Button>
-      </CardHeader>
-      <CardContent>
+      </div>
+
+      <div className="space-y-6">
         {isLoading ? (
-          <div className="space-y-4">
-            {Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className="flex items-center gap-3 p-2 rounded-lg">
-                  <Skeleton className="h-12 w-8 rounded" />
-                  <div className="flex-1 space-y-2">
-                      <Skeleton className="h-4 w-[80%]" />
-                      <Skeleton className="h-3 w-[50%]" />
-                  </div>
+          <div className="space-y-6">
+            {Array.from({ length: 2 }).map((_, i) => (
+              <div key={i} className="flex flex-col rounded-4xl overflow-hidden border border-zinc-100 dark:border-zinc-800">
+                <Skeleton className="h-32 w-full" />
+                <div className="p-4 space-y-3">
+                  <Skeleton className="h-5 w-[80%]" />
+                  <Skeleton className="h-3 w-[40%]" />
+                </div>
               </div>
             ))}
           </div>
         ) : books.length > 0 ? (
-          <div className="space-y-4">
-            {books.slice(0, 3).map((book) => (
-              <div key={book.id} className="flex items-center gap-3 group cursor-pointer hover:bg-muted/50 p-2 rounded-lg transition-colors">
-                 <div className="relative h-12 w-8 overflow-hidden rounded bg-indigo-50 dark:bg-indigo-900/30 flex items-center justify-center shrink-0">
-                    <BookOpen className="h-4 w-4 text-indigo-500" />
-                 </div>
-                 <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold truncate text-zinc-800 dark:text-zinc-200">{book.title || "Untitled"}</p>
-                    <p className="text-xs text-muted-foreground truncate">Recently Viewed</p>
-                 </div>
+          books.slice(0, 2).map((book) => (
+            <Link key={book.id} href={`/book/${book.id}`} className="block">
+              <div className="flex flex-col bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-[2rem] overflow-hidden shadow-sm hover:shadow-md transition-all group">
+                {/* Banner Area */}
+                <div className="relative h-32 w-full bg-zinc-100 dark:bg-zinc-800 overflow-hidden shrink-0">
+                  {book.coverUrl ? (
+                    <Image
+                      src={book.coverUrl}
+                      alt={book.title}
+                      fill
+                      className="object-cover transition-transform duration-500 group-hover:scale-110"
+                      unoptimized
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <BookOpen className="h-8 w-8 text-zinc-300" />
+                    </div>
+                  )}
+                  <div className="absolute inset-0 bg-linear-to-t from-black/20 to-transparent" />
+                </div>
+
+                {/* Content Area */}
+                <div className="p-5 flex-1 space-y-4">
+                  <div>
+                    <h4 className="font-bold text-sm text-zinc-900 dark:text-zinc-100 line-clamp-2 leading-tight">
+                      {book.title || "Untitled Document"}
+                    </h4>
+                    <div className="flex items-center gap-2 mt-2 text-[11px] font-medium text-zinc-400">
+                      <Clock className="w-3.5 h-3.5" />
+                      <span>{book.updatedAt || "Last viewed 2h ago"}</span>
+                    </div>
+                  </div>
+
+                  {/* Progress Section */}
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center text-[11px] font-bold">
+                      <span className="text-zinc-500">Progress</span>
+                      <span className="text-blue-600">45%</span>
+                    </div>
+                    <div className="w-full bg-zinc-100 dark:bg-zinc-800 rounded-full h-1.5 overflow-hidden">
+                      <div className="bg-blue-600 h-full rounded-full transition-all duration-1000" style={{ width: '45%' }} />
+                    </div>
+                  </div>
+                </div>
               </div>
-            ))}
-          </div>
+            </Link>
+          ))
         ) : (
-          <div className="flex flex-col items-center justify-center py-8 text-center space-y-3">
-            <div className="bg-muted/50 p-3 rounded-full">
-                <BookOpen className="h-6 w-6 text-muted-foreground" />
+          <div className="flex flex-col items-center justify-center py-10 text-center space-y-4 bg-zinc-50 dark:bg-zinc-900/50 rounded-[2.5rem] border border-dashed border-zinc-200 dark:border-zinc-800">
+            <div className="bg-white dark:bg-zinc-800 p-4 rounded-full shadow-sm">
+              <BookOpen className="h-6 w-6 text-zinc-400" />
             </div>
-            <p className="text-xs font-medium text-muted-foreground max-w-[12rem]">No recent books found. Start reading to see them here.</p>
+            <p className="text-sm font-medium text-zinc-500 max-w-[12rem]">No recent activity. Pick up where you left off!</p>
           </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 };
 
 export default ContinueReading;
+

@@ -1,5 +1,5 @@
 import React from "react";
-import { BookOpen, Clock, Flame, CalendarDays, Sparkles } from "lucide-react";
+import { BookOpen, Flame, CalendarDays, Sparkles, Brain } from "lucide-react";
 import { StatCard } from "./StatCard";
 
 interface KPICardsProps {
@@ -20,36 +20,35 @@ const KPICards = ({
   loading 
 }: KPICardsProps) => {
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
       <StatCard
         title="Books Read"
         value={booksRead}
         icon={BookOpen}
-        description="Total books finished"
+        iconClassName="text-blue-600 bg-blue-50 dark:bg-blue-900/20"
         loading={loading}
+        trend={{ value: 12, isPositive: true }}
       />
       <StatCard
-        title="Current Streak"
+        title="Study Streak"
         value={`${streak} Days`}
         icon={Flame}
-        description="Consecutive days reading"
-        className="border-orange-200 dark:border-orange-900 bg-orange-50/50 dark:bg-orange-900/10"
+        iconClassName="text-amber-500 bg-amber-50 dark:bg-amber-900/20"
         loading={loading}
+        trend={{ value: 5, isPositive: true }}
       />
       <StatCard
-        title="AI Assistance"
+        title="AI Interventions"
         value={totalAiRequests || 0}
-        icon={Sparkles}
-        description="Total AI interventions"
-        className="border-indigo-200 dark:border-indigo-900 bg-indigo-50/50 dark:bg-indigo-900/10"
+        icon={Brain}
+        iconClassName="text-violet-600 bg-violet-50 dark:bg-violet-900/20"
         loading={loading}
       />
        <StatCard
         title="Days to Exam"
         value={daysToExam ?? "--"}
         icon={CalendarDays}
-        description="Until closest final"
-        className="border-blue-200 dark:border-blue-900 bg-blue-50/50 dark:bg-blue-900/10"
+        iconClassName="text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20"
         loading={loading}
       />
     </div>
@@ -57,3 +56,4 @@ const KPICards = ({
 };
 
 export default KPICards;
+

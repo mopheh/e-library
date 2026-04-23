@@ -15,9 +15,14 @@ export async function POST(req: Request) {
     });
     if (!currentUser) return new NextResponse("User not found", { status: 404 });
 
-    const body = await req.formData();
-    const socketId = body.get("socket_id") as string;
-    const channel = body.get("channel_name") as string;
+    const text = await req.text();
+    const params = new URLSearchParams(text);
+    const socketId = params.get("socket_id");
+    const channel = params.get("channel_name");
+
+    if (!socketId || !channel) {
+        return new NextResponse("Invalid request", { status: 400 });
+    }
 
     // Expected channel format: private-chat-room-[roomId]
     const roomId = channel.replace("private-chat-room-", "");

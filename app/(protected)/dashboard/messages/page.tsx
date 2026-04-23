@@ -1,12 +1,16 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import { useUserData } from "@/hooks/useUsers";
 import { getChatRooms } from "@/actions/chat";
 import ChatWindow from "@/components/Chat/ChatWindow";
+import { useSearchParams } from "next/navigation";
 import { Loader2, MessageCircle, Search, Inbox, ChevronLeft } from "lucide-react";
 
-export default function MessagesPage() {
+function MessagesPage() {
+    const searchParams = useSearchParams();
+    const queryRoomId = searchParams.get("roomId");
+    
     const { data: userData } = useUserData();
     const [rooms, setRooms] = useState<any[]>([]);
     const [activeRoomId, setActiveRoomId] = useState<string | null>(null);
@@ -31,6 +35,17 @@ export default function MessagesPage() {
     const filteredRooms = rooms.filter(room => 
         room.otherUser.fullName?.toLowerCase().includes(searchQuery.toLowerCase())
     );
+
+    // Handle deep-linking to a room
+    useEffect(() => {
+        if (queryRoomId && rooms.length > 0) {
+            const targetRoom = rooms.find(r => r.id === queryRoomId);
+            if (targetRoom) {
+                setActiveRoomId(targetRoom.id);
+                setView("chat");
+            }
+        }
+    }, [queryRoomId, rooms]);
 
     const selectRoom = (id: string) => {
         setActiveRoomId(id);
@@ -120,6 +135,8 @@ export default function MessagesPage() {
                                 roomId={activeRoomId} 
                                 currentUserId={userData.id} 
                                 otherUserName={activeRoom?.otherUser?.fullName || "Chat"} 
+                                otherUserImage={activeRoom?.otherUser?.imageUrl || null}
+                                currentUserImage={userData.imageUrl || null}
                             />
                         </div>
                     </div>
@@ -134,5 +151,17 @@ export default function MessagesPage() {
                 )}
             </div>
         </div>
+    );
+}
+
+export default function SafeMessagesPage() {
+    return (
+        <Suspense fallback={
+            <div className="flex items-center justify-center h-screen bg-white dark:bg-zinc-950">
+                <Loader2 className="w-10 h-10 animate-spin text-blue-600" />
+            </div>
+        }>
+            <MessagesPage />
+        </Suspense>
     );
 }

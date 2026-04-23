@@ -2,15 +2,14 @@ import { db } from "@/database/drizzle";
 import { users, courses, books, readingSessions, departments, faculty, sessions } from "@/database/schema";
 import { count, sql } from "drizzle-orm";
 import { NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
+import { requireRole } from "@/lib/auth";
 
 export async function GET() {
   try {
-    const { userId, sessionClaims } = await auth();
-    
-    // Check for admin role (optional, depending on your auth setup)
-    if (!userId) {
-       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    // Only ADMIN can see global stats
+    const authCheck = await requireRole(["ADMIN"]);
+    if (!authCheck.authorized) {
+      return NextResponse.json({ error: authCheck.error }, { status: authCheck.status });
     }
 
     // Parallelize queries for performance
@@ -30,7 +29,7 @@ export async function GET() {
       db.select({ count: count() }).from(faculty),
       db.select({ 
         totalSessions: count(), 
-        totalDuration: sql<number>`sum(${readingSessions.duration})` 
+        totalDuration: sql<number>`coalesce(sum(${readingSessions.duration}), 0)` 
       }).from(readingSessions),
       db.select({ count: count() }).from(sessions)
     ]);
@@ -41,7 +40,7 @@ export async function GET() {
         materials: materialCount[0].count,
         departments: departmentCount[0].count,
         faculties: facultyCount[0].count,
-        totalReadingMinutes: readingStats[0].totalDuration || 0,
+        totalReadingMinutes: Number(readingStats[0].totalDuration || 0),
         cbtUsage: cbtStats[0].count, 
         revenue: 0 // Placeholder
     });

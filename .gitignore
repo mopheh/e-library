@@ -23,6 +23,7 @@
 test.js
 queue/notificationQueue.ts
 workers/notificationWorker.ts
+
 # misc
 .DS_Store
 *.pem
@@ -33,7 +34,7 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
+# env files
 .env*
 
 # vercel
@@ -42,3 +43,29 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# --- Test & dev output files (do not commit) ---
+lint_output.txt
+lint_output_utf8.txt
+tsc_output.txt
+tsc_output_2.txt
+tsc_output_3.txt
+test_output.txt
+build_output.txt
+
+# --- Scratch / temp ---
+/scratch/
+redis.js
+fix-env.js
+
+# --- One-time setup scripts (move to scripts/ and ignore root copies) ---
+execute_new_cors.mjs
+set-cors.mjs
+update-b2-cors.js
+
+# --- Large binary / data files not needed in repo ---
+*.pdf
+*.traineddata
+
+# --- Audit reports ---
+library_audit_report.md

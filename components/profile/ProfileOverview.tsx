@@ -1,4 +1,7 @@
 import FacultyRepSection from "./FacultyRepSection";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { BrainCircuit, BookOpen, Clock, Download, Layers } from "lucide-react";
+import Image from "next/image";
 
 interface ProfileOverviewProps {
   profile: any;

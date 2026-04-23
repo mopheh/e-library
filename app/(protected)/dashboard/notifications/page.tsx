@@ -29,7 +29,7 @@ export default function NotificationsPage() {
   const [notifications, setNotifications] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState("all");
-  const [handledRequests, setHandledRequests] = useState<Record<string, "ACCEPTED" | "REJECTED">>({});
+  const [handledRequests, setHandledRequests] = useState<Record<string, { status: "ACCEPTED" | "REJECTED", roomId?: string }>>({});
 
   const fetchNotifs = async () => {
     setLoading(true);
@@ -52,14 +52,15 @@ export default function NotificationsPage() {
 
   const handleResponse = async (notificationId: string, connectionId: string, status: "ACCEPTED" | "REJECTED") => {
     // Optimistic / Rapid UI Update
-    setHandledRequests(prev => ({ ...prev, [connectionId]: status }));
+    setHandledRequests(prev => ({ ...prev, [connectionId]: { status } }));
     
     try {
       const res = await respondToConnectionRequest(connectionId, status);
       if (res.success) {
         toast.success(status === "ACCEPTED" ? "Connection accepted!" : "Request declined");
-        // No full fetchNotifs() here to keep it snappy, 
-        // the labels below handle the persistent view.
+        if (res.roomId) {
+            setHandledRequests(prev => ({ ...prev, [connectionId]: { status, roomId: res.roomId } }));
+        }
       } else {
         toast.error(res.error || "Action failed");
         // Rollback on error
@@ -82,6 +83,7 @@ export default function NotificationsPage() {
   const filteredNotifications = notifications.filter(n => {
     if (activeFilter === "all") return true;
     if (activeFilter === "requests") return n.type === "CONNECTION_REQUEST";
+    if (activeFilter === "messages") return n.type === "MESSAGE";
     if (activeFilter === "system") return n.type === "SYSTEM";
     return true;
   });
@@ -100,7 +102,7 @@ export default function NotificationsPage() {
         </div>
         
         <div className="flex items-center gap-2 bg-white dark:bg-zinc-900 p-1 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm">
-           {["all", "requests", "system"].map((f) => (
+           {["all", "requests", "messages", "system"].map((f) => (
               <button 
                 key={f}
                 onClick={() => setActiveFilter(f)}
@@ -130,8 +132,9 @@ export default function NotificationsPage() {
         ) : (
           <AnimatePresence mode="popLayout">
             {filteredNotifications.map((notif) => {
-              const handleStatus = handledRequests[notif.targetId || ""];
-              
+              const handleData = handledRequests[notif.targetId || ""];
+              const handleStatus = handleData?.status;
+              const roomId = handleData?.roomId;
               return (
                 <motion.div
                   key={notif.id}
@@ -146,10 +149,10 @@ export default function NotificationsPage() {
                   )}
                   
                   <div className="flex flex-col md:flex-row gap-6 items-start">
-                     <div className={`p-4 rounded-2xl shrink-0 ${notif.type === 'CONNECTION_REQUEST' ? 'bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400' : 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400'}`}>
+                     <div className={`p-4 rounded-2xl shrink-0 ${notif.type === 'CONNECTION_REQUEST' ? 'bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400' : notif.type === 'MESSAGE' ? 'bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400' : 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400'}`}>
                         {notif.type === 'CONNECTION_REQUEST' ? (
                           handleStatus === 'ACCEPTED' ? <UserCheck className="w-6 h-6" /> : <UserPlus className="w-6 h-6" />
-                        ) : <Zap className="w-6 h-6" />}
+                        ) : notif.type === 'MESSAGE' ? <MessageSquare className="w-6 h-6" /> : <Zap className="w-6 h-6" />}
                      </div>
 
                      <div className="flex-1 space-y-2">
@@ -172,9 +175,16 @@ export default function NotificationsPage() {
                         {notif.type === 'CONNECTION_REQUEST' && notif.targetId && (
                            <div className="flex items-center gap-3 pt-4">
                              {handleStatus === 'ACCEPTED' ? (
-                               <Badge className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 px-4 py-2 rounded-xl border-none font-bold flex items-center gap-2">
-                                 <Check className="w-4 h-4" /> Connected
-                               </Badge>
+                               <div className="flex items-center gap-3">
+                                 <Badge className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 px-4 py-2 rounded-xl border-none font-bold flex items-center gap-2">
+                                   <Check className="w-4 h-4" /> Connected
+                                 </Badge>
+                                 <Link href={`/dashboard/messages?roomId=${roomId || ''}`}>
+                                    <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold flex items-center gap-2 shadow-lg shadow-blue-500/20">
+                                      <MessageSquare className="w-4 h-4" /> Chat Now
+                                    </Button>
+                                 </Link>
+                               </div>
                              ) : handleStatus === 'REJECTED' ? (
                                <Badge variant="outline" className="text-zinc-400 px-4 py-2 rounded-xl font-bold flex items-center gap-2 border-zinc-200 dark:border-zinc-800">
                                  <X className="w-4 h-4" /> Request Declined
@@ -202,6 +212,12 @@ export default function NotificationsPage() {
                         {notif.type === 'GENERAL' && (
                            <Link href="/dashboard/workspaces" className="inline-flex items-center gap-2 text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline pt-2 group">
                               Check Activity <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
+                           </Link>
+                        )}
+                        
+                        {notif.type === 'MESSAGE' && notif.targetId && (
+                           <Link href={`/dashboard/messages?roomId=${notif.targetId}`} className="inline-flex items-center gap-2 text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:underline pt-2 group">
+                              Open Chat <MessageSquare className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
                            </Link>
                         )}
                      </div>

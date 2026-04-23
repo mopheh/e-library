@@ -84,7 +84,7 @@ export const faculty = pgTable("faculty", {
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
 });
 
-export const departments = pgTable("department", {
+export const departments = pgTable("departments", {
   id: uuid("id").primaryKey().notNull().unique().defaultRandom(),
   name: varchar("name", { length: 255 }).notNull().unique(),
   facultyId: uuid("faculty_id")
@@ -104,15 +104,8 @@ export const courses = pgTable("courses", {
     .notNull()
     .references(() => departments.id, { onDelete: "cascade" }),
 });
-export const departmentCourses = pgTable("department_courses", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  departmentId: uuid("department_id")
-    .notNull()
-    .references(() => departments.id, { onDelete: "cascade" }),
-  courseId: uuid("course_id")
-    .notNull()
-    .references(() => courses.id, { onDelete: "cascade" }),
-});
+// Removed redundant departmentCourses table (courses.departmentId is used instead)
+
 
 export const studentCourses = pgTable(
   "student_courses",
@@ -246,7 +239,7 @@ export const userBooks = pgTable(
 export const readingSessions = pgTable(
   "reading_sessions",
   {
-    id: uuid("id").notNull().unique().defaultRandom(),
+    id: uuid("id").primaryKey().notNull().defaultRandom(),
 
     userId: uuid("user_id")
       .notNull()
@@ -380,7 +373,7 @@ export const complaints = pgTable("complaints", {
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
 });
 
-export const notificationTypeEnum = pgEnum("notification_type", ["COMPLAINT", "SYSTEM", "GENERAL", "CONNECTION_REQUEST"]);
+export const notificationTypeEnum = pgEnum("notification_type", ["COMPLAINT", "SYSTEM", "GENERAL", "CONNECTION_REQUEST", "MESSAGE"]);
 
 export const notifications = pgTable("notifications", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -690,6 +683,91 @@ export const chatMessagesRelations = relations(chatMessages, ({ one }) => ({
   sender: one(users, {
     fields: [chatMessages.senderId],
     references: [users.id],
+  }),
+}));
+
+// ── Previously-missing relations ──────────────────────────────────────────────
+
+export const userBooksRelations = relations(userBooks, ({ one }) => ({
+  user: one(users, {
+    fields: [userBooks.userId],
+    references: [users.id],
+  }),
+  book: one(books, {
+    fields: [userBooks.bookId],
+    references: [books.id],
+  }),
+}));
+
+export const readingSessionsRelations = relations(readingSessions, ({ one }) => ({
+  user: one(users, {
+    fields: [readingSessions.userId],
+    references: [users.id],
+  }),
+  book: one(books, {
+    fields: [readingSessions.bookId],
+    references: [books.id],
+  }),
+}));
+
+export const bookPagesRelations = relations(bookPages, ({ one }) => ({
+  book: one(books, {
+    fields: [bookPages.bookId],
+    references: [books.id],
+  }),
+}));
+
+export const annotationsRelations = relations(annotations, ({ one }) => ({
+  book: one(books, {
+    fields: [annotations.bookId],
+    references: [books.id],
+  }),
+  user: one(users, {
+    fields: [annotations.userId],
+    references: [users.id],
+  }),
+}));
+
+export const questionsRelations = relations(questions, ({ one, many }) => ({
+  course: one(courses, {
+    fields: [questions.courseId],
+    references: [courses.id],
+  }),
+  options: many(options),
+  topics: many(questionTopics),
+}));
+
+export const optionsRelations = relations(options, ({ one }) => ({
+  question: one(questions, {
+    fields: [options.questionId],
+    references: [questions.id],
+  }),
+}));
+
+export const cbtSessionsRelations = relations(sessions, ({ one, many }) => ({
+  user: one(users, {
+    fields: [sessions.userId],
+    references: [users.id],
+  }),
+  course: one(courses, {
+    fields: [sessions.courseId],
+    references: [courses.id],
+  }),
+  answers: many(answers),
+}));
+
+export const answersRelations = relations(answers, ({ one }) => ({
+  session: one(sessions, {
+    fields: [answers.sessionId],
+    references: [sessions.id],
+  }),
+  question: one(questions, {
+    fields: [answers.questionId],
+    references: [questions.id],
+  }),
+  selectedOption: one(options, {
+    fields: [answers.selectedOptionId],
+    references: [options.id],
   }),
 }));
 

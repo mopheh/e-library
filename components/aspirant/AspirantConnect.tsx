@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Pusher from "pusher-js";
 import { 
@@ -34,6 +35,7 @@ import { toast } from "sonner";
 
 
 export default function AspirantConnect() {
+  const router = useRouter();
   const { data: userData } = useUserData();
   const role = userData?.role?.toLowerCase() || "student";
   const isAspirant = role === "aspirant";
@@ -87,13 +89,13 @@ export default function AspirantConnect() {
 
     // Sub to private user channel for connection updates
     const userChannel = pusher.subscribe(`user-${userData.id}`);
-    userChannel.bind("connection-accepted", ({ peerId }: { peerId: string }) => {
+    userChannel.bind("connection-accepted", ({ peerId, roomId }: { peerId: string, roomId: string }) => {
       setData((prev: any) => {
         if (!prev?.peers) return prev;
         return {
           ...prev,
           peers: prev.peers.map((p: any) => 
-            p.id === peerId ? { ...p, connectionStatus: "ACCEPTED" } : p
+            p.id === peerId ? { ...p, connectionStatus: "ACCEPTED", roomId } : p
           )
         };
       });
@@ -365,7 +367,11 @@ export default function AspirantConnect() {
                          <button 
                            onClick={() => {
                              if (isAspirant) return setShowUpgradeModal(true);
-                             toast.info("Messaging is coming soon!");
+                             if (s.connectionStatus === "ACCEPTED") {
+                               router.push(s.roomId ? `/dashboard/messages?roomId=${s.roomId}` : `/dashboard/messages`);
+                             } else {
+                               toast.info("Connect with them first to start chatting!");
+                             }
                            }} 
                            className="flex-1 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-zinc-900 dark:text-zinc-100 font-bold py-3 rounded-2xl text-xs transition-all flex items-center justify-center gap-2 shadow-sm"
                          >

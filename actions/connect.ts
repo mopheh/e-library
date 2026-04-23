@@ -2,8 +2,9 @@
 
 import { db } from "@/database/drizzle";
 import { users, departmentCommunities, communityPosts, studentConnections, notifications, departments, chatRooms } from "@/database/schema";
-import { eq, desc, and, ne, inArray } from "drizzle-orm";
+import { eq, desc, and, or, ne, inArray } from "drizzle-orm";
 import { auth, clerkClient } from "@clerk/nextjs/server";
+import { revalidatePath } from "next/cache";
 import { pusherServer } from "@/lib/pusher";
 
 export async function getConnectData() {
@@ -54,19 +55,33 @@ export async function getConnectData() {
         }
     }
 
-    // For each peer, check if a connection request already exists and merge image
+    // For each peer, check if a connection request exists (either way) and merge image/roomId
     const peersWithStatus = await Promise.all(
         peers.map(async (peer) => {
             const connection = await db.query.studentConnections.findFirst({
-                where: and(
-                    eq(studentConnections.aspirantId, currentUser.id),
-                    eq(studentConnections.studentId, peer.id)
+                where: or(
+                    and(eq(studentConnections.aspirantId, currentUser.id), eq(studentConnections.studentId, peer.id)),
+                    and(eq(studentConnections.aspirantId, peer.id), eq(studentConnections.studentId, currentUser.id))
                 )
             });
+
+            let roomId = null;
+            if (connection?.status === "ACCEPTED") {
+                const [u1, u2] = [currentUser.id, peer.id].sort();
+                const room = await db.query.chatRooms.findFirst({
+                    where: and(
+                        eq(chatRooms.userOneId, u1),
+                        eq(chatRooms.userTwoId, u2)
+                    )
+                });
+                roomId = room?.id || null;
+            }
+
             return { 
                 ...peer, 
                 imageUrl: clerkUserMap.get(peer.clerkId) || null,
-                connectionStatus: connection?.status || null 
+                connectionStatus: connection?.status || null,
+                roomId 
             };
         })
     );
@@ -249,6 +264,7 @@ export async function respondToConnectionRequest(connectionId: string, status: "
             .set({ status, updatedAt: new Date() })
             .where(eq(studentConnections.id, connectionId));
 
+        let roomId = null;
         // Notify the requester and create a chat room
         if (status === "ACCEPTED") {
             const requester = await db.query.users.findFirst({
@@ -258,12 +274,18 @@ export async function respondToConnectionRequest(connectionId: string, status: "
             if (requester) {
                 // Ensure room exists
                 const [u1, u2] = [currentUser.id, requester.id].sort();
-                
                 try {
-                    await db.insert(chatRooms).values({
+                    const room = await db.insert(chatRooms).values({
                         userOneId: u1,
                         userTwoId: u2,
-                    }).onConflictDoNothing();
+                    }).onConflictDoUpdate({
+                        target: [chatRooms.userOneId, chatRooms.userTwoId],
+                        set: { userOneId: u1 } // dummy update to get returning
+                    }).returning();
+                    
+                    if (room.length > 0) {
+                        roomId = room[0].id;
+                    }
                 } catch (err) {
                     console.error("Chat room creation failed:", err);
                 }
@@ -276,12 +298,18 @@ export async function respondToConnectionRequest(connectionId: string, status: "
 
                 if (newNotif.length > 0) {
                     await pusherServer.trigger(`user-${requester.id}`, "new-notification", newNotif[0]);
-                    await pusherServer.trigger(`user-${requester.id}`, "connection-accepted", { peerId: currentUser.id });
+                    await pusherServer.trigger(`user-${requester.id}`, "connection-accepted", { 
+                        peerId: currentUser.id,
+                        roomId: roomId
+                    });
                 }
             }
         }
 
-        return { success: true };
+        revalidatePath("/(protected)/dashboard/notifications", "page");
+        revalidatePath("/(protected)/dashboard/connect", "page");
+
+        return { success: true, roomId };
     } catch (error) {
         console.error("Error responding to connection request:", error);
         return { success: false, error: "Failed to respond to request" };

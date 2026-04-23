@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "@/database/drizzle";
-import { users, chatRooms, chatMessages } from "@/database/schema";
+import { users, chatRooms, chatMessages, notifications } from "@/database/schema";
 import { eq, or, and, desc, asc, sql } from "drizzle-orm";
 import { auth, clerkClient } from "@clerk/nextjs/server";
 import { pusherServer } from "@/lib/pusher";
@@ -138,7 +138,19 @@ export async function sendMessage(roomId: string, content: string) {
         }).returning();
 
         // Trigger real-time event
+        console.log(`Triggering Pusher event on channel private-chat-room-${roomId}`);
         await pusherServer.trigger(`private-chat-room-${roomId}`, "new-message", newMessage);
+
+        // Notify recipient
+        const recipientId = room.userOneId === currentUser.id ? room.userTwoId : room.userOneId;
+        const [notif] = await db.insert(notifications).values({
+            userId: recipientId,
+            type: "MESSAGE",
+            message: `New message from ${currentUser.fullName}: ${content.substring(0, 50)}${content.length > 50 ? '...' : ''}`,
+            targetId: roomId,
+        }).returning();
+
+        await pusherServer.trigger(`user-${recipientId}`, "new-notification", notif);
 
         return { success: true, data: newMessage };
         

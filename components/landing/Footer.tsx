@@ -28,36 +28,39 @@ export const Footer = () => {
               UniVault
             </Link>
             <p className="font-inter text-sm text-[#8c90a1] max-w-xs">
-              The premier digital academic platform designed for higher education institutions.
+              The premier digital academic platform designed for higher education institutions and students.
             </p>
           </div>
           
           <div>
-            <h4 className="font-manrope text-white font-semibold mb-4">Product</h4>
+            <h4 className="font-manrope text-white font-semibold mb-4">Study Tools</h4>
             <ul className="flex flex-col gap-3 font-inter text-sm text-[#8c90a1]">
-              <li><Link href="#" className="hover:text-white transition-colors">Digital Library</Link></li>
-              <li><Link href="#" className="hover:text-white transition-colors">Study Assistant</Link></li>
-              <li><Link href="#" className="hover:text-white transition-colors">CBT Prep</Link></li>
-              <li><Link href="#" className="hover:text-white transition-colors">Pricing</Link></li>
+              <li><Link href="#features" className="hover:text-white transition-colors">Digital Library</Link></li>
+              <li><Link href="#features" className="hover:text-white transition-colors">AI Study Tutor</Link></li>
+              <li><Link href="#features" className="hover:text-white transition-colors">Exam Practice</Link></li>
+              <li><Link href="#features" className="hover:text-white transition-colors">Study Rooms</Link></li>
+              <li><Link href="#features" className="hover:text-white transition-colors">Study Streaks</Link></li>
+            </ul>
+          </div>
+
+          <div>
+            <h4 className="font-manrope text-white font-semibold mb-4">Community</h4>
+            <ul className="flex flex-col gap-3 font-inter text-sm text-[#8c90a1]">
+              <li><Link href="#features" className="hover:text-white transition-colors">Ask Seniors</Link></li>
+              <li><Link href="#features" className="hover:text-white transition-colors">Messaging</Link></li>
+              <li><Link href="#features" className="hover:text-white transition-colors">Leaderboard</Link></li>
+              <li><Link href="#features" className="hover:text-white transition-colors">Opportunities</Link></li>
+              <li><Link href="#preadmission" className="hover:text-white transition-colors">Aspirant Hub</Link></li>
             </ul>
           </div>
 
           <div>
             <h4 className="font-manrope text-white font-semibold mb-4">Institution</h4>
             <ul className="flex flex-col gap-3 font-inter text-sm text-[#8c90a1]">
-              <li><Link href="#" className="hover:text-white transition-colors">For Universities</Link></li>
-              <li><Link href="#" className="hover:text-white transition-colors">Faculty Tools</Link></li>
-              <li><Link href="#" className="hover:text-white transition-colors">Security</Link></li>
-              <li><Link href="#" className="hover:text-white transition-colors">Case Studies</Link></li>
-            </ul>
-          </div>
-
-          <div>
-            <h4 className="font-manrope text-white font-semibold mb-4">Resources</h4>
-            <ul className="flex flex-col gap-3 font-inter text-sm text-[#8c90a1]">
-              <li><Link href="#" className="hover:text-white transition-colors">Documentation</Link></li>
-              <li><Link href="#" className="hover:text-white transition-colors">Help Center</Link></li>
-              <li><Link href="#" className="hover:text-white transition-colors">Contact Support</Link></li>
+              <li><Link href="#institution" className="hover:text-white transition-colors">For Universities</Link></li>
+              <li><Link href="#institution" className="hover:text-white transition-colors">Faculty Management</Link></li>
+              <li><Link href="#institution" className="hover:text-white transition-colors">Admin Dashboard</Link></li>
+              <li><Link href="#" className="hover:text-white transition-colors">Pricing</Link></li>
             </ul>
           </div>
         </div>

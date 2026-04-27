@@ -1,12 +1,11 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Clock, ChevronLeft, ChevronRight, CheckCircle, XCircle, Loader2, BookOpen, Settings, Play } from "lucide-react";
+import { motion } from "framer-motion";
+import { Clock, ChevronLeft, ChevronRight, CheckCircle, XCircle, Loader2, Settings, Play } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { saveCbtSubjects } from "@/actions/aspirant";
 import { toast } from "sonner";
-import { Checkbox } from "@/components/ui/checkbox";
 
 const STORAGE_KEY = "univault_aspirant_cbt_session";
 
@@ -16,9 +15,9 @@ const AVAILABLE_SUBJECTS = [
   "economics", "history", "irk", "civiledu", "insurance", "currentaffairs"
 ];
 
-function capitalize(s: string) {
-  return s.charAt(0).toUpperCase() + s.slice(1);
-}
+// function capitalize(s: string) {
+//   return s.charAt(0).toUpperCase() + s.slice(1);
+// }
 
 export default function AspirantCbt() {
   const [mode, setMode] = useState<"loading" | "onboarding" | "config" | "exam">("loading");
@@ -34,9 +33,9 @@ export default function AspirantCbt() {
   const [configLimit, setConfigLimit] = useState(10);
 
   // Exam State
-  const [questions, setQuestions] = useState<any[]>([]);
+  const [questions, setQuestions] = useState<{ id: string; subject: string; questionText?: string; text?: string; options: { optionText: string; isCorrect: boolean }[]; explanation?: string }[]>([]);
   const [currentIdx, setCurrentIdx] = useState(0);
-  const [answers, setAnswers] = useState<Record<number, number>>({});
+  const [answers, setAnswers] = useState<Record<string, number>>({});
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [timeLeft, setTimeLeft] = useState(1800);
   const [isSyncing, setIsSyncing] = useState(false);
@@ -169,6 +168,7 @@ export default function AspirantCbt() {
         setMode("config");
       }
     } catch (err) {
+        console.error("CBT fetch error:", err);
         toast.error("Failed to start exam network error.");
         setMode("config");
     }
@@ -374,7 +374,7 @@ export default function AspirantCbt() {
 
             <div className="text-left space-y-6 max-h-96 overflow-y-auto pr-2">
               {questions.map((q, i) => {
-                const correctIdx = q.options.findIndex((o: any) => o.isCorrect);
+                const correctIdx = q.options.findIndex((o: { isCorrect: boolean }) => o.isCorrect);
                 const isCorrect = answers[q.id] === correctIdx;
                 const skipped = answers[q.id] === undefined;
                 return (
@@ -382,7 +382,7 @@ export default function AspirantCbt() {
                     <div className="flex gap-2">
                       <span className="font-bold">{i + 1}.</span>
                       <div>
-                        <p className="font-medium text-sm mb-2" dangerouslySetInnerHTML={{ __html: q.questionText || q.text }}></p>
+                        <p className="font-medium text-sm mb-2" dangerouslySetInnerHTML={{ __html: q.questionText || q.text || "" }}></p>
                         <div className="flex items-center gap-2 text-sm mb-2">
                            <span className="text-zinc-500">Your Answer:</span>
                            <span className={`font-semibold ${isCorrect ? 'text-green-600' : 'text-red-500'}`}>
@@ -424,8 +424,12 @@ export default function AspirantCbt() {
               <Clock className="w-5 h-5" />
               {formatTime(timeLeft)}
             </div>
-            <button onClick={handleSubmit} className="bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 px-6 py-2 rounded-xl text-sm font-semibold hover:bg-zinc-800 dark:hover:bg-zinc-200 transition-colors">
-              Submit Assessment
+            <button 
+              onClick={handleSubmit} 
+              disabled={isSyncing}
+              className="bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 px-6 py-2 rounded-xl text-sm font-semibold hover:bg-zinc-800 dark:hover:bg-zinc-200 transition-colors flex items-center gap-2"
+            >
+              {isSyncing ? <Loader2 className="w-4 h-4 animate-spin" /> : "Submit Assessment"}
             </button>
          </div>
       </div>
@@ -447,7 +451,7 @@ export default function AspirantCbt() {
               </h2>
 
               <div className="space-y-4">
-                {currentQ?.options?.map((opt: any, i: number) => {
+                {currentQ?.options?.map((opt: { optionText: string }, i: number) => {
                   const isSelected = answers[currentQ.id] === i;
                   return (
                     <button

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useState } from "react";
+import React, { useState } from "react";
 import { UploadCloud, CheckCircle, AlertCircle, X, File as FileIcon } from "lucide-react";
 import { useB2Upload } from "@/hooks/useB2Upload";
 
@@ -82,10 +82,11 @@ export function FileUploadDropzone({
       });
       setStatus("success");
       onUploadSuccess(url, activeFile);
-    } catch (err: any) {
+    } catch (err) {
+      const error = err as Error;
       setStatus("error");
-      setErrorMessage(err.message || "An error occurred during upload");
-      if (onUploadError) onUploadError(err);
+      setErrorMessage(error.message || "An error occurred during upload");
+      if (onUploadError) onUploadError(error);
     }
   };
 

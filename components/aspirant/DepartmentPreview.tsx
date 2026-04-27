@@ -6,7 +6,6 @@ import { BookA, PlayCircle, FileText, Lock, Users, Star, ArrowRight } from "luci
 import UpgradePromptModal from "./UpgradePromptModal";
 import Link from "next/link";
 import { getDepartmentPreview } from "@/actions/preview";
-import { useUser } from "@clerk/nextjs";
 import { useUserData } from "@/hooks/useUsers";
 
 export default function DepartmentPreview({ targetDepartmentId }: { targetDepartmentId?: string }) {
@@ -14,8 +13,11 @@ export default function DepartmentPreview({ targetDepartmentId }: { targetDepart
   const role = userData?.role?.toLowerCase() || "student";
   const isAspirant = role === "aspirant";
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
-  const { user } = useUser();
-  const [data, setData] = useState<any>(null);
+  const [data, setData] = useState<{ 
+    stats: { recommendedTexts: number; pastQuestions: number; currentStudents: number }; 
+    department: { name: string; id: string; facultyId: string | null }; 
+    coreCourses: string[] 
+  } | null>(null);
   const [loading, setLoading] = useState(true);
   
   // Note: For Aspirants, targetDepartmentId might be their intended department.
@@ -34,7 +36,7 @@ export default function DepartmentPreview({ targetDepartmentId }: { targetDepart
       }
       
       const res = await getDepartmentPreview(idToFetch);
-      if(res.success) {
+      if(res.success && res.data) {
         setData(res.data);
       }
       setLoading(false);
@@ -186,7 +188,7 @@ export default function DepartmentPreview({ targetDepartmentId }: { targetDepart
                         <span className="font-semibold text-sm">{s.name}</span>
                         <span className="text-xs bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300 px-2 py-1 rounded-full">{s.level}</span>
                       </div>
-                      <p className="text-sm text-zinc-600 dark:text-zinc-400 italic">"{s.msg}"</p>
+                      <p className="text-sm text-zinc-600 dark:text-zinc-400 italic">&quot;{s.msg}&quot;</p>
                    </div>
                  ))}
                  

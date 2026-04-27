@@ -98,6 +98,34 @@ const Onboarding = () => {
   }, [userId]);
 
   useEffect(() => {
+    const checkExistingUser = async () => {
+      if (!userId || !user) return;
+
+      try {
+        const res = await fetch(`/api/users?clerkId=${userId}`);
+        const data = await res.json();
+
+        // If user already exists in DB, they are already onboarded
+        if (data && data.length > 0) {
+          // Use the server action to sync metadata (since publicMetadata is server-only)
+          const { syncUserMetadata } = await import("@/actions/sync");
+          const result = await syncUserMetadata();
+          
+          if (result.success) {
+            toast.success("Profile found! Syncing and redirecting...");
+            // Force a reload to ensure the new session token is picked up
+            window.location.href = "/dashboard";
+          }
+        }
+      } catch (err) {
+        console.error("Error checking existing user:", err);
+      }
+    };
+
+    checkExistingUser();
+  }, [userId, user, router]);
+
+  useEffect(() => {
     if (isError) {
       toast.error("Something went wrong", {
         description: error?.message || "Unable to fetch faculties",

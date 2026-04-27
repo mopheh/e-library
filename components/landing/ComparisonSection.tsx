@@ -6,10 +6,14 @@ import { Check, X } from "lucide-react";
 
 export const ComparisonSection = () => {
   const features = [
-    { label: "File Management", traditional: "Static files & chaotic folders", univault: "Structured academic system" },
-    { label: "Progress Monitoring", traditional: "No tracking available", univault: "Visual reading analytics" },
-    { label: "Exam Readiness", traditional: "No preparation tools", univault: "Integrated CBT simulations" },
-    { label: "Mentorship", traditional: "No guidance", univault: "Senior connect system" },
+    { label: "Finding Materials", traditional: "Scattered PDFs & random folders", univault: "Organized by faculty & department" },
+    { label: "Tracking Progress", traditional: "No way to know where you are", univault: "Visual streaks & reading stats" },
+    { label: "Exam Preparation", traditional: "No practice tools", univault: "Timed practice tests with instant results" },
+    { label: "Getting Advice", traditional: "Figure it out alone", univault: "Ask seniors directly from the app" },
+    { label: "Studying Together", traditional: "Isolated reading", univault: "Study rooms, discussions & live chat" },
+    { label: "Finding Opportunities", traditional: "Searching on your own", univault: "Curated jobs, internships & scholarships" },
+    { label: "Understanding Content", traditional: "No help available", univault: "AI tutor explains any page" },
+    { label: "Staying Motivated", traditional: "Easy to lose focus", univault: "Streaks, points & leaderboard rankings" },
   ];
 
   return (
@@ -45,20 +49,20 @@ export const ComparisonSection = () => {
           {/* Rows */}
           {features.map((row, idx) => (
             <React.Fragment key={idx}>
-              <div className="hidden md:flex items-center p-6 border-b border-white/5 bg-[#131313]/50">
-                <span className="text-white font-medium">{row.label}</span>
+              <div className="hidden md:flex items-center p-5 border-b border-white/5 bg-[#131313]/50">
+                <span className="text-white font-medium text-sm">{row.label}</span>
               </div>
-              <div className="flex flex-col md:flex-row md:items-center justify-center p-6 border-b border-white/5 bg-[#131313] md:border-l text-center gap-2">
+              <div className="flex flex-col md:flex-row md:items-center justify-center p-5 border-b border-white/5 bg-[#131313] md:border-l text-center gap-2">
                  <span className="md:hidden text-xs text-[#8c90a1] uppercase">{row.label} (Traditional)</span>
-                 <div className="flex items-center justify-center gap-2 text-[#c2c6d8]">
-                   <X className="w-4 h-4 text-[#ffb4ab]" />
+                 <div className="flex items-center justify-center gap-2 text-[#c2c6d8] text-sm">
+                   <X className="w-4 h-4 text-[#ffb4ab] shrink-0" />
                    <span>{row.traditional}</span>
                  </div>
               </div>
-              <div className="flex flex-col md:flex-row md:items-center justify-center p-6 border-b border-white/5 bg-[#0066FF]/5 md:border-l text-center border-l-white/10 gap-2">
+              <div className="flex flex-col md:flex-row md:items-center justify-center p-5 border-b border-white/5 bg-[#0066FF]/5 md:border-l text-center border-l-white/10 gap-2">
                  <span className="md:hidden text-xs text-[#abc7ff] uppercase">{row.label} (UniVault)</span>
-                 <div className="flex items-center justify-center gap-2 text-white font-medium">
-                   <Check className="w-5 h-5 text-[#abc7ff]" />
+                 <div className="flex items-center justify-center gap-2 text-white font-medium text-sm">
+                   <Check className="w-5 h-5 text-[#abc7ff] shrink-0" />
                    <span>{row.univault}</span>
                  </div>
               </div>

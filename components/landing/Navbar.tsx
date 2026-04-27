@@ -21,9 +21,9 @@ export const Navbar = () => {
         </Link>
         
         <nav className="hidden md:flex gap-8 text-sm font-inter text-[#c2c6d8]">
-          <Link href="#product" className="hover:text-white transition-colors">Product</Link>
+          <Link href="#features" className="hover:text-white transition-colors">Features</Link>
+          <Link href="#preadmission" className="hover:text-white transition-colors">Aspirants</Link>
           <Link href="#institution" className="hover:text-white transition-colors">Institution</Link>
-          <Link href="#resources" className="hover:text-white transition-colors">Resources</Link>
         </nav>
 
         <div className="flex flex-row items-center gap-4">

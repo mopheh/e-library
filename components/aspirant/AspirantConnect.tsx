@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Pusher from "pusher-js";
@@ -9,9 +9,7 @@ import {
   UserPlus, 
   Filter, 
   Award, 
-  BookOpen, 
   Clock, 
-  Search, 
   Lock, 
   UserCheck, 
   Sparkles, 
@@ -19,7 +17,6 @@ import {
   Users as UsersIcon,
   ChevronRight,
   Send,
-  Plus,
   Info
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -29,7 +26,6 @@ import ConnectionRequestModal from "./ConnectionRequestModal";
 import { getConnectData, createDiscussionPost, updateUserInterests } from "@/actions/connect";
 import { formatDistanceToNow } from "date-fns";
 import { useUserData } from "@/hooks/useUsers";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 
@@ -42,9 +38,32 @@ export default function AspirantConnect() {
   
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [showConnectModal, setShowConnectModal] = useState(false);
-  const [selectedPeer, setSelectedPeer] = useState<any>(null);
+  const [selectedPeer, setSelectedPeer] = useState<{ 
+    id: string; 
+    name: string; 
+    imageUrl?: string | null; 
+    level?: string | null; 
+    role?: string | null; 
+    connectionStatus?: "PENDING" | "REJECTED" | "ACCEPTED" | null; 
+    roomId?: string | null;
+    interests?: string | null;
+  } | null>(null);
   const [activeFilter, setActiveFilter] = useState("all");
-  const [data, setData] = useState<any>(null);
+  const [data, setData] = useState<{ 
+    departmentId: string; 
+    interests?: string | null; 
+    peers: { 
+      id: string; 
+      name: string; 
+      imageUrl?: string | null; 
+      level?: string | null; 
+      role?: string | null; 
+      connectionStatus?: "PENDING" | "REJECTED" | "ACCEPTED" | null; 
+      roomId?: string | null;
+      interests?: string | null;
+    }[]; 
+    recentDiscussions: { id: string; content: string; authorName: string; authorLevel: string; createdAt: string }[] 
+  } | null>(null);
   const [loading, setLoading] = useState(true);
   const [newPostContent, setNewPostContent] = useState("");
   const [isPosting, setIsPosting] = useState(false);
@@ -53,22 +72,22 @@ export default function AspirantConnect() {
   const [customTag, setCustomTag] = useState("");
   const [isUpdating, setIsUpdating] = useState(false);
 
-  const refreshData = async () => {
+  const refreshData = useCallback(async () => {
     setLoading(true);
     const res = await getConnectData();
-    if (res.success) {
-      setData(res.data);
+    if (res.success && res.data) {
+      setData(res.data as Required<NonNullable<typeof data>>);
       // Show expertise prompt if current student has no interests
       if (!isAspirant && res.data && !res.data.interests) {
         setShowExpertisePrompt(true);
       }
     }
     setLoading(false);
-  };
+  }, [isAspirant]);
 
   useEffect(() => {
     refreshData();
-  }, [isAspirant]);
+  }, [isAspirant, refreshData]);
 
   // Pusher setup for real-time updates (discussions & connection statuses)
   useEffect(() => {
@@ -80,21 +99,24 @@ export default function AspirantConnect() {
 
     // Sub to community feed
     const communityChannel = pusher.subscribe(`dept-community-${data.departmentId}`);
-    communityChannel.bind("new-post", (newPost: any) => {
-      setData((prev: any) => ({
-        ...prev,
-        recentDiscussions: [newPost, ...(prev?.recentDiscussions || [])].slice(0, 10)
-      }));
+    communityChannel.bind("new-post", (newPost: { id: string; content: string; authorName: string; authorLevel: string; createdAt: string }) => {
+      setData((prev) => {
+        if (!prev) return null;
+        return {
+          ...prev,
+          recentDiscussions: [newPost, ...(prev.recentDiscussions || [])].slice(0, 10)
+        };
+      });
     });
 
     // Sub to private user channel for connection updates
     const userChannel = pusher.subscribe(`user-${userData.id}`);
     userChannel.bind("connection-accepted", ({ peerId, roomId }: { peerId: string, roomId: string }) => {
-      setData((prev: any) => {
+      setData((prev) => {
         if (!prev?.peers) return prev;
         return {
           ...prev,
-          peers: prev.peers.map((p: any) => 
+          peers: prev.peers.map((p) => 
             p.id === peerId ? { ...p, connectionStatus: "ACCEPTED", roomId } : p
           )
         };
@@ -121,7 +143,8 @@ export default function AspirantConnect() {
       } else {
         toast.error(res.error || "Failed to post");
       }
-    } catch (error) {
+    } catch (err) {
+      console.error("Post submit error:", err);
       toast.error("An error occurred");
     } finally {
       setIsPosting(false);
@@ -140,7 +163,8 @@ export default function AspirantConnect() {
         setShowExpertisePrompt(false);
         refreshData();
       }
-    } catch (error) {
+    } catch (err) {
+      console.error("Update interests error:", err);
       toast.error("Failed to update profile");
     } finally {
       setIsUpdating(false);
@@ -192,7 +216,7 @@ export default function AspirantConnect() {
                 <div className="flex items-center gap-2 text-blue-100 font-bold text-xs uppercase tracking-widest">
                    <Award className="w-4 h-4" /> Personalize Your Profile
                 </div>
-                <h2 className="text-3xl font-bold font-cabin tracking-tight">What's your expertise?</h2>
+                <h2 className="text-3xl font-bold font-cabin tracking-tight">What&apos;s your expertise?</h2>
                 <div className="bg-white/10 backdrop-blur-md p-4 rounded-2xl flex items-start gap-3 border border-white/10">
                    <Info className="w-5 h-5 mt-0.5 shrink-0" />
                    <p className="text-sm font-light leading-relaxed">
@@ -262,7 +286,7 @@ export default function AspirantConnect() {
              </div>
              <h1 className="text-4xl font-bold font-cabin tracking-tight">Connect with Peers</h1>
              <p className="text-zinc-500 dark:text-zinc-400 max-w-xl font-light">
-               Join your department's academic network. Find mentors, study partners, and join verified discussion circles.
+               Join your department&apos;s academic network. Find mentors, study partners, and join verified discussion circles.
              </p>
           </div>
           
@@ -315,7 +339,7 @@ export default function AspirantConnect() {
                      </p>
                   </div>
                ) : (
-                 studentsToMap.map((s: any, i: number) => (
+                 studentsToMap.map((s, i) => (
                    <motion.div 
                      key={s.id}
                      initial={{ opacity: 0, scale: 0.98 }}
@@ -439,7 +463,7 @@ export default function AspirantConnect() {
                        <p className="text-zinc-400 text-xs mt-1">Be the first to start a conversation in your department!</p>
                     </div>
                   ) : (
-                    postsToMap.map((post: any, idx: number) => (
+                    postsToMap.map((post, idx) => (
                       <motion.div 
                         initial={{ opacity: 0, x: -10 }}
                         animate={{ opacity: 1, x: 0 }}

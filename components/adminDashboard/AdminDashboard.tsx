@@ -4,19 +4,16 @@ import { useUser } from "@clerk/nextjs";
 import { PlusIcon } from "@heroicons/react/20/solid";
 import { toast } from "sonner";
 import Link from "next/link";
-import { UserCheckIcon, ArrowRightIcon, ShieldCheckIcon } from "lucide-react";
+import { ArrowRightIcon, ShieldCheckIcon } from "lucide-react";
 import FormModal from "@/components/FormDialogBody";
 import AddFacultyForm from "@/components/adminDashboard/department/AddFacultyForm";
 import DepartmentRow from "@/components/adminDashboard/department/DepartmentRow";
 import FacultyRow from "./faculty/FacultyRow";
-import MiniLoader from "../Loader";
 import Stat from "@/components/Dashboard/Stat";
 import { useFaculties } from "@/hooks/useFaculties";
 import { useDepartments } from "@/hooks/useDepartments";
 import { SkeletonRow } from "@/components/adminDashboard/SkeletonRow";
 import { useAdminStats } from "@/hooks/useAdminStats";
-import { useUsers } from "@/hooks/useUsers";
-// ... imports
 
 const AdminDashboard = () => {
 
@@ -25,7 +22,7 @@ const AdminDashboard = () => {
   const [open, setOpen] = useState(false);
   const [type, setType] = useState("");
 
-  const { user, isSignedIn } = useUser();
+  const { user } = useUser();
 
   // Faculty Query
   const {
@@ -42,12 +39,9 @@ const AdminDashboard = () => {
     error: departmentsErr,
   } = useDepartments({ page: departmentPage, limit: 5 });
 
-  const {
-    data: users,
-    isLoading: usersLoading,
-    isError: usersError,
-    error: usersErr,
-  } = useUsers();
+  // const {
+  //   data: users,
+  // } = useUsers();
 
   const {
     data: stats,
@@ -61,7 +55,7 @@ const AdminDashboard = () => {
   // Log user on mount
   useEffect(() => {
     if (user) console.log(user);
-  }, [isSignedIn]);
+  }, [user]);
 
   // Show toast notifications for errors
   useEffect(() => {
@@ -71,7 +65,7 @@ const AdminDashboard = () => {
       toast.error(departmentsErr?.message || "Failed to fetch departments");
     if (statsError)
       toast.error(statsErr?.message || "Failed to fetch dashboard stats");
-  }, [facultiesError, departmentsError, statsError]);
+  }, [facultiesError, departmentsError, statsError, facultiesErr?.message, departmentsErr?.message, statsErr?.message]);
 
   return (
     <>

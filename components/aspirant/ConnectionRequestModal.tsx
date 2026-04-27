@@ -34,7 +34,8 @@ export default function ConnectionRequestModal({ isOpen, onClose, targetStudent,
       } else {
         toast.error(res.error || "Failed to send request");
       }
-    } catch (error) {
+    } catch (err) {
+      console.error("Connection request error:", err);
       toast.error("An error occurred");
     } finally {
       setLoading(false);
@@ -50,7 +51,7 @@ export default function ConnectionRequestModal({ isOpen, onClose, targetStudent,
           </div>
           <DialogTitle className="text-xl font-cabin">Connect with {targetStudent?.name}</DialogTitle>
           <DialogDescription className="font-poppins text-sm font-light">
-            Connections allow you to see each other's activity and message each other directly once accepted.
+            Connections allow you to see each other&apos;s activity and message each other directly once accepted.
           </DialogDescription>
         </DialogHeader>
         

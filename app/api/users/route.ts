@@ -12,10 +12,16 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const facultyId = searchParams.get("facultyId");
     const departmentId = searchParams.get("departmentId");
+    const clerkId = searchParams.get("clerkId");
 
     let rawResults;
 
-    if (facultyId) {
+    if (clerkId) {
+      rawResults = await db
+        .select()
+        .from(users).leftJoin(departments, eq(users.departmentId, departments.id))
+        .where(eq(users.clerkId, clerkId));
+    } else if (facultyId) {
       rawResults = await db
         .select()
         .from(users).leftJoin(departments, eq(users.departmentId, departments.id))
@@ -111,11 +117,40 @@ export async function POST(req: Request) {
     if (existingUser.length > 0) {
       // User already exists, let's update their onboarding info instead of throwing an error
       await db.update(users).set(params).where(eq(users.email, params.email));
+
+      // Sync with Clerk Metadata
+      try {
+        const client = await clerkClient();
+        await client.users.updateUserMetadata(params.clerkId, {
+          publicMetadata: {
+            onboarded: true,
+            role: params.role || "STUDENT",
+          },
+        });
+      } catch (clerkError) {
+        console.error("[POST /api/users] Failed to update Clerk metadata:", clerkError);
+      }
+
       return NextResponse.json({ success: true, message: "user updated" });
     }
 
-    //@ts-ignore
     await db.insert(users).values(params);
+
+    // Sync with Clerk Metadata for immediate role and onboarding update
+    try {
+      const client = await clerkClient();
+      await client.users.updateUserMetadata(params.clerkId, {
+        publicMetadata: {
+          onboarded: true,
+          role: params.role || "STUDENT",
+        },
+      });
+    } catch (clerkError) {
+      console.error("[POST /api/users] Failed to update Clerk metadata:", clerkError);
+      // We don't necessarily want to fail the whole request if Clerk sync fails, 
+      // but it will cause the redirection issue.
+    }
+
     return NextResponse.json({ success: true, message: "user created" });
   } catch (e) {
     console.error("[POST /api/users]", e);

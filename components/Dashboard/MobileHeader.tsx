@@ -25,7 +25,7 @@ export default function MobileHeader() {
         </div>
         <div className="flex flex-col">
           <span className="text-sm font-medium text-zinc-500">Hello,</span>
-          <span className="text-base font-bold text-zinc-900 dark:text-zinc-100 -mt-1 tracking-tight">
+          <span className="text-xs font-bold text-zinc-900 dark:text-zinc-100 -mt-1 tracking-tight">
             {isLoaded ? user?.fullName || "Student" : "..."}
           </span>
         </div>

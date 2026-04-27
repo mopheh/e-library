@@ -2,11 +2,10 @@
 
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { UploadCloud, CheckCircle, AlertTriangle, Building, FileText, BadgeCheck, Loader2 } from "lucide-react";
+import { CheckCircle, AlertTriangle, Building, BadgeCheck, Loader2 } from "lucide-react";
 import { useUser } from "@clerk/nextjs";
 import { submitVerification, getVerificationStatus } from "@/actions/aspirant";
 import { getFaculties, getDepartmentsByFaculty } from "@/actions/academic";
-import { LEVEL_ENUM } from "@/database/schema";
 import { toast } from "sonner";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";

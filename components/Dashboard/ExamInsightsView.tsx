@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { BrainCircuit, Loader2, Sparkles, TrendingUp, AlertTriangle } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,6 +10,8 @@ import { toast } from "sonner";
 
 export const ExamInsightsView = ({ courseId }: { courseId: string }) => {
   const queryClient = useQueryClient();
+  const [page, setPage] = useState(1);
+  const itemsPerPage = 4;
 
   const { data: insights, isLoading } = useQuery({
     queryKey: ["examInsights", courseId],
@@ -90,9 +92,11 @@ export const ExamInsightsView = ({ courseId }: { courseId: string }) => {
           </Button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {insights.map((insight: any, index: number) => {
-             const isHighYield = index < 3 && insight.frequencyPercentage > 15;
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {insights.slice((page - 1) * itemsPerPage, page * itemsPerPage).map((insight: any, index: number) => {
+               const actualIndex = (page - 1) * itemsPerPage + index;
+               const isHighYield = actualIndex < 3 && insight.frequencyPercentage > 15;
              return (
               <Card key={insight.id} className={`flex flex-col h-full hover:shadow-lg transition-all border-gray-200 dark:border-zinc-800 overflow-hidden relative ${isHighYield ? 'ring-1 ring-amber-400/50' : ''}`}>
                 {isHighYield && (
@@ -101,7 +105,7 @@ export const ExamInsightsView = ({ courseId }: { courseId: string }) => {
                   </div>
                 )}
                 <CardHeader className="pb-3 pt-6">
-                  <CardTitle className="text-lg line-clamp-2 leading-tight font-poppins text-gray-800 dark:text-gray-100 pr-12">
+                  <CardTitle className="text-lg leading-tight font-poppins text-gray-800 dark:text-gray-100 pr-12">
                      {insight.topicName}
                   </CardTitle>
                 </CardHeader>
@@ -118,6 +122,14 @@ export const ExamInsightsView = ({ courseId }: { courseId: string }) => {
               </Card>
              );
           })}
+          </div>
+          {Math.ceil(insights.length / itemsPerPage) > 1 && (
+            <div className="flex justify-between items-center mt-4">
+              <Button variant="outline" size="sm" disabled={page === 1} onClick={() => setPage(p => p - 1)}>Prev</Button>
+              <span className="text-xs text-muted-foreground">Page {page} of {Math.ceil(insights.length / itemsPerPage)}</span>
+              <Button variant="outline" size="sm" disabled={page === Math.ceil(insights.length / itemsPerPage)} onClick={() => setPage(p => p + 1)}>Next</Button>
+            </div>
+          )}
         </div>
       )}
     </div>

@@ -23,38 +23,15 @@ const Preloader = () => {
   if (isDone) return null;
 
   return (
-    <div className="fixed inset-0 z-[9999] bg-[#f9f6f1] flex items-center justify-center">
-      {/* Spinner Ring */}
-      <div className="relative w-32 h-32">
-        <div className="absolute inset-0 animate-spin rounded-full border-4 border-b-[#5C4033]/30 border-t-[#8B5E3C] border-l-transparent border-r-transparent" />
-
-        {/* Book Core */}
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="relative w-20 h-24">
-            {/* Back Cover */}
-            <div className="absolute inset-0 bg-[#5C4033] rounded-md shadow-inner z-0" />
-
-            {/* Animated Pages */}
-            <AnimatePresence>
-              {flipPages.map((i) => (
-                <motion.div
-                  key={i}
-                  initial={{ rotateY: 0 }}
-                  animate={{ rotateY: -180 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.4 }}
-                  className="absolute inset-0 bg-white rounded-md shadow origin-left"
-                  style={{
-                    zIndex: 100 - i,
-                    transformStyle: "preserve-3d",
-                  }}
-                />
-              ))}
-            </AnimatePresence>
-
-            {/* Front Cover */}
-            <div className="absolute inset-0 border border-[#3B2F2F] rounded-md z-10" />
-          </div>
+    <div className="fixed inset-0 z-[9999] bg-[#f9f6f1] dark:bg-zinc-950 flex items-center justify-center">
+      <div className="relative flex justify-center items-center w-32 h-32">
+        <div className="absolute inset-0 rounded-full border-4 border-zinc-200 dark:border-zinc-800 border-t-blue-600 dark:border-t-blue-500 animate-spin" />
+        <div className="relative w-16 h-16 flex items-center justify-center">
+          <img
+            src="/rcf-logo.png"
+            alt="Loading..."
+            className="object-contain w-full h-full"
+          />
         </div>
       </div>
     </div>

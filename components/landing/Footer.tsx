@@ -14,7 +14,7 @@ export const Footer = () => {
             Study With Structure.<br />Perform With Confidence.
           </h2>
           <Link href="/dashboard" className="inline-flex items-center gap-2 px-8 py-4 rounded-md bg-[#0066FF] hover:bg-[#005cbb] text-white font-inter font-medium transition-transform hover:scale-[1.02]">
-            Start Using UniVault
+            Start Using RCF
             <ArrowRight className="w-5 h-5" />
           </Link>
         </div>
@@ -22,10 +22,7 @@ export const Footer = () => {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-16 border-t border-white/5 pt-16">
           <div className="col-span-2 md:col-span-1">
             <Link href="/" className="font-manrope text-2xl font-bold tracking-tight text-white flex items-center gap-2 mb-4">
-              <div className="w-8 h-8 rounded-lg bg-[#0066FF] flex items-center justify-center">
-                <span className="text-white font-bold text-lg">U</span>
-              </div>
-              UniVault
+              <img src="/rcf-logo-full.png" alt="RCF Logo" className="h-10 w-auto" />
             </Link>
             <p className="font-inter text-sm text-[#8c90a1] max-w-xs">
               The premier digital academic platform designed for higher education institutions and students.
@@ -66,7 +63,7 @@ export const Footer = () => {
         </div>
 
         <div className="border-t border-white/5 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 font-inter text-xs text-[#8c90a1]">
-          <p>© {new Date().getFullYear()} UniVault. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} RCF. All rights reserved.</p>
           <div className="flex gap-6">
             <Link href="#" className="hover:text-white transition-colors">Privacy Policy</Link>
             <Link href="#" className="hover:text-white transition-colors">Terms of Service</Link>

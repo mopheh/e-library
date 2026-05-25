@@ -19,7 +19,9 @@ import {
   Menu,
   X,
   Crown,
-  ShieldCheck
+  ShieldCheck,
+  ChevronLeft,
+  ChevronRight
 } from "lucide-react";
 import { useAuth, useUser } from "@clerk/nextjs";
 import { useUserData } from "@/hooks/useUsers";
@@ -49,6 +51,20 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggle }) => {
   const [active, setActive] = useState(pathname);
 
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [isDesktopClosed, setIsDesktopClosed] = useState(false);
+
+  React.useEffect(() => {
+    const saved = localStorage.getItem("sidebar_desktop_closed");
+    if (saved === "true") setIsDesktopClosed(true);
+  }, []);
+
+  const toggleDesktop = () => {
+    setIsDesktopClosed(prev => {
+      const next = !prev;
+      localStorage.setItem("sidebar_desktop_closed", String(next));
+      return next;
+    });
+  };
 
   const handleNavigation = (id: string, route: string) => {
     setActive(id);
@@ -141,17 +157,20 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggle }) => {
       </div>
 
       <aside
-        className={`fixed top-0 left-0 w-80 bg-zinc-50 dark:bg-zinc-950 h-screen p-6 z-40 transition-transform duration-300
-        ${isOpen ? "translate-x-0" : "-translate-x-full"} sm:translate-x-0 md:static border-r border-zinc-200 dark:border-zinc-800/50 shadow-[4px_0_24px_rgba(0,0,0,0.02)]`}
+        className={`fixed top-0 left-0 bg-zinc-50 dark:bg-zinc-950 h-screen z-40 transition-all duration-300
+        ${isOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0 
+        ${isDesktopClosed ? "md:w-0 md:border-r-0" : "w-80"}
+        md:static border-r border-zinc-200 dark:border-zinc-800/50 shadow-[4px_0_24px_rgba(0,0,0,0.02)] relative flex-shrink-0`}
       >
-        <div className="flex flex-col gap-8 h-full relative">
-          <div className="w-full pl-2">
+        <div className="w-full h-full overflow-hidden">
+          <div className={`w-80 px-6 py-6 h-full flex flex-col gap-8 transition-opacity duration-300 ${isDesktopClosed ? "opacity-0 invisible" : "opacity-100 visible"}`}>
+            <div className="w-full pl-2">
             <Image
-              src="/univault.png"
-              alt="Univault Logo"
-              className="dark:brightness-200"
-              width={140}
-              height={40}
+              src="/rcf-logo-full.png"
+              alt="RCF Logo"
+              className="dark:brightness-200 w-40 h-auto"
+              width={385}
+              height={177}
               priority
             />
           </div>
@@ -223,7 +242,18 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggle }) => {
                 </div>
               )}
           </div>
+          </div>
         </div>
+
+        <button
+          onClick={toggleDesktop}
+          className={`hidden md:flex absolute top-1/2 -translate-y-1/2 w-5 h-14 bg-zinc-50 dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800/50 items-center justify-center cursor-pointer z-50 text-zinc-400 hover:text-zinc-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-all duration-300
+            ${isDesktopClosed 
+              ? "-right-5 rounded-r-xl border-y border-r border-l-0 shadow-[4px_0_12px_rgba(0,0,0,0.02)]" 
+              : "right-[0px] rounded-l-xl border-y border-l border-r-0 translate-x-[1px] shadow-[-4px_0_12px_rgba(0,0,0,0.02)]"}`}
+        >
+          {isDesktopClosed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
+        </button>
       </aside>
 
       {isOpen && (

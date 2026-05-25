@@ -35,6 +35,9 @@ export async function processJob(job: {
     try {
       let downloadUrl = book.fileUrl;
       
+      // Normalize wrong cluster URL (f000 → f005)
+      downloadUrl = downloadUrl.replace("https://f000.backblazeb2.com", "https://f005.backblazeb2.com");
+
       if (downloadUrl.includes("backblazeb2.com") || downloadUrl.includes("univault-books")) {
         const { authorizeB2, b2 } = await import("@/lib/utils");
         await authorizeB2();
@@ -48,7 +51,7 @@ export async function processJob(job: {
 
         const { data: auth } = await b2.getDownloadAuthorization({
           bucketId: process.env.B2_BUCKET_ID!,
-          fileNamePrefix: fileName,
+          fileNamePrefix: decodeURIComponent(fileName),
           validDurationInSeconds: 60 * 60,
         });
 

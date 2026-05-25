@@ -59,8 +59,8 @@ export default function Page() {
         ) : (
           <div className="flex bg-white/80 h-screen w-full justify-center items-center animate-fade-in col-span-3">
             <img
-              src="/univault.png"
-              alt="Loading UniVault..."
+              src="/rcf-logo.png"
+              alt="Loading RCF..."
               className="h-20 w-auto animate-pulse mb-4"
             />
           </div>
@@ -68,7 +68,7 @@ export default function Page() {
       </div>
 
       <footer className="absolute bottom-6 font-poppins w-full text-center text-xs text-white/60 z-50">
-        © {new Date().getFullYear()} UniVault. All rights reserved.
+        © {new Date().getFullYear()} RCF. All rights reserved.
       </footer>
     </div>
   );

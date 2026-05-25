@@ -5,6 +5,8 @@ import { useUserData } from "@/hooks/useUsers";
 import ResourceRequestsTable from "@/components/adminDashboard/ResourceRequestsTable";
 import AnnouncementTool from "@/components/adminDashboard/AnnouncementTool";
 import AdminDashboard from "@/components/adminDashboard/AdminDashboard";
+import CourseManagement from "@/components/adminDashboard/CourseManagement";
+import AspirantManagement from "@/components/adminDashboard/AspirantManagement";
 import { 
     LayoutDashboard, 
     Link as LinkIcon, 
@@ -14,13 +16,14 @@ import {
     ChevronRight,
     Search,
     BookOpen,
-    Database
+    Database,
+    GraduationCap
 } from "lucide-react";
 import Link from "next/link";
 
 export default function FacultyManagementPage() {
     const { data: userData } = useUserData();
-    const [activeTab, setActiveTab] = useState<"overview" | "requests" | "announcements" | "data">("overview");
+    const [activeTab, setActiveTab] = useState<"overview" | "requests" | "announcements" | "courses" | "aspirants" | "data">("overview");
 
     if (!userData || (userData.role !== "ADMIN" && userData.role !== "FACULTY REP")) {
         return (
@@ -57,10 +60,14 @@ export default function FacultyManagementPage() {
             {/* Main Tabs/Navigation */}
             <div className="flex gap-4 overflow-x-auto pb-4 no-scrollbar">
                 {[
-                    { id: "overview", label: "Overview", icon: LayoutDashboard },
-                    { id: "requests", label: "Resources", icon: Search },
-                    { id: "announcements", label: "Broadcast", icon: LinkIcon },
-                    ...(isAdmin ? [{ id: "data", label: "Platform Data", icon: Database }] : [])
+                {
+                    id: "overview", label: "Overview", icon: LayoutDashboard
+                },
+                { id: "requests", label: "Resources", icon: Search },
+                { id: "announcements", label: "Broadcast", icon: LinkIcon },
+                { id: "courses", label: "Courses", icon: GraduationCap },
+                ...(isAdmin ? [{ id: "aspirants", label: "Aspirants", icon: Users }] : []),
+                ...(isAdmin ? [{ id: "data", label: "Platform Data", icon: Database }] : [])
                 ].map((tab) => (
                     <button
                         key={tab.id}
@@ -156,6 +163,18 @@ export default function FacultyManagementPage() {
                 {activeTab === "requests" && (
                     <div className="lg:col-span-7">
                         <ResourceRequestsTable />
+                    </div>
+                )}
+
+                {activeTab === "courses" && (
+                    <div className="lg:col-span-7">
+                        <CourseManagement />
+                    </div>
+                )}
+
+                {activeTab === "aspirants" && isAdmin && (
+                    <div className="lg:col-span-7">
+                        <AspirantManagement />
                     </div>
                 )}
 

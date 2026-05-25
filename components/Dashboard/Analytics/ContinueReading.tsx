@@ -1,109 +1,209 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Button } from "@/components/ui/button";
-import Image from "next/image";
-import { getRecentlyViewedBooks } from "@/lib/utils";
-import { ArrowRight, BookOpen, Clock } from "lucide-react";
-import { Skeleton } from "@/components/ui/skeleton";
+import { motion, AnimatePresence } from "framer-motion";
+import { BookOpen, Clock, ArrowRight, Play, FileText, ScrollText, HelpCircle, BookMarked, GraduationCap } from "lucide-react";
 import Link from "next/link";
+import { getRecentlyViewedBooks } from "@/lib/utils";
+
+const TYPE_CONFIG: Record<string, { icon: React.ElementType; color: string; bg: string }> = {
+  textbook:       { icon: BookMarked,     color: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-100 dark:bg-emerald-900/30" },
+  "past question":{ icon: HelpCircle,     color: "text-rose-500 dark:text-rose-400",       bg: "bg-rose-100 dark:bg-rose-900/30" },
+  material:       { icon: FileText,       color: "text-blue-600 dark:text-blue-400",       bg: "bg-blue-100 dark:bg-blue-900/30" },
+  note:           { icon: ScrollText,     color: "text-violet-600 dark:text-violet-400",   bg: "bg-violet-100 dark:bg-violet-900/30" },
+  research:       { icon: GraduationCap,  color: "text-amber-600 dark:text-amber-400",     bg: "bg-amber-100 dark:bg-amber-900/30" },
+};
+
+function timeAgo(dateStr?: string): string {
+  if (!dateStr) return "recently";
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  return `${Math.floor(hrs / 24)}d ago`;
+}
+
+function ProgressRing({ pct }: { pct: number }) {
+  const r = 14;
+  const circ = 2 * Math.PI * r;
+  const dash = circ * (1 - pct / 100);
+
+  return (
+    <svg width="36" height="36" viewBox="0 0 36 36" className="-rotate-90">
+      <circle cx="18" cy="18" r={r} fill="none" className="stroke-zinc-100 dark:stroke-zinc-800" strokeWidth="3" />
+      <motion.circle
+        cx="18" cy="18" r={r} fill="none"
+        className="stroke-blue-600 dark:stroke-blue-500"
+        strokeWidth="3"
+        strokeLinecap="round"
+        strokeDasharray={circ}
+        initial={{ strokeDashoffset: circ }}
+        animate={{ strokeDashoffset: dash }}
+        transition={{ duration: 1, ease: "easeOut" }}
+      />
+    </svg>
+  );
+}
 
 const ContinueReading = () => {
   const [books, setBooks] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const recentlyViewed = getRecentlyViewedBooks();
-    setBooks(recentlyViewed);
-    setTimeout(() => {
-      setIsLoading(false);
-    }, 400);
+    const recent = getRecentlyViewedBooks();
+    setBooks(recent);
+    const t = setTimeout(() => setIsLoading(false), 300);
+    return () => clearTimeout(t);
   }, []);
 
   return (
-    <div className="space-y-6 pt-3">
-      <div className="flex items-center justify-between px-3">
-        <h3 className="text-lg font-bold font-cabin text-zinc-900 dark:text-zinc-100 tracking-tight">
-          Continue Reading
-        </h3>
-        <Button variant="ghost" size="sm" className="text-[12px] font-poppins font-normal text-blue-600 hover:text-blue-700 hover:bg-transparent">
-          View All <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
-        </Button>
+    <div className="p-6 space-y-5">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-[10px] font-black uppercase tracking-[0.18em] text-zinc-400 font-cabin mb-0.5">
+            Resume
+          </p>
+          <h3 className="text-base font-black font-cabin tracking-tighter text-zinc-900 dark:text-zinc-50">
+            Continue Reading
+          </h3>
+        </div>
+        <Link
+          href="/library"
+          className="flex items-center gap-1.5 text-[10px] font-black font-cabin uppercase tracking-widest text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors"
+        >
+          All books <ArrowRight className="w-3 h-3" />
+        </Link>
       </div>
 
-      <div className="space-y-6">
+      {/* Content */}
+      <AnimatePresence mode="wait">
         {isLoading ? (
-          <div className="space-y-6">
-            {Array.from({ length: 2 }).map((_, i) => (
-              <div key={i} className="flex flex-col rounded-4xl overflow-hidden border border-zinc-100 dark:border-zinc-800">
-                <Skeleton className="h-32 w-full" />
-                <div className="p-4 space-y-3">
-                  <Skeleton className="h-5 w-[80%]" />
-                  <Skeleton className="h-3 w-[40%]" />
+          <motion.div key="loading" className="space-y-3">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="flex items-center gap-4 p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-900/50 animate-pulse">
+                <div className="w-10 h-10 rounded-xl bg-zinc-200 dark:bg-zinc-800 shrink-0" />
+                <div className="flex-1 space-y-2">
+                  <div className="h-3 w-3/4 bg-zinc-200 dark:bg-zinc-800 rounded-lg" />
+                  <div className="h-2 w-1/2 bg-zinc-200 dark:bg-zinc-800 rounded-lg" />
                 </div>
+                <div className="w-9 h-9 rounded-full bg-zinc-200 dark:bg-zinc-800 shrink-0" />
               </div>
             ))}
-          </div>
+          </motion.div>
         ) : books.length > 0 ? (
-          books.slice(0, 2).map((book) => (
-            <Link key={book.id} href={`/book/${book.id}`} className="block">
-              <div className="flex flex-col bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-[2rem] overflow-hidden shadow-sm hover:shadow-md transition-all group">
-                {/* Banner Area */}
-                <div className="relative h-32 w-full bg-zinc-100 dark:bg-zinc-800 overflow-hidden shrink-0">
-                  {book.coverUrl ? (
-                    <Image
-                      src={book.coverUrl}
-                      alt={book.title}
-                      fill
-                      className="object-cover transition-transform duration-500 group-hover:scale-110"
-                      unoptimized
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center">
-                      <BookOpen className="h-8 w-8 text-zinc-300" />
-                    </div>
-                  )}
-                  <div className="absolute inset-0 bg-linear-to-t from-black/20 to-transparent" />
-                </div>
+          <motion.div
+            key="books"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="space-y-2"
+          >
+            {books.slice(0, 4).map((book, i) => {
+              const typeKey = book.type?.toLowerCase() as string;
+              const typeCfg = TYPE_CONFIG[typeKey] ?? {
+                icon: BookOpen,
+                color: "text-zinc-500",
+                bg: "bg-zinc-100 dark:bg-zinc-800",
+              };
+              const TypeIcon = typeCfg.icon;
+              const progress = typeof book.progress === "number" ? book.progress : 0;
 
-                {/* Content Area */}
-                <div className="p-5 flex-1 space-y-4">
-                  <div>
-                    <h4 className="font-bold text-sm text-zinc-900 dark:text-zinc-100 line-clamp-2 leading-tight">
-                      {book.title || "Untitled Document"}
-                    </h4>
-                    <div className="flex items-center gap-2 mt-2 text-[11px] font-medium text-zinc-400">
-                      <Clock className="w-3.5 h-3.5" />
-                      <span>{book.updatedAt || "Last viewed 2h ago"}</span>
+              return (
+                <motion.div
+                  key={book.id}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.05 }}
+                >
+                  <Link
+                    href={`/book/${book.id}`}
+                    className="flex items-center gap-4 px-4 py-3.5 rounded-2xl border border-transparent hover:border-zinc-100 dark:hover:border-zinc-800 hover:bg-zinc-50/80 dark:hover:bg-zinc-900/50 transition-all group"
+                  >
+                    {/* Type icon */}
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${typeCfg.bg}`}>
+                      <TypeIcon className={`w-4.5 h-4.5 ${typeCfg.color}`} />
                     </div>
-                  </div>
 
-                  {/* Progress Section */}
-                  <div className="space-y-2">
-                    <div className="flex justify-between items-center text-[11px] font-bold">
-                      <span className="text-zinc-500">Progress</span>
-                      <span className="text-blue-600">45%</span>
+                    {/* Meta */}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-bold font-poppins text-zinc-800 dark:text-zinc-100 truncate leading-tight">
+                        {book.title || "Untitled"}
+                      </p>
+                      <div className="flex items-center gap-2 mt-1">
+                        {/* Progress bar */}
+                        <div className="flex-1 h-1 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden max-w-[80px]">
+                          <motion.div
+                            className="h-full rounded-full bg-blue-600"
+                            initial={{ width: 0 }}
+                            animate={{ width: `${progress}%` }}
+                            transition={{ duration: 0.8, delay: i * 0.05 + 0.2, ease: "easeOut" }}
+                          />
+                        </div>
+                        <span className="text-[10px] font-black font-cabin text-zinc-400">
+                          {progress}%
+                        </span>
+                        <span className="text-[10px] text-zinc-300 dark:text-zinc-600">·</span>
+                        <span className="flex items-center gap-1 text-[10px] text-zinc-400 font-poppins">
+                          <Clock className="w-3 h-3" />
+                          {timeAgo(book.updatedAt ?? book.lastOpened)}
+                        </span>
+                      </div>
                     </div>
-                    <div className="w-full bg-zinc-100 dark:bg-zinc-800 rounded-full h-1.5 overflow-hidden">
-                      <div className="bg-blue-600 h-full rounded-full transition-all duration-1000" style={{ width: '45%' }} />
+
+                    {/* Resume ring + play button */}
+                    <div className="relative shrink-0 flex items-center justify-center w-9 h-9">
+                      <ProgressRing pct={progress} />
+                      <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="w-6 h-6 rounded-full bg-blue-600 flex items-center justify-center shadow-md shadow-blue-600/30">
+                          <Play className="w-3 h-3 text-white fill-white" />
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </div>
-              </div>
-            </Link>
-          ))
+                  </Link>
+                </motion.div>
+              );
+            })}
+
+            {/* "More" nudge if there are more than 4 */}
+            {books.length > 4 && (
+              <Link
+                href="/library"
+                className="flex items-center justify-center gap-1.5 py-3 rounded-2xl border border-dashed border-zinc-200 dark:border-zinc-800 text-[10px] font-black font-cabin uppercase tracking-widest text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300 hover:border-zinc-300 dark:hover:border-zinc-700 transition-all"
+              >
+                +{books.length - 4} more books
+              </Link>
+            )}
+          </motion.div>
         ) : (
-          <div className="flex flex-col items-center justify-center py-10 text-center space-y-4 bg-zinc-50 dark:bg-zinc-900/50 rounded-[2.5rem] border border-dashed border-zinc-200 dark:border-zinc-800">
-            <div className="bg-white dark:bg-zinc-800 p-4 rounded-full shadow-sm">
-              <BookOpen className="h-6 w-6 text-zinc-400" />
+          <motion.div
+            key="empty"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="flex flex-col items-center justify-center py-10 text-center gap-4"
+          >
+            <div className="w-14 h-14 rounded-2xl bg-zinc-100 dark:bg-zinc-900 flex items-center justify-center">
+              <BookOpen className="w-6 h-6 text-zinc-300 dark:text-zinc-700" />
             </div>
-            <p className="text-sm font-medium text-zinc-500 max-w-[12rem]">No recent activity. Pick up where you left off!</p>
-          </div>
+            <div>
+              <p className="text-sm font-black font-cabin text-zinc-400 uppercase tracking-wider mb-1">
+                Nothing yet
+              </p>
+              <p className="text-xs text-zinc-400 font-poppins">
+                Open any book from the library to see it here.
+              </p>
+            </div>
+            <Link
+              href="/library"
+              className="flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-zinc-900 dark:bg-zinc-50 text-white dark:text-zinc-900 text-[10px] font-black font-cabin uppercase tracking-widest hover:bg-zinc-800 dark:hover:bg-zinc-200 transition-all shadow-md"
+            >
+              Browse Library <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+          </motion.div>
         )}
-      </div>
+      </AnimatePresence>
     </div>
   );
 };
 
 export default ContinueReading;
-

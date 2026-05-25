@@ -15,6 +15,7 @@
 
 service-account.json
 drive-migration.ts
+/scripts
 
 # next.js
 /.next/

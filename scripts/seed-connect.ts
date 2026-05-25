@@ -76,7 +76,7 @@ async function seedConnect() {
           departmentId: dept.id,
           year: level as any,
           gender: Math.random() > 0.5 ? "MALE" : "FEMALE",
-          address: "UniVault Campus Residence",
+          address: "RCF Campus Residence",
           interests: selectedInterests,
         }).onConflictDoNothing();
       }

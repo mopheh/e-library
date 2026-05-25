@@ -3,6 +3,7 @@ import { db } from "@/database/drizzle";
 import { bookPages } from "@/database/schema";
 import { extractTextWithOCR } from "@/lib/ocr";
 import { getEmbedding } from "@/lib/embeddings";
+import { sql } from "drizzle-orm";
 
 import * as path from "path";
 
@@ -74,15 +75,36 @@ export async function parsePdfPages(filePath: string, bookId: string) {
     const batchWithEmbeddings = await Promise.all(
       batch.map(async (page) => {
         const embedding = await getEmbedding(page.textChunk);
+        
+        // pgvector requires exactly 768 dimensions. If it's different, we save null to avoid a crash.
+        const isValidEmbedding = embedding.length === 768;
+        
+        if (embedding.length > 0 && !isValidEmbedding) {
+          console.warn(`⚠️ Page ${page.pageNumber}: Embedding dimension mismatch (${embedding.length} vs 768). Saving text only.`);
+        }
+
         return {
           ...page,
-          // Drizzle's vector() column accepts number[] directly — no manual serialization needed
-          embedding: embedding.length > 0 ? embedding : null,
+          embedding: isValidEmbedding ? embedding : null,
         };
       })
     );
 
-    await db.insert(bookPages).values(batchWithEmbeddings);
+    try {
+      await db
+        .insert(bookPages)
+        .values(batchWithEmbeddings)
+        .onConflictDoUpdate({
+          target: [bookPages.bookId, bookPages.pageNumber],
+          set: {
+            textChunk: sql`excluded.text_chunk`,
+            embedding: sql`excluded.embedding`,
+          },
+        });
+    } catch (dbErr: any) {
+      console.error(`❌ DB Insert failed for batch starting at page ${batch[0].pageNumber}:`, dbErr.message.substring(0, 300));
+      throw dbErr;
+    }
   }
 
   return numPages;

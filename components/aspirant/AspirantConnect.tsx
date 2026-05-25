@@ -220,7 +220,7 @@ export default function AspirantConnect() {
                 <div className="bg-white/10 backdrop-blur-md p-4 rounded-2xl flex items-start gap-3 border border-white/10">
                    <Info className="w-5 h-5 mt-0.5 shrink-0" />
                    <p className="text-sm font-light leading-relaxed">
-                     Help us personalize your hub! Listing your interests allows peers to discover you for mentorship and helps UniVault suggest the most relevant study circles for your academic path.
+                     Help us personalize your hub! Listing your interests allows peers to discover you for mentorship and helps RCF suggest the most relevant study circles for your academic path.
                    </p>
                 </div>
               </div>
@@ -335,7 +335,7 @@ export default function AspirantConnect() {
                      <UsersIcon className="w-12 h-12 text-zinc-300 mx-auto mb-4" />
                      <h3 className="text-xl font-bold font-cabin">Build the Network</h3>
                      <p className="text-zinc-500 text-sm mt-2 max-w-xs mx-auto font-light">
-                        No verified students found in your department yet. Tell your classmates to join UniVault!
+                        No verified students found in your department yet. Tell your classmates to join RCF!
                      </p>
                   </div>
                ) : (

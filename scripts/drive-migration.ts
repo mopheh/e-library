@@ -1,5 +1,5 @@
 /**
- * Google Drive Migration Script for UniVault
+ * Google Drive Migration Script for RCF
  * 
  * Logic:
  * 1. Authenticate with Google Drive Service Account

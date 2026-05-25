@@ -4,7 +4,7 @@ import React from "react";
 import { motion } from "framer-motion";
 import { ShieldCheck, GraduationCap, LayoutTemplate, Workflow, Zap, Users } from "lucide-react";
 
-export const WhyUniVault = () => {
+export const WhyRCF = () => {
   const reasons = [
     { title: "Structured Environment", desc: "No more chaotic folders. Every resource is organized by university, faculty, department, and course — exactly how institutions operate.", icon: <LayoutTemplate /> },
     { title: "Built for Universities", desc: "Designed for how universities actually work — with built-in support for faculties, departments, course registration, and student representatives.", icon: <GraduationCap /> },
@@ -18,7 +18,7 @@ export const WhyUniVault = () => {
     <section id="institution" className="py-32 px-6 md:px-12 max-w-7xl mx-auto">
       <div className="text-center mb-20">
         <h2 className="font-manrope text-3xl md:text-5xl font-bold text-white mb-6">
-          Why UniVault?
+          Why RCF?
         </h2>
         <p className="font-inter text-[#c2c6d8] max-w-2xl mx-auto text-lg">
           We bridge the gap between institutional requirements and student learning experiences.

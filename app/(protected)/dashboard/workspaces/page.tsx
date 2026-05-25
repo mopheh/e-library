@@ -4,9 +4,10 @@ import React from "react";
 import Link from "next/link";
 import { useDashboard } from "@/hooks/useDashboard";
 import { MyCourses } from "@/components/Dashboard/MyCourses";
-import { PlayCircle, Clock, BookOpen, ChevronRight } from "lucide-react";
+import { PlayCircle, Clock, BookOpen, ChevronRight, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { CourseRegistrationModal } from "@/components/Dashboard/CourseRegistration";
 
 export default function WorkspacesPage() {
    const { data, isLoading } = useDashboard();
@@ -54,8 +55,19 @@ export default function WorkspacesPage() {
          <div className="space-y-6">
             <div className="flex items-center justify-between">
                <h3 className="text-xl font-medium font-cabin">My Enrolled Courses</h3>
-               <div className="text-xs text-muted-foreground font-poppins">
-                  Showing {data?.enrolledCourses?.length || 0} active workspaces
+               <div className="flex items-center gap-4">
+                  <div className="hidden sm:block text-xs text-muted-foreground font-poppins">
+                     Showing {data?.enrolledCourses?.length || 0} active workspaces
+                  </div>
+                  <CourseRegistrationModal 
+                     departmentId={data?.user?.departmentId} 
+                     trigger={
+                        <Button variant="outline" size="sm" className="h-8 rounded-lg">
+                           <Settings className="w-3.5 h-3.5 mr-1.5" />
+                           Manage Courses
+                        </Button>
+                     } 
+                  />
                </div>
             </div>
             <MyCourses courses={data?.enrolledCourses || []} loading={isLoading} />

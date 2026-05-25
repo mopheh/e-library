@@ -50,7 +50,7 @@ export const BookPreviewModal = ({ book, isOpen, onClose, onOpenReader }: BookPr
                  </div>
                  <div className="flex flex-col gap-1">
                     <span className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">Uploaded By</span>
-                    <span className="text-sm font-medium flex items-center gap-1.5"><User className="w-3.5 h-3.5" /> UniVault User</span>
+                    <span className="text-sm font-medium flex items-center gap-1.5"><User className="w-3.5 h-3.5" /> RCF User</span>
                  </div>
                  <div className="flex flex-col gap-1">
                     <span className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">Date Added</span>

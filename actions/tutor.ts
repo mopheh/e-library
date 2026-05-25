@@ -28,7 +28,7 @@ export async function askAiTutor(courseId: string, messages: GeminiMessage[]) {
         });
 
         const systemInstruction = `
-You are the UniVault AI Tutor for the course: ${course?.courseCode} - ${course?.title}.
+You are the RCF AI Tutor for the course: ${course?.courseCode} - ${course?.title}.
 Your goal is to provide accurate, academic, and encouraging assistance to students.
 
 CRITICAL INSTRUCTIONS:

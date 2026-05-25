@@ -164,7 +164,7 @@ export default function CourseTutorPage() {
             </div>
          </div>
          <p className="text-center text-[10px] text-zinc-400 mt-4 font-medium uppercase tracking-widest">
-           Powered by UniVault Academic Core
+           Powered by RCF Academic Core
          </p>
       </div>
     </div>

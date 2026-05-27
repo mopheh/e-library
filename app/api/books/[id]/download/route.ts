@@ -29,7 +29,8 @@ export async function GET(
 
     const fileUrl = book.fileUrl!;
     const parts = fileUrl.split("/");
-    const fileName = parts.slice(parts.indexOf("univault-books") + 1).join("/");
+    const bucketName = process.env.B2_BUCKET || "univault-books";
+    const fileName = parts.slice(parts.indexOf(bucketName) + 1).join("/");
 
     const { data: auth } = await b2.getDownloadAuthorization({
       bucketId: process.env.B2_BUCKET_ID!,

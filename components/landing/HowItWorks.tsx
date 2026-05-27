@@ -7,7 +7,7 @@ export const HowItWorks = () => {
   const steps = [
     { num: "01", title: "Create Your Account", desc: "Sign up in seconds and tell us your university, faculty, department, and academic level. We'll personalize everything for you." },
     { num: "02", title: "Find Your Course Materials", desc: "Browse a well-organized library filtered by your department. Search for any topic and open materials instantly." },
-    { num: "03", title: "Read with AI Help", desc: "Read your textbooks right inside UniVault. Stuck on something? Ask the AI tutor and get a clear explanation on the spot." },
+    { num: "03", title: "Read with AI Help", desc: "Read your textbooks right inside RCF. Stuck on something? Ask the AI tutor and get a clear explanation on the spot." },
     { num: "04", title: "Practice for Exams", desc: "Take timed practice tests based on what you've been reading. See your results right away and know what to focus on." },
     { num: "05", title: "Study Together", desc: "Join study rooms, chat with classmates, start course discussions, and ask seniors for advice — all in one place." },
     { num: "06", title: "Track Your Growth", desc: "Watch your streaks grow, check your stats, see where you rank, and discover scholarships and opportunities along the way." },

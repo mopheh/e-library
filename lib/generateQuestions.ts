@@ -5,7 +5,7 @@ dotenv.config({ path: ".env.worker" });
 import { bookCourses, bookPages, options, questions } from "@/database/schema";
 import { db } from "@/workers/db";
 import { eq } from "drizzle-orm";
-import { generateWithGemini } from "./gemini";
+import { generateContent } from "./ai";
 
 // Helper: fetch with retry on 429
 async function fetchWithRetry(url: string, options: RequestInit, retries = 5) {
@@ -63,7 +63,7 @@ Instructions:
 Text: ${textBatch}
 `;
 
-    const responseText = await generateWithGemini(prompt);
+    const responseText = await generateContent(prompt);
     
     if (!responseText) {
       console.warn("No AI response for this batch");

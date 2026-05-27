@@ -18,6 +18,8 @@ export const SurvivalGuidesList = ({ courseId }: { courseId: string }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
+  const [page, setPage] = useState(1);
+  const itemsPerPage = 3;
 
   const { data: guides, isLoading } = useQuery({
     queryKey: ["survivalGuides", courseId],
@@ -133,8 +135,9 @@ export const SurvivalGuidesList = ({ courseId }: { courseId: string }) => {
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {guides.map((guide: any) => (
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {guides.slice((page - 1) * itemsPerPage, page * itemsPerPage).map((guide: any) => (
              <Card key={guide.id} className="flex flex-col h-full hover:shadow-lg transition-all border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-950">
                <CardHeader className="pb-3 pt-6 flex-grow">
                  <CardTitle className="text-xl font-poppins leading-snug line-clamp-2 text-foreground mb-4">
@@ -172,6 +175,14 @@ export const SurvivalGuidesList = ({ courseId }: { courseId: string }) => {
                </CardFooter>
              </Card>
           ))}
+          </div>
+          {Math.ceil(guides.length / itemsPerPage) > 1 && (
+            <div className="flex justify-between items-center mt-4">
+              <Button variant="outline" size="sm" disabled={page === 1} onClick={() => setPage(p => p - 1)}>Prev</Button>
+              <span className="text-xs text-muted-foreground">Page {page} of {Math.ceil(guides.length / itemsPerPage)}</span>
+              <Button variant="outline" size="sm" disabled={page === Math.ceil(guides.length / itemsPerPage)} onClick={() => setPage(p => p + 1)}>Next</Button>
+            </div>
+          )}
         </div>
       )}
     </div>

@@ -7,7 +7,7 @@ import { FeaturesSection } from "@/components/landing/FeaturesSection";
 import { ComparisonSection } from "@/components/landing/ComparisonSection";
 import { HowItWorks } from "@/components/landing/HowItWorks";
 import { ExpansionVision } from "@/components/landing/ExpansionVision";
-import { WhyUniVault } from "@/components/landing/WhyUniVault";
+import { WhyRCF } from "@/components/landing/WhyRCF";
 import { Footer } from "@/components/landing/Footer";
 
 import { auth } from "@clerk/nextjs/server";
@@ -30,7 +30,7 @@ export default async function LandingPage() {
       <ComparisonSection />
       <HowItWorks />
       <ExpansionVision />
-      <WhyUniVault />
+      <WhyRCF />
       <Footer />
     </main>
   );

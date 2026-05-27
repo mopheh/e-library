@@ -10,10 +10,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { formatDistanceToNow } from "date-fns";
 import { useQuery } from "@tanstack/react-query";
-import { use } from "react";
+import { use, useState } from "react";
+import { Button } from "@/components/ui/button";
 
 export default function CourseWorkspace({ params }: { params: Promise<{ id: string }> }) {
   const { id: courseId } = use(params);
+  const [threadPage, setThreadPage] = useState(1);
+  const threadsPerPage = 5;
 
   const { data: workspace, isLoading } = useQuery({
     queryKey: ["course-workspace", courseId],
@@ -45,6 +48,9 @@ export default function CourseWorkspace({ params }: { params: Promise<{ id: stri
   }
 
   const { course, materials, threads, questionsCount } = workspace;
+
+  const totalThreadPages = Math.ceil((threads?.length || 0) / threadsPerPage);
+  const currentThreads = threads?.slice((threadPage - 1) * threadsPerPage, threadPage * threadsPerPage) || [];
 
   return (
     <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-6 flex-1 min-h-screen">
@@ -139,12 +145,11 @@ export default function CourseWorkspace({ params }: { params: Promise<{ id: stri
           )}
         </TabsContent>
 
-        <TabsContent value="practice" className="mt-0 space-y-8">
-           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-              <div className="lg:col-span-8 space-y-8">
-                 <div className="flex justify-between items-center mb-2">
-                   <h3 className="text-xl font-medium font-cabin">Mock Exams & Quizzes</h3>
-                 </div>
+        <TabsContent value="practice" className="mt-0 space-y-12">
+           <div>
+             <div className="flex justify-between items-center mb-4">
+               <h3 className="text-xl font-medium font-cabin">Mock Exams & Quizzes</h3>
+             </div>
                  
                  {questionsCount > 0 ? (
                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -186,20 +191,17 @@ export default function CourseWorkspace({ params }: { params: Promise<{ id: stri
                       </Link>
                    </div>
                  )}
-              </div>
-              
-              <div className="lg:col-span-4">
-                 <h3 className="text-xl font-medium font-cabin mb-4">Exam Insights</h3>
-                 <ExamInsightsView courseId={course.id} />
-              </div>
+           </div>
+           
+           <div>
+              <ExamInsightsView courseId={course.id} />
            </div>
         </TabsContent>
 
-        <TabsContent value="community" className="mt-0 space-y-10">
-           <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-              <div className="lg:col-span-8 space-y-8">
-                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                    <h3 className="text-xl font-medium font-cabin">Course Discussions</h3>
+        <TabsContent value="community" className="mt-0 space-y-12">
+           <div>
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+                <h3 className="text-xl font-medium font-cabin">Course Discussions</h3>
                     <Link href={`/dashboard/threads/new?courseId=${course.id}`} className="bg-blue-600 text-white hover:bg-blue-700 px-5 py-2.5 rounded-xl text-xs font-semibold transition-all shadow-md shadow-blue-500/20 flex items-center gap-2">
                        Start a Topic
                     </Link>
@@ -214,39 +216,43 @@ export default function CourseWorkspace({ params }: { params: Promise<{ id: stri
                         </p>
                      </div>
                   ) : (
-                     <div className="space-y-4">
-                       {threads.map((thread: any) => (
-                          <Link key={thread.id} href={`/dashboard/threads/${thread.id}`} className="block group">
-                            <Card className="hover:border-blue-300 dark:hover:border-blue-900 transition-all cursor-pointer bg-white dark:bg-zinc-950 border-gray-100 dark:border-zinc-900 shadow-sm">
-                               <CardHeader className="pb-4 pt-5 px-6">
-                                 <CardTitle className="text-lg group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors mb-2 font-cabin font-normal">{thread.title}</CardTitle>
-                                 <CardDescription className="flex items-center gap-2 font-poppins text-[11px] font-light">
-                                   <div className="w-5 h-5 rounded-full bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center text-[10px] font-bold text-blue-600">
-                                     {thread.author?.fullName?.[0] || "?"}
-                                   </div>
-                                   <span>{thread.author?.fullName || "Unknown"}</span>
-                                   <span className="text-gray-300 dark:text-zinc-800">•</span>
-                                   <span>{formatDistanceToNow(new Date(thread.createdAt), { addSuffix: true })}</span>
-                                 </CardDescription>
-                               </CardHeader>
-                            </Card>
-                          </Link>
-                       ))}
+                     <div>
+                       <div className="space-y-4">
+                         {currentThreads.map((thread: any) => (
+                            <Link key={thread.id} href={`/dashboard/threads/${thread.id}`} className="block group">
+                              <Card className="hover:border-blue-300 dark:hover:border-blue-900 transition-all cursor-pointer bg-white dark:bg-zinc-950 border-gray-100 dark:border-zinc-900 shadow-sm">
+                                 <CardHeader className="pb-4 pt-5 px-6">
+                                   <CardTitle className="text-lg group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors mb-2 font-cabin font-normal">{thread.title}</CardTitle>
+                                   <CardDescription className="flex items-center gap-2 font-poppins text-[11px] font-light">
+                                     <div className="w-5 h-5 rounded-full bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center text-[10px] font-bold text-blue-600">
+                                       {thread.author?.fullName?.[0] || "?"}
+                                     </div>
+                                     <span>{thread.author?.fullName || "Unknown"}</span>
+                                     <span className="text-gray-300 dark:text-zinc-800">•</span>
+                                     <span>{formatDistanceToNow(new Date(thread.createdAt), { addSuffix: true })}</span>
+                                   </CardDescription>
+                                 </CardHeader>
+                              </Card>
+                            </Link>
+                         ))}
+                       </div>
+                       {totalThreadPages > 1 && (
+                         <div className="flex justify-between items-center mt-6">
+                           <Button variant="outline" size="sm" disabled={threadPage === 1} onClick={() => setThreadPage(p => p - 1)}>Previous</Button>
+                           <span className="text-xs text-muted-foreground font-poppins">Page {threadPage} of {totalThreadPages}</span>
+                           <Button variant="outline" size="sm" disabled={threadPage === totalThreadPages} onClick={() => setThreadPage(p => p + 1)}>Next</Button>
+                         </div>
+                       )}
                      </div>
                   )}
-              </div>
-              
-              <div className="lg:col-span-4 space-y-10">
-                 <div>
-                   <h3 className="text-xl font-medium font-cabin mb-4">Study Rooms</h3>
-                   <StudyRoomsList courseId={course.id} />
-                 </div>
-                 
-                 <div>
-                   <h3 className="text-xl font-medium font-cabin mb-4">Survival Guides</h3>
-                   <SurvivalGuidesList courseId={course.id} />
-                 </div>
-              </div>
+           </div>
+           
+           <div>
+             <StudyRoomsList courseId={course.id} />
+           </div>
+           
+           <div>
+             <SurvivalGuidesList courseId={course.id} />
            </div>
         </TabsContent>
 

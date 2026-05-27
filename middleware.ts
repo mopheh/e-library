@@ -19,7 +19,7 @@ const isProtectedRoute = createRouteMatcher([
 ]);
 
 export default clerkMiddleware(async (auth, req) => {
-  const { userId } = await auth();
+  const { userId, sessionClaims } = await auth();
   const path = req.nextUrl.pathname;
 
   // 1. If hitting a protected route, ensure we have a userId
@@ -31,7 +31,6 @@ export default clerkMiddleware(async (auth, req) => {
     }
 
     // 2. Optimized user data check (using session claims/JWT)
-    const { sessionClaims } = await auth();
     
     // Extract metadata from session claims (must be configured in Clerk Dashboard)
     const metadata = (sessionClaims?.metadata || {}) as any;

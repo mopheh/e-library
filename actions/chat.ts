@@ -21,6 +21,7 @@ export async function getChatRooms() {
                 eq(chatRooms.userOneId, currentUser.id),
                 eq(chatRooms.userTwoId, currentUser.id)
             ),
+            limit: 20, // ADDED LIMIT to prevent excessive DB calls
             with: {
                 // We'll need to define relations in schema for better fetching, 
                 // but for now, we'll manually fetch the participant info.
@@ -42,15 +43,8 @@ export async function getChatRooms() {
 
             // Get other user image from Clerk
             let imageUrl = null;
-            if (otherUser) {
-                try {
-                    const client = await clerkClient();
-                    const clerkUser = await client.users.getUser(otherUser.clerkId);
-                    imageUrl = clerkUser.imageUrl;
-                } catch (e) {
-                    console.error("Failed to fetch clerk image for room participant", e);
-                }
-            }
+            // Clerk API call removed to prevent massive N+1 HTTP latency.
+            // Avatars should be managed locally or fetched via batch if necessary.
 
             return {
                 id: room.id,

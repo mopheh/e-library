@@ -14,10 +14,7 @@ export const Navbar = () => {
     >
       <div className="max-w-7xl mx-auto flex items-center justify-between">
         <Link href="/" className="font-manrope text-xl font-bold tracking-tight text-white flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-[#0066FF] flex items-center justify-center">
-            <span className="text-white font-bold text-lg">U</span>
-          </div>
-          UniVault
+          <img src="/rcf-logo-full.png" alt="RCF Logo" className="h-10 w-auto" />
         </Link>
         
         <nav className="hidden md:flex gap-8 text-sm font-inter text-[#c2c6d8]">

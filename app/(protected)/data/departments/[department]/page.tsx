@@ -1,28 +1,40 @@
 "use client";
+
 import React, { useEffect, useState } from "react";
-import Courses from "@/components/adminDashboard/Courses";
-import CustomList from "@/components/adminDashboard/CustomList";
-import { useCourses } from "@/hooks/useCourses";
+import { useParams } from "next/navigation";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  Users,
+  BookOpen,
+  GraduationCap,
+  ShieldCheck,
+  Mail,
+  Award,
+  Building2,
+} from "lucide-react";
+
 import { getDepartmentWithFaculty } from "@/actions/department";
 import { useDepartmentUsers } from "@/hooks/useUsers";
-import StudentRow from "@/components/adminDashboard/StudentRow";
-import { useBooks } from "@/hooks/useBooks";
-import { BooksRow } from "@/components/Dashboard/BooksRow";
-import { useParams } from "next/navigation";
-import { Book, User } from "@/types";
 import { useUsers } from "@/hooks/useUsers";
-import { Card, CardContent } from "@/components/ui/card";
-import { Mail, GraduationCap, Award, ShieldCheck } from "lucide-react";
+import { User } from "@/types";
+
+import DepartmentStudentsTable from "@/components/adminDashboard/DepartmentStudentsTable";
+import DepartmentBooksTable from "@/components/adminDashboard/DepartmentBooksTable";
+import CourseManagement from "@/components/adminDashboard/CourseManagement";
+
+type TabId = "students" | "books" | "courses";
+
+const TABS: { id: TabId; label: string; icon: React.ElementType }[] = [
+  { id: "students", label: "Students", icon: Users },
+  { id: "books", label: "Library", icon: BookOpen },
+  { id: "courses", label: "Courses", icon: GraduationCap },
+];
 
 const Page = () => {
   const params = useParams();
-  const department = params.department as string;
-  const role = params.role as string;
-  const isFacultyRep = role === "faculty-rep" || role === "FACULTY REP" || role === "faculty rep";
+  const departmentId = params.department as string;
 
-  const { data: students } = useDepartmentUsers(department);
-  const [coursePage, setCoursePage] = useState(1);
-  const [bookPage, setBookPage] = useState(1);
+  const [activeTab, setActiveTab] = useState<TabId>("students");
   const [departmentInfo, setDepartmentInfo] = useState<{
     facultyName: string;
     departmentName: string;
@@ -30,170 +42,145 @@ const Page = () => {
   } | null>(null);
 
   useEffect(() => {
-    const fetchInfo = async () => {
-      const data = await getDepartmentWithFaculty(department);
-      setDepartmentInfo(data);
-    };
+    if (departmentId) {
+      getDepartmentWithFaculty(departmentId).then(setDepartmentInfo);
+    }
+  }, [departmentId]);
 
-    if (department) fetchInfo();
-  }, [department]);
+  const { data: students = [] } = useDepartmentUsers(departmentId);
+  const { data: facultyUsers = [] } = useUsers(departmentInfo?.facultyId);
+  const facultyReps = (facultyUsers as User[]).filter((u) => u.role === "FACULTY REP");
 
-  const { data: courses } = useCourses({
-    departmentId: department,
-    page: coursePage,
-    limit: 5,
-  });
-
-  const {
-    data: books = { books: [], totalPages: 1 },
-    isLoading: booksLoading,
-    error: booksError,
-  } = useBooks({ departmentId: department, page: bookPage });
-
-  const { data: facultyUsers } = useUsers(departmentInfo?.facultyId);
-  const facultyReps = (facultyUsers || []).filter((u: User) => u.role === "FACULTY REP");
+  const deptAsType = departmentInfo
+    ? {
+        id: departmentId,
+        departmentName: departmentInfo.departmentName,
+        facultyId: departmentInfo.facultyId,
+        facultyName: departmentInfo.facultyName,
+      }
+    : null;
 
   return (
-    <>
-      <div className="space-y-4">
-         {/* Faculty Representatives Mini Profiles */}
-        {!isFacultyRep && facultyReps.length > 0 && (
-           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 font-poppins">
-              {facultyReps.map((rep: User) => (
-                 <Card key={rep.id} className="border-slate-100 dark:border-slate-900/50 bg-slate-50/50 dark:bg-slate-950/20 shadow-sm relative overflow-hidden">
-                    <div className="absolute top-0 left-0 w-1.5 h-full bg-slate-500 rounded-l-xl"></div>
-                    <CardContent className="p-4 flex items-start gap-4">
-                       <div className="h-12 w-12 rounded-full bg-white font-cabin dark:bg-zinc-900 border-2 border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-400 font-bold text-lg shrink-0 shadow-sm overflow-hidden">
-                          {rep.imageUrl ? (
-                             <img src={rep.imageUrl} alt={rep.fullName} className="h-full w-full object-cover" />
-                          ) : (
-                             rep.fullName?.charAt(0).toUpperCase()
-                          )}
-                       </div>
-                       <div className="flex-1 min-w-0 space-y-1">
-                          <div className="flex items-center gap-2">
-                             <h3 className="font-semibold text-zinc-900 dark:text-zinc-100 truncate text-sm md:text-base font-open-sans">{rep.fullName}</h3>
-                             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-slate-100 text-slate-800 dark:bg-slate-900/50 dark:text-slate-300 whitespace-nowrap border border-slate-200 dark:border-slate-800">
-                                <ShieldCheck className="w-3 h-3" />
-                                Faculty Rep
-                             </span>
-                          </div>
-                          
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1 mt-2">
-                             <div className="flex items-center gap-1.5 text-xs text-zinc-600 dark:text-zinc-400 truncate">
-                                <Mail className="w-3.5 h-3.5 text-zinc-400" />
-                                <a href={`mailto:${rep.email}`} className="hover:text-slate-600 dark:hover:text-slate-400 truncate hover:underline">{rep.email}</a>
-                             </div>
-                             <div className="flex items-center gap-1.5 text-xs text-zinc-600 dark:text-zinc-400 truncate">
-                                <Award className="w-3.5 h-3.5 text-zinc-400" />
-                                {rep.matricNo || "N/A"}
-                             </div>
-                             <div className="flex items-center gap-1.5 text-xs text-zinc-600 dark:text-zinc-400 truncate sm:col-span-2">
-                                <GraduationCap className="w-3.5 h-3.5 text-zinc-400" />
-                                <span className="truncate">Level {rep.year} • {rep.department?.departmentName}</span>
-                             </div>
-                          </div>
-                       </div>
-                    </CardContent>
-                 </Card>
-              ))}
-           </div>
-        )}
+    <div className="space-y-8 pb-20 font-poppins">
+      {/* ── Hero header ─────────────────────────────────── */}
+      <div className="bg-zinc-900 dark:bg-zinc-50 rounded-[3rem] px-10 py-12 text-white dark:text-zinc-900 shadow-2xl shadow-zinc-900/20 relative overflow-hidden">
+        <div className="relative z-10">
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500 dark:text-zinc-400 mb-2 font-cabin">
+            {departmentInfo?.facultyName ?? "Faculty"}
+          </p>
+          <h1 className="text-3xl md:text-4xl font-black font-cabin uppercase tracking-tighter mb-3">
+            {departmentInfo?.departmentName ?? "Department"}
+          </h1>
+          <div className="flex flex-wrap gap-5 text-xs text-zinc-400 dark:text-zinc-500 font-poppins">
+            <span className="flex items-center gap-1.5">
+              <Users className="w-3.5 h-3.5" />
+              {(students as User[]).length} students
+            </span>
+          </div>
+        </div>
+        <div className="absolute top-0 right-0 -translate-y-6 translate-x-6 opacity-5">
+          <Building2 className="w-60 h-60" />
+        </div>
+      </div>
 
-        <div className="flex flex-col lg:flex-row w-full gap-4">
-          {/* Students Table */}
-          {!isFacultyRep && (
-            <CustomList
-              name={"Students"}
-              courses={courses}
-              department={[{ ...departmentInfo, id: department }]}
-              students={students}
+      {/* ── Faculty Reps strip ────────────────────────── */}
+      {facultyReps.length > 0 && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {facultyReps.map((rep: User) => (
+            <div
+              key={rep.id}
+              className="bg-white dark:bg-zinc-950 rounded-[2rem] px-6 py-5 shadow-sm flex items-center gap-4 relative overflow-hidden"
             >
-              <div className="w-full overflow-x-auto">
-                <table className="table-auto min-w-[500px] sm:min-w-full border-collapse">
-                  <thead className="text-left">
-                    <tr className="tracking-wider uppercase font-normal text-zinc-400 text-xs font-karla border-b border-zinc-200">
-                      <th className="py-3">Name</th>
-                      <th>Matric Number</th>
-                      <th>Level</th>
-                      <th>Role</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {students &&
-                      students.map((student: User) => (
-                        <StudentRow key={student.id} student={student} />
-                      ))}
-                  </tbody>
-                </table>
+              <div className="absolute left-0 top-0 h-full w-1 bg-gradient-to-b from-amber-400 to-amber-600 rounded-l-[2rem]" />
+              {/* Avatar */}
+              <div className="w-11 h-11 rounded-2xl shrink-0 overflow-hidden bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white font-black font-cabin text-base shadow-md">
+                {rep.imageUrl ? (
+                  <img src={rep.imageUrl} alt={rep.fullName} className="w-full h-full object-cover" />
+                ) : (
+                  rep.fullName?.charAt(0)?.toUpperCase()
+                )}
               </div>
-            </CustomList>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2">
+                  <p className="text-sm font-bold text-zinc-900 dark:text-zinc-50 font-cabin truncate">
+                    {rep.fullName}
+                  </p>
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 font-cabin shrink-0">
+                    <ShieldCheck className="w-2.5 h-2.5" />
+                    Rep
+                  </span>
+                </div>
+                <div className="flex items-center gap-1.5 mt-1">
+                  <Mail className="w-3 h-3 text-zinc-400 shrink-0" />
+                  <a
+                    href={`mailto:${rep.email}`}
+                    className="text-[10px] text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300 truncate font-poppins"
+                  >
+                    {rep.email}
+                  </a>
+                </div>
+                <div className="flex items-center gap-3 mt-1">
+                  <span className="flex items-center gap-1 text-[10px] text-zinc-400 font-poppins">
+                    <Award className="w-3 h-3" /> {rep.matricNo || "—"}
+                  </span>
+                  <span className="flex items-center gap-1 text-[10px] text-zinc-400 font-poppins">
+                    <GraduationCap className="w-3 h-3" /> {rep.year}L
+                  </span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* ── Tab bar ──────────────────────────────────── */}
+      <div className="flex gap-3 overflow-x-auto pb-1 no-scrollbar">
+        {TABS.map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={`flex items-center gap-2.5 px-7 py-3.5 rounded-2xl whitespace-nowrap font-black font-cabin text-[10px] uppercase tracking-widest transition-all duration-300 ${
+              activeTab === tab.id
+                ? "bg-zinc-900 dark:bg-zinc-50 text-white dark:text-zinc-900 shadow-xl shadow-zinc-900/15 scale-105"
+                : "bg-white dark:bg-zinc-950 text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-300 shadow-sm"
+            }`}
+          >
+            <tab.icon className="w-3.5 h-3.5" />
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {/* ── Tab content ──────────────────────────────── */}
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={activeTab}
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -8 }}
+          transition={{ duration: 0.2 }}
+        >
+          {activeTab === "students" && (
+            <DepartmentStudentsTable students={students as User[]} />
           )}
 
-          {/* Books Table */}
-          <CustomList
-            name={"Books"}
-            courses={courses}
-            department={[{ ...departmentInfo, id: department }]}
-          >
-            <div className="w-full overflow-x-auto">
-              <table className="table-auto min-w-[500px] sm:min-w-full border-collapse">
-                <thead className="text-left">
-                  <tr className="tracking-wider uppercase font-normal text-zinc-400 text-xs font-karla border-b border-zinc-200">
-                    <th className="py-3">Title</th>
-                    <th>Course</th>
-                    <th>Type</th>
-                    <th>Date</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {books &&
-                    books.books
-                      .sort(
-                        (a: Book, b: Book) =>
-                          new Date(b.createdAt).getTime() -
-                          new Date(a.createdAt).getTime()
-                      )
-                      .map((book: Book, idx: React.Key | null | undefined) => (
-                        <BooksRow key={idx} book={book} />
-                      ))}
-                </tbody>
-              </table>
-            </div>
+          {activeTab === "books" && (
+            <DepartmentBooksTable
+              departmentId={departmentId}
+              department={deptAsType}
+            />
+          )}
 
-            <div className="flex justify-between mt-4">
-              <button
-                onClick={() => setBookPage((prev) => Math.max(prev - 1, 1))}
-                disabled={bookPage === 1}
-                className="text-xs text-zinc-500 hover:underline"
-              >
-                Previous
-              </button>
-              <span className="text-xs text-zinc-600">Page {bookPage}</span>
-              <button
-                onClick={() => setBookPage((prev) => prev + 1)}
-                className="text-xs text-green-500 hover:underline"
-              >
-                Next
-              </button>
-            </div>
-          </CustomList>
-        </div>
-
-        {/* Courses Section */}
-        {!isFacultyRep && (
-          <Courses
-            department={[{ ...departmentInfo, id: department }]}
-            id={department}
-            courses={courses}
-            page={coursePage}
-            next={setCoursePage}
-          />
-        )}
-      </div>
-    </>
+          {activeTab === "courses" && (
+            <CourseManagement
+              departmentId={departmentId}
+              departmentInfo={deptAsType}
+            />
+          )}
+        </motion.div>
+      </AnimatePresence>
+    </div>
   );
 };
+
 export default Page;

@@ -5,7 +5,7 @@ export default function OfflinePage() {
       <div className="text-center">
         <h1 className="text-2xl font-bold text-gray-800">You’re offline</h1>
         <p className="mt-2 text-gray-600">
-          Don’t worry, UniVault works offline too. Some features may be limited
+          Don’t worry, RCF works offline too. Some features may be limited
           until you reconnect.
         </p>
       </div>

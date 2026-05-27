@@ -7,6 +7,10 @@ import { auth } from "@clerk/nextjs/server"
 export async function GET() {
   const { userId } = await auth()
 
+  if (!userId) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  }
+
   const [userInfo] = await db
     .select({
       id: users.id,
@@ -19,21 +23,10 @@ export async function GET() {
       matricNo: users.matricNo,
     })
     .from(users)
-    .where(userId ? eq(users.clerkId, userId) : undefined)
+    .where(eq(users.clerkId, userId))
     .innerJoin(departments, eq(users.departmentId, departments.id))
     .innerJoin(faculty, eq(departments.facultyId, faculty.id))
 
-  let imageUrl = null;
-  if (userId) {
-      try {
-          const { clerkClient } = await import("@clerk/nextjs/server");
-          const client = await clerkClient();
-          const clerkUser = await client.users.getUser(userId);
-          imageUrl = clerkUser.imageUrl;
-      } catch (err) {
-          console.error("Failed to fetch clerk image for /api/me", err);
-      }
-  }
-
-  return NextResponse.json({ ...(userInfo ?? {}), imageUrl })
+  // Clerk API call removed to improve latency. Frontend uses useUser() for avatar.
+  return NextResponse.json({ ...(userInfo ?? {}), imageUrl: null })
 }

@@ -47,9 +47,17 @@ export async function GET() {
         })
         .from(books)
         .leftJoin(bookCourses, eq(books.id, bookCourses.bookId))
-        .leftJoin(courses, eq(bookCourses.courseId, courses.id))
-        .innerJoin(studentCourses, eq(courses.id, studentCourses.courseId))
-        .where(eq(studentCourses.userId, user.id))
+        // .leftJoin(courses, eq(bookCourses.courseId, courses.id))
+        // .leftJoin(userBooks, eq(user.year, courses.level))
+        // .innerJoin(studentCourses, eq(courses.id, studentCourses.courseId))
+        // .where(eq(studentCourses.userId, user.id))
+        .innerJoin(courses, eq(bookCourses.courseId, courses.id))
+        .where(
+          and(
+            eq(courses.level, user.year),
+            eq(courses.departmentId, user.departmentId)
+          )
+        )
         .limit(12),
 
       db

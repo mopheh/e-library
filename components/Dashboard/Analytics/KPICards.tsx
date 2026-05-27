@@ -1,5 +1,5 @@
 import React from "react";
-import { BookOpen, Flame, CalendarDays, Sparkles, Brain } from "lucide-react";
+import { BookOpen, Flame, CalendarDays, Brain } from "lucide-react";
 import { StatCard } from "./StatCard";
 
 interface KPICardsProps {
@@ -11,44 +11,48 @@ interface KPICardsProps {
   loading?: boolean;
 }
 
-const KPICards = ({ 
-  booksRead, 
-  minutesRead, 
-  streak, 
-  daysToExam, 
-  totalAiRequests, 
-  loading 
+const KPICards = ({
+  booksRead,
+  minutesRead,
+  streak,
+  daysToExam,
+  totalAiRequests,
+  loading,
 }: KPICardsProps) => {
   return (
-    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+    <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
       <StatCard
         title="Books Read"
         value={booksRead}
         icon={BookOpen}
-        iconClassName="text-blue-600 bg-blue-50 dark:bg-blue-900/20"
+        iconClassName="bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400"
+        accentColor="bg-blue-600"
         loading={loading}
         trend={{ value: 12, isPositive: true }}
       />
       <StatCard
         title="Study Streak"
-        value={`${streak} Days`}
+        value={`${streak}d`}
         icon={Flame}
-        iconClassName="text-amber-500 bg-amber-50 dark:bg-amber-900/20"
+        iconClassName="bg-amber-100 dark:bg-amber-900/30 text-amber-500"
+        accentColor="bg-amber-500"
         loading={loading}
         trend={{ value: 5, isPositive: true }}
       />
       <StatCard
-        title="AI Interventions"
-        value={totalAiRequests || 0}
+        title="AI Sessions"
+        value={totalAiRequests ?? 0}
         icon={Brain}
-        iconClassName="text-violet-600 bg-violet-50 dark:bg-violet-900/20"
+        iconClassName="bg-violet-100 dark:bg-violet-900/30 text-violet-600 dark:text-violet-400"
+        accentColor="bg-violet-600"
         loading={loading}
       />
-       <StatCard
+      <StatCard
         title="Days to Exam"
         value={daysToExam ?? "--"}
         icon={CalendarDays}
-        iconClassName="text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20"
+        iconClassName="bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400"
+        accentColor="bg-emerald-600"
         loading={loading}
       />
     </div>
@@ -56,4 +60,3 @@ const KPICards = ({
 };
 
 export default KPICards;
-

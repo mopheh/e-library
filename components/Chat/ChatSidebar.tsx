@@ -125,7 +125,7 @@ export default function ChatSidebar() {
                                     )}
                                 </div>
                                 <div className="p-4 bg-white dark:bg-zinc-900 border-t border-zinc-100 dark:border-zinc-800 text-center">
-                                    <p className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest">UniVault Messaging</p>
+                                    <p className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest">RCF Messaging</p>
                                 </div>
                             </div>
                         )}

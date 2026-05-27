@@ -43,7 +43,7 @@ export const ComparisonSection = () => {
             <span className="font-manrope text-xl font-bold text-white">Traditional PDFs</span>
           </div>
           <div className="p-6 border-b border-white/5 bg-[#0066FF]/10 md:border-l text-center border-l-white/10">
-            <span className="font-manrope text-xl font-bold text-[#abc7ff]">UniVault</span>
+            <span className="font-manrope text-xl font-bold text-[#abc7ff]">RCF</span>
           </div>
 
           {/* Rows */}
@@ -60,7 +60,7 @@ export const ComparisonSection = () => {
                  </div>
               </div>
               <div className="flex flex-col md:flex-row md:items-center justify-center p-5 border-b border-white/5 bg-[#0066FF]/5 md:border-l text-center border-l-white/10 gap-2">
-                 <span className="md:hidden text-xs text-[#abc7ff] uppercase">{row.label} (UniVault)</span>
+                 <span className="md:hidden text-xs text-[#abc7ff] uppercase">{row.label} (RCF)</span>
                  <div className="flex items-center justify-center gap-2 text-white font-medium text-sm">
                    <Check className="w-5 h-5 text-[#abc7ff] shrink-0" />
                    <span>{row.univault}</span>

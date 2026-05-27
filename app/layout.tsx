@@ -17,8 +17,11 @@ const poppinsSans = LocalFont({
 });
 
 export const metadata: Metadata = {
-  title: "UniVault - E-Library",
+  title: "RCF - E-Library",
   description: "Online Study",
+  icons: {
+    icon: '/favicon.png',
+  },
 };
 
 export default function RootLayout({
@@ -39,10 +42,10 @@ export default function RootLayout({
             <Providers>{children}</Providers>
             <ServiceWorkerRegister />
             <OfflineIndicator />
-            <Toaster 
-              position="top-center" 
-              richColors 
-              duration={4000} 
+            <Toaster
+              position="top-center"
+              richColors
+              duration={4000}
               toastOptions={{
                 className: "font-poppins bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xl border border-zinc-200 dark:border-zinc-800 rounded-[2rem] shadow-2xl transition-all",
                 style: {

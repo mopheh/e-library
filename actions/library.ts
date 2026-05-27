@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "@/database/drizzle";
-import { userBooks, books, users, courses, departments } from "@/database/schema";
+import { userBooks, books, users, courses, departments, bookCourses } from "@/database/schema";
 import { eq, desc, and, inArray, isNotNull } from "drizzle-orm";
 import { auth } from "@clerk/nextjs/server";
 
@@ -31,7 +31,8 @@ export async function getRecentBooks() {
       })
       .from(userBooks)
       .innerJoin(books, eq(userBooks.bookId, books.id))
-      .leftJoin(courses, eq(books.id, courses.id)) // Actually bookCourses would be correct, but since it's a bit complex, let's just get basic book details
+      .leftJoin(bookCourses, eq(books.id, bookCourses.bookId))
+      .leftJoin(courses, eq(bookCourses.courseId, courses.id))
       .where(eq(userBooks.userId, dbUser.id))
       .orderBy(desc(userBooks.lastReadAt))
       .limit(6);

@@ -3,6 +3,7 @@
 import { SignIn, useUser } from "@clerk/nextjs";
 import React from "react";
 import { motion } from "framer-motion";
+import { LogoLoader } from "@/components/LogoLoader";
 
 export default function Page() {
   const { isLoaded } = useUser();
@@ -73,18 +74,12 @@ export default function Page() {
             />
           </motion.div>
         ) : (
-          <div className="flex bg-white/50 backdrop-blur-2xl  h-screen w-full justify-center items-center animate-fade-in col-span-3">
-            <img
-              src="/icons/univault_icon.png"
-              alt="Loading UniVault..."
-              className="h-20 w-auto animate-spin mb-4"
-            />
-          </div>
+          <LogoLoader />
         )}
       </div>
 
       <footer className="absolute bottom-6 font-poppins w-full text-center text-xs text-zinc-600 dark:text-zinc-400 z-20">
-        © {new Date().getFullYear()} UniVault. All rights reserved.
+        © {new Date().getFullYear()} RCF. All rights reserved.
       </footer>
     </div>
   );

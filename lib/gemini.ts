@@ -24,7 +24,7 @@ export type GeminiMessage = {
  */
 export async function generateWithGemini(
   input: string | GeminiMessage[],
-  model: string = "gemini-2.0-flash-lite"
+  model: string = "gemini-2.5-flash"
 ) {
   return withRetry(async () => {
     const ai = getAI();

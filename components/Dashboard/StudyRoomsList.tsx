@@ -18,6 +18,8 @@ export const StudyRoomsList = ({ courseId }: { courseId: string }) => {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
+  const [page, setPage] = useState(1);
+  const itemsPerPage = 3;
   const queryClient = useQueryClient();
 
   const { data: rooms, isLoading } = useQuery({
@@ -129,8 +131,9 @@ export const StudyRoomsList = ({ courseId }: { courseId: string }) => {
           </Button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-6">
-          {rooms.map((room: any) => (
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {rooms.slice((page - 1) * itemsPerPage, page * itemsPerPage).map((room: any) => (
             <Card key={room.id} className="flex flex-col h-full hover:shadow-2xl transition-all duration-300 border-zinc-200 dark:border-zinc-800 overflow-hidden group rounded-[2.5rem] bg-white/50 dark:bg-zinc-900/50 backdrop-blur-sm">
               <div className="h-2.5 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 w-full opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
               
@@ -181,6 +184,14 @@ export const StudyRoomsList = ({ courseId }: { courseId: string }) => {
               </CardFooter>
             </Card>
           ))}
+          </div>
+          {Math.ceil(rooms.length / itemsPerPage) > 1 && (
+            <div className="flex justify-between items-center mt-4">
+              <Button variant="outline" size="sm" disabled={page === 1} onClick={() => setPage(p => p - 1)}>Prev</Button>
+              <span className="text-xs text-muted-foreground">Page {page} of {Math.ceil(rooms.length / itemsPerPage)}</span>
+              <Button variant="outline" size="sm" disabled={page === Math.ceil(rooms.length / itemsPerPage)} onClick={() => setPage(p => p + 1)}>Next</Button>
+            </div>
+          )}
         </div>
       )}
     </div>

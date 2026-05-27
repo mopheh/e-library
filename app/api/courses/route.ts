@@ -2,9 +2,15 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/database/drizzle";
 import { courses } from "@/database/schema";
 import { eq, and } from "drizzle-orm";
+import { auth } from "@clerk/nextjs/server";
 
 export async function GET(req: NextRequest) {
   try {
+    const { userId } = await auth();
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const { searchParams } = new URL(req.url);
     const departmentId = searchParams.get("departmentId");
 

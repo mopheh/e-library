@@ -603,6 +603,67 @@ export const resourceRequests = pgTable("resource_requests", {
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 });
 
+// ── Academic Calendar ──────────────────────────────────────────────────────────
+
+export const calendarCategoryEnum = pgEnum("calendar_category", [
+  "lecture",
+  "exam",
+  "registration",
+  "break",
+  "orientation",
+  "matriculation",
+  "revision",
+  "result",
+  "other",
+]);
+
+export const academicCalendarEvents = pgTable("academic_calendar_events", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  session: varchar("session", { length: 20 }).notNull(),          // "2025/2026"
+  semester: varchar("semester", { length: 20 }),                   // "FIRST" | "SECOND" | null (session-level)
+  startDate: date("start_date").notNull(),
+  endDate: date("end_date"),                                        // null = single-day event
+  activity: text("activity").notNull(),
+  category: calendarCategoryEnum("category").default("other"),
+  isPublished: boolean("is_published").default(false).notNull(),
+  createdBy: uuid("created_by").references(() => users.id, { onDelete: "set null" }),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
+// ── Exam Schedules (faculty-specific dates from the calendar) ──────────────────
+
+export const examSchedules = pgTable("exam_schedules", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  facultyId: uuid("faculty_id").notNull().references(() => faculty.id, { onDelete: "cascade" }),
+  calendarEventId: uuid("calendar_event_id").references(() => academicCalendarEvents.id, { onDelete: "set null" }),
+  session: varchar("session", { length: 20 }).notNull(),
+  semester: varchar("semester", { length: 20 }).notNull(),
+  examDate: date("exam_date").notNull(),
+  startTime: varchar("start_time", { length: 8 }),                 // "09:00"
+  endTime: varchar("end_time", { length: 8 }),                     // "12:00"
+  venue: varchar("venue", { length: 255 }),
+  notes: text("notes"),
+  createdBy: uuid("created_by").references(() => users.id, { onDelete: "set null" }),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
+// ── Class Timetables (uploaded per department / level / semester) ──────────────
+
+export const classTimetables = pgTable("class_timetables", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  departmentId: uuid("department_id").references(() => departments.id, { onDelete: "cascade" }),
+  facultyId: uuid("faculty_id").references(() => faculty.id, { onDelete: "cascade" }),
+  session: varchar("session", { length: 20 }).notNull(),
+  semester: SEMESTER_ENUM("semester").notNull(),
+  level: LEVEL_ENUM("level"),                                       // null = all levels
+  title: varchar("title", { length: 255 }).notNull(),
+  fileUrl: text("file_url"),                                        // B2 / drive link
+  fileType: varchar("file_type", { length: 10 }),                  // "pdf" | "image"
+  uploadedBy: uuid("uploaded_by").references(() => users.id, { onDelete: "set null" }),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
 export const resourceRequestsRelations = relations(resourceRequests, ({ one }) => ({
   user: one(users, {
     fields: [resourceRequests.userId],

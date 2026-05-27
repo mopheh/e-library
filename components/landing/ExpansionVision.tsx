@@ -20,7 +20,7 @@ export const ExpansionVision = () => {
           Built for the Entire Academic Lifecycle
         </h2>
         <p className="font-inter text-[#c2c6d8] max-w-2xl mx-auto text-lg leading-relaxed">
-          UniVault isn&apos;t just an app; it&apos;s an evolving ecosystem designed to scale from the individual aspirant to the highest levels of university administration.
+          RCF isn&apos;t just an app; it&apos;s an evolving ecosystem designed to scale from the individual aspirant to the highest levels of university administration.
         </p>
       </div>
 

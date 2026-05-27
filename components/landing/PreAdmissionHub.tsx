@@ -50,7 +50,7 @@ export const PreAdmissionHub = () => {
             Start Before You Enter
           </h2>
           <p className="font-inter text-[#c2c6d8] max-w-2xl mx-auto text-lg leading-relaxed">
-            UniVault gives university aspirants real tools — practice tests, department previews, senior connections, and guided roadmaps — so you can start preparing before admission day.
+            RCF gives university aspirants real tools — practice tests, department previews, senior connections, and guided roadmaps — so you can start preparing before admission day.
           </p>
         </motion.div>
       </div>

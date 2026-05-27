@@ -64,7 +64,6 @@ export const useUsers = (facultyId?: string) => {
         : `/api/users`;
       const res = await fetch(url);
       const data = await res.json();
-      console.log(data);
       if (!res.ok) throw new Error(data.error || "Failed to fetch users");
       return data;
     },

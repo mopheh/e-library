@@ -3,8 +3,8 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
     return {
-        name: "UniVault — E-Library",
-        short_name: "UniVault",
+        name: "RCF — E-Library",
+        short_name: "RCF",
         description: "Academic e-library for students — read, download, and study offline.",
         start_url: "/?source=pwa",
         display: "standalone", // looks like a native app

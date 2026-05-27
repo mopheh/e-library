@@ -43,7 +43,7 @@ export const BooksRow = ({ book }: { book: Book }) => {
         const data = await authResponse.json();
         downloadUrl = data.url;
       }
-      
+
       const response = await fetch(downloadUrl);
       const blob = await response.blob();
       await savePdfForOffline(book.id, blob);
@@ -89,7 +89,7 @@ export const BooksRow = ({ book }: { book: Book }) => {
       <TableCell
         className="font-normal cursor-pointer flex items-center gap-2"
         onClick={() => {
-          router.push(`/dashboard/book/${book.id}`);
+          router.push(`/book/${book.id}`);
           addRecentlyViewedBook({ ...book, progress: 0 });
         }}
       >
@@ -105,10 +105,9 @@ export const BooksRow = ({ book }: { book: Book }) => {
       {/* Type badge */}
       <TableCell>
         <Badge
-          className={`capitalize border-none ${
-            badgeColors[bookType] ||
+          className={`capitalize border-none ${badgeColors[bookType] ||
             "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300"
-          }`}
+            }`}
         >
           {book.type}
         </Badge>
@@ -148,14 +147,14 @@ export const BooksRow = ({ book }: { book: Book }) => {
               <FiDownload className="h-4 w-4 mr-2" /> Download file
             </DropdownMenuItem>
             {isOfflineReady ? (
-               <DropdownMenuItem onClick={handleRemoveOffline}>
-                 <Trash2 className="h-4 w-4 mr-2 text-rose-500" /> Remove Offline
-               </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleRemoveOffline}>
+                <Trash2 className="h-4 w-4 mr-2 text-rose-500" /> Remove Offline
+              </DropdownMenuItem>
             ) : (
-               <DropdownMenuItem onClick={handleSaveForOffline} disabled={isDownloading}>
-                 <WifiOff className="h-4 w-4 mr-2" /> 
-                 {isDownloading ? "Downloading..." : "Save for Offline"}
-               </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleSaveForOffline} disabled={isDownloading}>
+                <WifiOff className="h-4 w-4 mr-2" />
+                {isDownloading ? "Downloading..." : "Save for Offline"}
+              </DropdownMenuItem>
             )}
           </DropdownMenuContent>
         </DropdownMenu>

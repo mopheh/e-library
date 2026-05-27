@@ -19,6 +19,7 @@ export const useBooks = (filters: BookFilters) => {
     courseId,
     page = 1,
     pageSize = 5,
+    search,
   } = filters;
 
   return useQuery({
@@ -30,6 +31,7 @@ export const useBooks = (filters: BookFilters) => {
       if (type) params.set("type", type === "All" ? "" : type);
       if (level) params.set("level", level);
       if (courseId) params.set("courseId", courseId);
+      if (search && search.trim().length >= 2) params.set("search", search.trim());
       params.set("page", page.toString());
       params.set("pageSize", pageSize.toString());
 

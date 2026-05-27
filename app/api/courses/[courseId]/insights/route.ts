@@ -2,10 +2,8 @@ import { NextResponse } from "next/server";
 import { db } from "@/database/drizzle";
 import { questions, questionTopics, examInsights } from "@/database/schema";
 import { eq } from "drizzle-orm";
-import { GoogleGenAI } from "@google/genai";
+import { generateContent } from "@/lib/ai";
 import { getCurrentUser } from "@/lib/auth";
-
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 export async function POST(
   req: Request,
@@ -49,11 +47,7 @@ export async function POST(
         const prompt = `Analyze the following exam questions and assign exactly ONE core academic topic to each question (e.g., "Thevenin's Theorem", "Calculus", "Thermodynamics"). Return only a valid JSON array of objects, where each object has "id" and "topic" fields. Do not include markdown formatting.\n\nQuestions:\n${JSON.stringify(chunk.map(q => ({ id: q.id, text: q.questionText })))}`
         
         try {
-          const response = await ai.models.generateContent({
-             model: "gemini-2.0-flash",
-             contents: prompt
-          });
-          const rawText = response.text || "[]";
+          const rawText = await generateContent(prompt, "gemini-3-flash-preview");
           const _jsonString = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
           const parsed = JSON.parse(_jsonString);
 

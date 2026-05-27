@@ -33,6 +33,11 @@ export async function GET(
     // Handle B2 specifically
     if (fileUrl.includes("backblazeb2.com") || fileUrl.includes("univault-books")) {
       const url = new URL(fileUrl);
+      
+      // Normalize domain to delivery endpoint to handle cluster mismatches
+      const deliveryEndpoint = process.env.B2_DELIVERY_ENDPOINT || "f005.backblazeb2.com";
+      url.host = deliveryEndpoint;
+
       const parts = url.pathname.split("/");
       const bucketIndex = parts.indexOf("univault-books");
       const fileName = (bucketIndex !== -1 && bucketIndex + 1 < parts.length)
@@ -41,11 +46,16 @@ export async function GET(
 
       const { data: auth } = await b2.getDownloadAuthorization({
         bucketId: process.env.B2_BUCKET_ID!,
-        fileNamePrefix: fileName,
+        fileNamePrefix: decodeURIComponent(fileName),
         validDurationInSeconds: 60 * 60,
       });
 
-      const signedUrl = `${fileUrl}?Authorization=${auth.authorizationToken}`;
+      // Properly encode path to handle commas, spaces, etc. for B2 API compatibility
+      const decodedPath = decodeURIComponent(url.pathname);
+      url.pathname = decodedPath.split("/").map(encodeURIComponent).join("/");
+
+      url.searchParams.set("Authorization", auth.authorizationToken);
+      const signedUrl = url.toString();
       
       // Pass through relevant headers like 'Range' for byte-serving
       const requestHeaders = new Headers();

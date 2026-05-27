@@ -160,7 +160,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggle }) => {
         className={`fixed top-0 left-0 bg-zinc-50 dark:bg-zinc-950 h-screen z-40 transition-all duration-300
         ${isOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0 
         ${isDesktopClosed ? "md:w-0 md:border-r-0" : "w-80"}
-        md:static border-r border-zinc-200 dark:border-zinc-800/50 shadow-[4px_0_24px_rgba(0,0,0,0.02)] relative flex-shrink-0`}
+        md:static border-r border-zinc-200 dark:border-zinc-800/50 shadow-[4px_0_24px_rgba(0,0,0,0.02)] md:relative flex-shrink-0`}
       >
         <div className="w-full h-full overflow-hidden">
           <div className={`w-80 px-6 py-6 h-full flex flex-col gap-8 transition-opacity duration-300 ${isDesktopClosed ? "opacity-0 invisible" : "opacity-100 visible"}`}>

@@ -33,7 +33,7 @@ async function run() {
         console.log("Headers:", response.headers);
     }
   } catch(e) {
-    console.error("Error:", e.response ? e.response.data : e);
+    console.error("Error:", (e as any).response ? (e as any).response.data : e);
   }
 }
 

@@ -7,6 +7,7 @@ import AnnouncementTool from "@/components/adminDashboard/AnnouncementTool";
 import AdminDashboard from "@/components/adminDashboard/AdminDashboard";
 import CourseManagement from "@/components/adminDashboard/CourseManagement";
 import AspirantManagement from "@/components/adminDashboard/AspirantManagement";
+import AcademicScheduleManager from "@/components/adminDashboard/AcademicScheduleManager";
 import { 
     LayoutDashboard, 
     Link as LinkIcon, 
@@ -17,13 +18,14 @@ import {
     Search,
     BookOpen,
     Database,
-    GraduationCap
+    GraduationCap,
+    Calendar
 } from "lucide-react";
 import Link from "next/link";
 
 export default function FacultyManagementPage() {
     const { data: userData } = useUserData();
-    const [activeTab, setActiveTab] = useState<"overview" | "requests" | "announcements" | "courses" | "aspirants" | "data">("overview");
+    const [activeTab, setActiveTab] = useState<"overview" | "requests" | "announcements" | "courses" | "aspirants" | "schedule" | "data">("overview");
 
     if (!userData || (userData.role !== "ADMIN" && userData.role !== "FACULTY REP")) {
         return (
@@ -66,6 +68,7 @@ export default function FacultyManagementPage() {
                 { id: "requests", label: "Resources", icon: Search },
                 { id: "announcements", label: "Broadcast", icon: LinkIcon },
                 { id: "courses", label: "Courses", icon: GraduationCap },
+                { id: "schedule", label: "Schedule", icon: Calendar },
                 ...(isAdmin ? [{ id: "aspirants", label: "Aspirants", icon: Users }] : []),
                 ...(isAdmin ? [{ id: "data", label: "Platform Data", icon: Database }] : [])
                 ].map((tab) => (
@@ -175,6 +178,12 @@ export default function FacultyManagementPage() {
                 {activeTab === "aspirants" && isAdmin && (
                     <div className="lg:col-span-7">
                         <AspirantManagement />
+                    </div>
+                )}
+
+                {activeTab === "schedule" && (
+                    <div className="lg:col-span-7">
+                        <AcademicScheduleManager />
                     </div>
                 )}
 

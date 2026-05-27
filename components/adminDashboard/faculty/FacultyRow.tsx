@@ -3,9 +3,10 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useUsers } from "@/hooks/useUsers";
-import { UserPlus, ChevronDown, ChevronUp, Users, ShieldCheck } from "lucide-react";
+import { UserPlus, ChevronDown, ChevronUp, Users, ShieldCheck, Edit2, Trash2, Check, X, TriangleAlert } from "lucide-react";
 import AddRepModal from "./AddRepModal";
-import { User } from "@/types";
+import { Faculty, User } from "@/types";
+import { toast } from "sonner";
 import {
   Tooltip,
   TooltipContent,
@@ -28,6 +29,73 @@ function getGradient(name: string) {
   return FACULTY_COLORS[Math.abs(hash) % FACULTY_COLORS.length];
 }
 
+function DeleteConfirmModal({
+  faculty,
+  onClose,
+  onConfirm,
+  loading,
+}: {
+  faculty: String;
+  onClose: () => void;
+  onConfirm: () => void;
+  loading: boolean;
+}) {
+  return (
+    <AnimatePresence>
+      <motion.div
+        className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[60] p-4"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+      >
+        <motion.div
+          className="bg-white dark:bg-zinc-950 rounded-[2rem] shadow-2xl p-8 w-full max-w-md"
+          initial={{ scale: 0.85, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          exit={{ scale: 0.85, opacity: 0 }}
+          transition={{ type: "spring", stiffness: 300, damping: 25 }}
+        >
+          {/* Icon */}
+          <div className="w-16 h-16 rounded-2xl bg-rose-100 dark:bg-rose-900/30 flex items-center justify-center text-rose-500 mb-6 mx-auto">
+            <TriangleAlert className="w-8 h-8" />
+          </div>
+
+          <h2 className="text-xl font-black font-cabin uppercase tracking-tighter text-zinc-900 dark:text-zinc-50 text-center mb-2">
+            Delete Faculty?
+          </h2>
+          <p className="text-xs text-zinc-500 font-poppins text-center leading-relaxed mb-2">
+            This will permanently remove{" "}
+            <span className="font-bold text-zinc-800 dark:text-zinc-200">
+              {faculty}
+            </span>{" "}
+            and all associated data including faculty reps, study rooms, and resource requests.
+          </p>
+          <p className="text-[10px] font-bold uppercase tracking-widest text-rose-500 text-center mb-8">
+            This action cannot be undone.
+          </p>
+
+          <div className="flex gap-3">
+            <button
+              onClick={onClose}
+              disabled={loading}
+              className="flex-1 py-3.5 rounded-2xl border border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 font-bold font-cabin text-xs uppercase tracking-widest hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-all disabled:opacity-50"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={onConfirm}
+              disabled={loading}
+              className="flex-1 py-3.5 rounded-2xl bg-rose-600 hover:bg-rose-700 text-white font-bold font-cabin text-xs uppercase tracking-widest shadow-lg shadow-rose-500/25 transition-all disabled:opacity-50"
+            >
+              {loading ? "Deleting…" : "Delete"}
+            </button>
+          </div>
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>
+  );
+}
+
 const FacultyRow = ({
   facultyId,
   name,
@@ -38,14 +106,67 @@ const FacultyRow = ({
   const { data: users, isLoading } = useUsers(facultyId);
   const [openRepModal, setOpenRepModal] = useState(false);
   const [expanded, setExpanded] = useState(false);
+  const [deleteFaculty, setDeleteFaculty] = useState<String | null>(null);
+
+  const [isEditing, setIsEditing] = useState(false);
+  const [editName, setEditName] = useState(name);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const reps = (users ?? []).filter((u: User) => u.role === "FACULTY REP");
   const students = (users ?? []).filter((u: User) => u.role === "STUDENT");
   const maxRepsReached = reps.length >= 2;
   const gradient = getGradient(name);
 
+  const handleUpdate = async () => {
+    if (!editName.trim() || editName === name) {
+      setIsEditing(false);
+      return;
+    }
+    setIsSaving(true);
+    try {
+      const res = await fetch("/api/faculty", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: facultyId, name: editName }),
+      });
+      if (!res.ok) throw new Error("Failed to update");
+      toast.success("Updated successfully");
+      setIsEditing(false);
+      window.location.reload();
+    } catch (e: any) {
+      toast.error(e.message);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!deleteFaculty) return;
+    setIsDeleting(true);
+    try {
+      const res = await fetch(`/api/faculty?id=${facultyId}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) throw new Error("Failed to delete");
+      toast.success("Deleted successfully");
+      window.location.reload();
+    } catch (e: any) {
+      toast.error(e.message);
+      setIsDeleting(false);
+    }
+  };
+
   return (
     <>
+      {deleteFaculty && (
+        <DeleteConfirmModal
+          faculty={deleteFaculty}
+          onClose={() => setDeleteFaculty(null)}
+          onConfirm={handleDelete}
+          loading={isDeleting}
+        />
+      )}
       <motion.div
         layout
         className="group rounded-2xl border border-zinc-100 dark:border-zinc-800/60 bg-zinc-50/50 dark:bg-zinc-900/30 hover:border-zinc-200 dark:hover:border-zinc-700 hover:bg-white dark:hover:bg-zinc-900/60 transition-all duration-200 overflow-hidden"
@@ -61,9 +182,27 @@ const FacultyRow = ({
 
           {/* Name & meta */}
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-bold text-zinc-900 dark:text-zinc-50 font-cabin truncate">
-              {name}
-            </p>
+            {isEditing ? (
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  className="w-full px-2 py-1 text-sm font-bold text-zinc-900 dark:text-zinc-50 font-cabin bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded outline-none focus:border-indigo-500"
+                  autoFocus
+                />
+                <button onClick={handleUpdate} disabled={isSaving} className="p-1 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 rounded">
+                  <Check className="w-4 h-4" />
+                </button>
+                <button onClick={() => { setIsEditing(false); setEditName(name); }} disabled={isSaving} className="p-1 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/30 rounded">
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            ) : (
+              <p className="text-sm font-bold text-zinc-900 dark:text-zinc-50 font-cabin truncate">
+                {name}
+              </p>
+            )}
             <div className="flex items-center gap-3 mt-0.5">
               {isLoading ? (
                 <div className="h-3 w-24 bg-zinc-200 dark:bg-zinc-800 rounded-full animate-pulse" />
@@ -122,6 +261,26 @@ const FacultyRow = ({
                 <UserPlus className="w-3.5 h-3.5" />
                 <span className="hidden sm:inline">Assign Rep</span>
               </button>
+            )}
+
+            {!isEditing && (
+              <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-all">
+                <button
+                  onClick={() => setIsEditing(true)}
+                  className="w-8 h-8 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center text-zinc-400 hover:text-blue-600 hover:border-blue-300 dark:hover:border-blue-800 transition-all shadow-sm"
+                  title="Edit Faculty"
+                >
+                  <Edit2 className="w-3.5 h-3.5" />
+                </button>
+                <button
+                  onClick={() => setDeleteFaculty(name)}
+                  disabled={isDeleting}
+                  className="w-8 h-8 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center text-zinc-400 hover:text-rose-600 hover:border-rose-300 dark:hover:border-rose-800 transition-all shadow-sm"
+                  title="Delete Faculty"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
+              </div>
             )}
 
             {/* Expand toggle */}

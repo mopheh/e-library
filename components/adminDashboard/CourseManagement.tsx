@@ -123,15 +123,15 @@ function EditModal({
         onClick={onClose}
       >
         <motion.div
-          className="bg-white dark:bg-zinc-950 rounded-[2rem] shadow-2xl w-full max-w-lg overflow-hidden"
+          className="bg-white dark:bg-zinc-950 rounded-[2rem] shadow-2xl w-full max-w-lg flex flex-col max-h-[90vh]"
           initial={{ scale: 0.85, opacity: 0, y: 40 }}
           animate={{ scale: 1, opacity: 1, y: 0 }}
           exit={{ scale: 0.85, opacity: 0, y: 40 }}
           transition={{ type: "spring", stiffness: 280, damping: 22 }}
           onClick={(e) => e.stopPropagation()}
         >
-          {/* Header bar */}
-          <div className="flex items-center justify-between px-8 pt-8 pb-4">
+          {/* Sticky header */}
+          <div className="flex items-center justify-between px-8 pt-8 pb-4 flex-shrink-0 border-b border-zinc-100 dark:border-zinc-900">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600">
                 <Pencil className="w-5 h-5" />
@@ -153,7 +153,8 @@ function EditModal({
             </button>
           </div>
 
-          <div className="px-4 pb-4">
+          {/* Scrollable body */}
+          <div className="flex-1 overflow-y-auto px-4 pb-6">
             <EditCourseForm course={course} onSuccess={onClose} />
           </div>
         </motion.div>
@@ -187,10 +188,13 @@ const CourseManagement: React.FC<CourseManagementProps> = ({
 
   const queryClient = useQueryClient();
 
-  // Fetch courses (all or scoped)
+  // Fetch courses (all or scoped).
+  // When scoped to a department, include borrowed courses too so the tab
+  // reflects every course the department offers — not just the ones it owns.
   const { data: courses = [], isLoading } = useCourses({
     departmentId: selectedDeptId || undefined,
     limit: 1000,
+    includeBorrowed: !!selectedDeptId,
   });
 
   // For department selector when in global mode

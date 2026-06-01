@@ -23,7 +23,7 @@ export const useDepartments = ({
     queryFn: async (): Promise<Department[]> => {
       const url = facultyId
         ? `/api/departments?facultyId=${facultyId}&skip=${skip}&limit=${currentLimit}`
-        : `/api/departments?skip=${skip}&limit=${5}`
+        : `/api/departments?skip=${skip}&limit=${currentLimit}`
       const res = await fetch(url)
       const data = await res.json()
       console.log(data)

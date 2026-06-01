@@ -104,7 +104,25 @@ export const courses = pgTable("courses", {
     .notNull()
     .references(() => departments.id, { onDelete: "cascade" }),
 });
-// Removed redundant departmentCourses table (courses.departmentId is used instead)
+// Junction table: departments that "borrow" / co-offer a course
+export const courseDepartments = pgTable(
+  "course_departments",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    courseId: uuid("course_id")
+      .notNull()
+      .references(() => courses.id, { onDelete: "cascade" }),
+    departmentId: uuid("department_id")
+      .notNull()
+      .references(() => departments.id, { onDelete: "cascade" }),
+  },
+  (t) => ({
+    courseDeptUniq: uniqueIndex("course_departments_course_dept_idx").on(
+      t.courseId,
+      t.departmentId,
+    ),
+  }),
+);
 
 
 export const studentCourses = pgTable(
@@ -703,6 +721,18 @@ export const departmentsRelations = relations(departments, ({ one, many }) => ({
   }),
   users: many(users),
   courses: many(courses),
+  courseDepartments: many(courseDepartments),
+}));
+
+export const courseDepartmentsRelations = relations(courseDepartments, ({ one }) => ({
+  course: one(courses, {
+    fields: [courseDepartments.courseId],
+    references: [courses.id],
+  }),
+  department: one(departments, {
+    fields: [courseDepartments.departmentId],
+    references: [departments.id],
+  }),
 }));
 
 export const verificationRequestsRelations = relations(verificationRequests, ({ one }) => ({

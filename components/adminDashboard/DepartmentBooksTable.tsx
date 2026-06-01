@@ -137,7 +137,7 @@ function EditBookModal({
   onClose: () => void;
 }) {
   const queryClient = useQueryClient();
-  const { data: courses = [] } = useCourses({ departmentId, limit: 1000 });
+  const { data: courses = [] } = useCourses({ departmentId, limit: 1000, includeBorrowed: true });
 
   const { register, control, handleSubmit, formState: { isSubmitting } } = useForm({
     defaultValues: {
@@ -340,7 +340,7 @@ const DepartmentBooksTable: React.FC<Props> = ({ departmentId, department }) => 
         />
       )}
       <FormModal open={addOpen} setOpen={setAddOpen}>
-        <UploadBookForm department={deptForForm} setOpen={setAddOpen} />
+        <UploadBookForm department={deptForForm} setOpen={setAddOpen} departmentId={departmentId} />
       </FormModal>
 
       <div className="bg-white dark:bg-zinc-950 rounded-[2.5rem] shadow-sm overflow-hidden">

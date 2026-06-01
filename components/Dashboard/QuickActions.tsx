@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { MessageSquareText, BookOpen, Clock, Target } from "lucide-react";
+import { MessageSquareText, BookOpen, ClipboardList, Trophy } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 
@@ -25,22 +25,22 @@ const actions = [
     href: "/library",
   },
   {
-    icon: Clock,
-    label: "Timetable",
-    sublabel: "View schedule",
+    icon: ClipboardList,
+    label: "CBT",
+    sublabel: "Practice exams",
     color: "text-amber-600 dark:text-amber-400",
     bg: "bg-amber-100 dark:bg-amber-900/30",
     border: "border-amber-200 dark:border-amber-800/40",
-    href: "/dashboard/timetable",
+    href: "/cbt",
   },
   {
-    icon: Target,
-    label: "Goals",
-    sublabel: "Track targets",
+    icon: Trophy,
+    label: "Leaderboard",
+    sublabel: "See rankings",
     color: "text-rose-600 dark:text-rose-400",
     bg: "bg-rose-100 dark:bg-rose-900/30",
     border: "border-rose-200 dark:border-rose-800/40",
-    href: "/dashboard/goals",
+    href: "/dashboard/leaderboard",
   },
 ];
 

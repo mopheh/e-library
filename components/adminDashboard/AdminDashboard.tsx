@@ -90,7 +90,7 @@ const AdminDashboard = () => {
   const { data: faculties, isLoading: facultiesLoading, isError: facultiesError, error: facultiesErr } =
     useFaculties(facultyPage);
   const { data: departments, isLoading: deptLoading, isError: deptError, error: deptErr } =
-    useDepartments({ page: deptPage, limit: 8 });
+    useDepartments({ page: deptPage, limit: 5 });
   const { data: stats, isLoading: statsLoading, isError: statsError, error: statsErr } = useAdminStats();
 
   useEffect(() => {
@@ -176,11 +176,10 @@ const AdminDashboard = () => {
           <button
             key={s.id}
             onClick={() => setActiveSection(s.id as any)}
-            className={`flex items-center gap-2 px-6 py-3 rounded-2xl font-black font-cabin text-[10px] uppercase tracking-widest transition-all ${
-              activeSection === s.id
-                ? "bg-zinc-900 dark:bg-zinc-50 text-white dark:text-zinc-900 shadow-lg shadow-zinc-900/10"
-                : "bg-zinc-100 dark:bg-zinc-900 text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300"
-            }`}
+            className={`flex items-center gap-2 px-6 py-3 rounded-2xl font-black font-cabin text-[10px] uppercase tracking-widest transition-all ${activeSection === s.id
+              ? "bg-zinc-900 dark:bg-zinc-50 text-white dark:text-zinc-900 shadow-lg shadow-zinc-900/10"
+              : "bg-zinc-100 dark:bg-zinc-900 text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300"
+              }`}
           >
             {s.icon && <s.icon className="w-3.5 h-3.5" />}
             {s.label}
@@ -265,15 +264,15 @@ const AdminDashboard = () => {
                 {facultiesLoading
                   ? Array.from({ length: 5 }).map((_, i) => <SkeletonRow key={i} />)
                   : (faculties ?? []).length === 0
-                  ? (
-                    <div className="flex flex-col items-center justify-center h-48 text-center">
-                      <BookOpen className="w-10 h-10 text-zinc-200 dark:text-zinc-800 mb-3" />
-                      <p className="text-xs font-bold font-cabin text-zinc-400 uppercase tracking-wider">No faculties yet</p>
-                    </div>
-                  )
-                  : (faculties ?? []).map((faculty) => (
-                    <FacultyRow key={faculty.id} facultyId={faculty.id} name={faculty.name} />
-                  ))
+                    ? (
+                      <div className="flex flex-col items-center justify-center h-48 text-center">
+                        <BookOpen className="w-10 h-10 text-zinc-200 dark:text-zinc-800 mb-3" />
+                        <p className="text-xs font-bold font-cabin text-zinc-400 uppercase tracking-wider">No faculties yet</p>
+                      </div>
+                    )
+                    : (faculties ?? []).map((faculty) => (
+                      <FacultyRow key={faculty.id} facultyId={faculty.id} name={faculty.name} />
+                    ))
                 }
               </div>
 
@@ -341,21 +340,21 @@ const AdminDashboard = () => {
                 {deptLoading
                   ? Array.from({ length: 5 }).map((_, i) => <SkeletonRow key={i} columns={3} />)
                   : filteredDepts.length === 0
-                  ? (
-                    <div className="flex flex-col items-center justify-center h-48 text-center">
-                      <Building2 className="w-10 h-10 text-zinc-200 dark:text-zinc-800 mb-3" />
-                      <p className="text-xs font-bold font-cabin text-zinc-400 uppercase tracking-wider">
-                        {deptSearch ? "No match found" : "No departments yet"}
-                      </p>
-                    </div>
-                  )
-                  : filteredDepts.map((dept) => (
-                    <DepartmentRow
-                      key={dept.id}
-                      departmentId={dept.id}
-                      name={dept.name ?? dept.departmentName ?? "Unknown"}
-                    />
-                  ))
+                    ? (
+                      <div className="flex flex-col items-center justify-center h-48 text-center">
+                        <Building2 className="w-10 h-10 text-zinc-200 dark:text-zinc-800 mb-3" />
+                        <p className="text-xs font-bold font-cabin text-zinc-400 uppercase tracking-wider">
+                          {deptSearch ? "No match found" : "No departments yet"}
+                        </p>
+                      </div>
+                    )
+                    : filteredDepts.map((dept) => (
+                      <DepartmentRow
+                        key={dept.id}
+                        departmentId={dept.id}
+                        name={dept.name ?? dept.departmentName ?? "Unknown"}
+                      />
+                    ))
                 }
               </div>
 
@@ -373,7 +372,7 @@ const AdminDashboard = () => {
                 </span>
                 <button
                   onClick={() => setDeptPage((p) => p + 1)}
-                  disabled={filteredDepts.length < 8}
+                  disabled={filteredDepts.length < 5}
                   className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 disabled:opacity-30 transition-colors font-cabin"
                 >
                   Next <ChevronRight className="w-4 h-4" />

@@ -21,7 +21,8 @@ import {
   Crown,
   ShieldCheck,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Brain
 } from "lucide-react";
 import { useAuth, useUser } from "@clerk/nextjs";
 import { useUserData } from "@/hooks/useUsers";
@@ -133,6 +134,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggle }) => {
        label: "Discover",
        defaultOpen: false,
        items: [
+         { name: "AI Assistant", path: "/dashboard/ai", icon: Brain, id: "/dashboard/ai" },
          { name: "Opportunities", path: "/dashboard/opportunities", icon: Briefcase, id: "/dashboard/opportunities" },
          { name: "Dept Preview", path: "/preview", icon: BookOpen, id: "/preview" },
        ]

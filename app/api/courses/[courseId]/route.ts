@@ -1,8 +1,43 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/database/drizzle";
-import { courses, sessions, answers, questions, options } from "@/database/schema";
+import { courses, courseDepartments, sessions, answers, questions, options } from "@/database/schema";
 import { eq, inArray } from "drizzle-orm";
 import { requireRole } from "@/lib/auth";
+
+export async function GET(
+  req: NextRequest,
+  context: { params: Promise<{ courseId: string }> }
+) {
+  try {
+    const { courseId } = await context.params;
+
+    const [course] = await db
+      .select()
+      .from(courses)
+      .where(eq(courses.id, courseId))
+      .limit(1);
+
+    if (!course) {
+      return NextResponse.json({ error: "Course not found" }, { status: 404 });
+    }
+
+    const deptRows = await db
+      .select({ departmentId: courseDepartments.departmentId })
+      .from(courseDepartments)
+      .where(eq(courseDepartments.courseId, courseId));
+
+    return NextResponse.json({
+      ...course,
+      borrowingDepartments: deptRows.map((r) => r.departmentId),
+    });
+  } catch (error: any) {
+    console.error("[GET /api/courses/[courseId]]", error);
+    return NextResponse.json(
+      { error: error?.message || "Failed to fetch course" },
+      { status: 500 }
+    );
+  }
+}
 
 export async function PUT(
   req: NextRequest,
@@ -16,7 +51,7 @@ export async function PUT(
 
     const { courseId } = await context.params;
     const body = await req.json();
-    const { courseCode, title, level, semester, unitLoad, departmentId } = body;
+    const { courseCode, title, level, semester, unitLoad, departmentId, borrowingDepartments } = body;
 
     // Check if course exists
     const [existingCourse] = await db
@@ -29,7 +64,7 @@ export async function PUT(
       return NextResponse.json({ error: "Course not found" }, { status: 404 });
     }
 
-    // Update details
+    // Update core course details
     await db
       .update(courses)
       .set({
@@ -41,6 +76,22 @@ export async function PUT(
         departmentId: departmentId !== undefined ? departmentId : existingCourse.departmentId,
       })
       .where(eq(courses.id, courseId));
+
+    // Update borrowing departments (full replace)
+    if (Array.isArray(borrowingDepartments)) {
+      await db
+        .delete(courseDepartments)
+        .where(eq(courseDepartments.courseId, courseId));
+
+      if (borrowingDepartments.length > 0) {
+        await db.insert(courseDepartments).values(
+          borrowingDepartments.map((dId: string) => ({
+            courseId,
+            departmentId: dId,
+          }))
+        );
+      }
+    }
 
     return NextResponse.json({ message: "Course updated successfully" });
   } catch (error: any) {

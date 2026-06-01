@@ -44,15 +44,20 @@ type BookFormData = z.infer<typeof bookSchema>;
 export function UploadBookForm({
   department,
   setOpen,
+  departmentId,
 }: {
   department: Department[] | null;
   setOpen: (open: boolean) => void;
+  /** When provided, restricts the course list to courses owned or borrowed by this department */
+  departmentId?: string;
 }) {
   const [loading, setLoading] = useState(false);
   const { createBook } = useCreateBook();
-  const { data: courses } = useCourses({
-    limit: 2000,
-  });
+  const { data: courses } = useCourses(
+    departmentId
+      ? { departmentId, limit: 2000, includeBorrowed: true }
+      : { limit: 2000 },
+  );
 
   const {
     register,

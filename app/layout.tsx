@@ -6,6 +6,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { Providers } from "@/app/provider";
 import { ThemeProvider } from "@/components/theme-provider";
 import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
+import { Analytics } from "@vercel/analytics/react";
 import { OfflineIndicator } from "@/components/OfflineIndicator";
 const poppinsSans = LocalFont({
   src: [
@@ -42,6 +43,7 @@ export default function RootLayout({
             <Providers>{children}</Providers>
             <ServiceWorkerRegister />
             <OfflineIndicator />
+            <Analytics />
             <Toaster
               position="top-center"
               richColors

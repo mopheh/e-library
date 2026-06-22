@@ -42,7 +42,7 @@ export async function GET(req: NextRequest) {
 
     // Compute streak for these top 20 users
     const userIds = leaderboardData.map(u => u.id);
-    let streaks: Record<string, number> = {};
+    const streaks: Record<string, number> = {};
     
     if (userIds.length > 0) {
       const sessionsData = await db

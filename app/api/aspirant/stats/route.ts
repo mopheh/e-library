@@ -74,7 +74,7 @@ export async function GET() {
       }
     }
 
-    let intendedDepartmentId = profile?.intendedDepartmentId ?? user.departmentId ?? null;
+    const intendedDepartmentId = profile?.intendedDepartmentId ?? user.departmentId ?? null;
     let subjectCombinations = (profile?.subjectCombinations as string[]) ?? [];
 
     if (subjectCombinations.length === 0 && intendedDepartmentId) {

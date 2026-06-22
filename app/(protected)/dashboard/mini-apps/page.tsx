@@ -196,7 +196,7 @@ const UNIT_CATS: Record<UnitCat, { label: string; units: string[]; convert: (v: 
     label: "Temperature",
     units: ["°C", "°F", "K"],
     convert: (v, from, to) => {
-      let c = from === "°C" ? v : from === "°F" ? (v - 32) * 5 / 9 : v - 273.15;
+      const c = from === "°C" ? v : from === "°F" ? (v - 32) * 5 / 9 : v - 273.15;
       return to === "°C" ? c : to === "°F" ? c * 9 / 5 + 32 : c + 273.15;
     },
   },

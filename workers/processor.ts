@@ -82,16 +82,21 @@ export async function processJob(job: {
 
       const pageCount = await parsePdfPages(tmpPath, bookId);
 
-      await db
-        .update(books)
-        .set({ parseStatus: "parsed", pageCount })
-        .where(eq(books.id, bookId));
+      const skipGenerationTypes = ["past question", "past_question", "handwritten", "note"];
+      const shouldSkip = skipGenerationTypes.some(t => book.type.toLowerCase().includes(t));
 
-      // enqueue next job
-      await db.insert(jobs).values({
-        type: "generate_questions",
-        payload: { bookId },
-      });
+      if (shouldSkip) {
+        console.log(`⏭️ Skipping question generation for book ${bookId} (Type: ${book.type})`);
+        await db
+          .update(books)
+          .set({ parseStatus: "completed", pageCount })
+          .where(eq(books.id, bookId));
+      } else {
+        await db
+          .update(books)
+          .set({ parseStatus: "parsed", pageCount })
+          .where(eq(books.id, bookId));
+      }
     } finally {
       if (fs.existsSync(tmpPath)) {
         fs.unlinkSync(tmpPath);

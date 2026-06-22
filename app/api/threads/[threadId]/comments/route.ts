@@ -38,6 +38,8 @@ export async function GET(
   }
 }
 
+import { moderateText } from "@/lib/moderation";
+
 export async function POST(
   req: Request,
   { params }: { params: Promise<{ threadId: string }> },
@@ -53,6 +55,15 @@ export async function POST(
       return NextResponse.json(
         { error: "Validation failed", issues: result.error.errors },
         { status: 400 },
+      );
+    }
+
+    // Toxicity moderation check
+    const modResult = await moderateText(result.data.content);
+    if (modResult.flagged) {
+      return NextResponse.json(
+        { error: `Your comment was flagged for inappropriate content (${modResult.reason}).` },
+        { status: 400 }
       );
     }
 

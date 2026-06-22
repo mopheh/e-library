@@ -40,6 +40,8 @@ export async function GET(
   }
 }
 
+import { moderateText } from "@/lib/moderation";
+
 export async function POST(
   req: Request,
   { params }: { params: Promise<{ courseId: string }> },
@@ -58,6 +60,15 @@ export async function POST(
       );
     }
     const { title, content } = result.data;
+
+    // Toxicity moderation check
+    const modResult = await moderateText(`${title} ${content}`);
+    if (modResult.flagged) {
+      return NextResponse.json(
+        { error: `Your post was flagged for inappropriate content (${modResult.reason}).` },
+        { status: 400 }
+      );
+    }
 
     const [newThread] = await db
       .insert(threads)

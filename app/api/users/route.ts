@@ -90,6 +90,15 @@ export async function POST(req: Request) {
     if (!userId)
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     const params = await req.json();
+
+    // Ensure user cannot modify/create profiles for other Clerk IDs
+    if (params.clerkId !== userId) {
+      return NextResponse.json(
+        { error: "Forbidden: Cannot register or modify other user profiles" },
+        { status: 403 }
+      );
+    }
+
     if (!params.email) {
       return NextResponse.json({ error: "Missing email" }, { status: 500 });
     }

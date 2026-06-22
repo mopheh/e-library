@@ -25,11 +25,13 @@ export async function withRetry<T>(
         err.message.includes("ETIMEDOUT") ||
         err.message.includes("fetch failed") ||
         err.message.includes("Operation timed out");
+      const isRateLimit = err.status === 429 || err.message.includes("429") || err.message.includes("RESOURCE_EXHAUSTED");
 
-      if (isNetworkError && i < retries - 1) {
-        console.warn(`⚠️ Network error (${err.message}). Retrying in ${delay}ms... (Attempt ${i + 1}/${retries})`);
+      if ((isNetworkError || isRateLimit) && i < retries - 1) {
+        console.warn(`⚠️ ${isRateLimit ? 'Rate limit' : 'Network error'} (${err.message}). Retrying in ${delay}ms... (Attempt ${i + 1}/${retries})`);
         await new Promise((res) => setTimeout(res, delay));
-        delay *= 2; // Exponential backoff
+        // If rate limited, use longer backoff
+        delay = isRateLimit ? delay * 3 : delay * 2; 
         continue;
       }
       throw err;

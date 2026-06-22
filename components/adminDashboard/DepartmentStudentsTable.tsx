@@ -145,7 +145,7 @@ const DepartmentStudentsTable: React.FC<Props> = ({ students = [] }) => {
 
               {/* Level pip */}
               <div className="flex items-center gap-1.5 shrink-0">
-                <span className={`w-2 h-2 rounded-full ${LEVEL_COLORS[student.year] ?? "bg-zinc-400"}`} />
+                <span className={`w-2 h-2 rounded-full ${LEVEL_COLORS[student.year || "100"] ?? "bg-zinc-400"}`} />
                 <span className="text-[10px] font-bold font-cabin text-zinc-500">{student.year}L</span>
               </div>
 

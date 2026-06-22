@@ -14,12 +14,10 @@ interface CanvasModule {
 export async function extractTextWithOCR(pdf: pdfjsLib.PDFDocumentProxy, pageNumber: number) {
   let canvasModule: CanvasModule | undefined;
   try {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
     canvasModule = eval('require("pdfjs-dist/node_modules/canvas")') as CanvasModule;
     console.log("[OCR] Loaded pdfjs-dist canvas");
   } catch (err) {
     try {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
       canvasModule = eval('require("canvas")') as CanvasModule;
       console.log("[OCR] Loaded top-level canvas");
     } catch (err2) {

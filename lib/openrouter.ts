@@ -5,7 +5,7 @@ import { withRetry } from "./ai-utils";
  */
 export async function generateWithOpenRouter(
   input: string | { role: string; content: string }[],
-  model: string = "anthropic/claude-3-haiku"
+  model: string = "openrouter/free"
 ) {
   return withRetry(async () => {
     const apiKey = process.env.OPENROUTER_API_KEY;

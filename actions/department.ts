@@ -2,6 +2,7 @@
 import { db } from "@/database/drizzle"
 import { departments, faculty } from "@/database/schema"
 import { eq } from "drizzle-orm"
+import { requireRole } from "@/lib/auth"
 
 type Department = {
   name: string
@@ -9,6 +10,11 @@ type Department = {
 }
 export const createDepartment = async (data: Department) => {
   try {
+    const authCheck = await requireRole(["ADMIN"]);
+    if (!authCheck.authorized) {
+      throw new Error(authCheck.error || "Unauthorized");
+    }
+
     const existing = await db
       .select()
       .from(departments)

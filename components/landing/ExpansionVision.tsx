@@ -2,53 +2,114 @@
 
 import React from "react";
 import { motion } from "framer-motion";
-import { Map, BookOpen, UserCircle, University, GraduationCap } from "lucide-react";
+import { Map, UserCircle, GraduationCap, BookOpen, University, ChevronRight } from "lucide-react";
+
+const personas = [
+  {
+    icon: <Map className="w-5 h-5" />,
+    title: "Aspirants",
+    desc: "Prepare for university with practice tests, department previews, senior connections, and guided roadmaps — before you even get in.",
+    iconBg: "bg-blue-500/15 border-blue-500/25 text-blue-400",
+    gradient: "from-blue-500/10 to-blue-600/5",
+    count: "Start today",
+  },
+  {
+    icon: <UserCircle className="w-5 h-5" />,
+    title: "Undergraduates",
+    desc: "Read smarter with AI, chat with classmates, join study groups, track your progress, and climb the leaderboard throughout your degree.",
+    iconBg: "bg-violet-500/15 border-violet-500/25 text-violet-400",
+    gradient: "from-violet-500/10 to-violet-600/5",
+    count: "Core users",
+  },
+  {
+    icon: <GraduationCap className="w-5 h-5" />,
+    title: "Course Reps",
+    desc: "Upload and manage course materials, keep your department&apos;s library current, and serve as the go-to academic resource hub for your peers.",
+    iconBg: "bg-emerald-500/15 border-emerald-500/25 text-emerald-400",
+    gradient: "from-emerald-500/10 to-emerald-600/5",
+    count: "Content managers",
+  },
+  {
+    icon: <BookOpen className="w-5 h-5" />,
+    title: "Departments",
+    desc: "Organize academic resources, manage courses, and track how students engage with materials across your entire department.",
+    iconBg: "bg-amber-500/15 border-amber-500/25 text-amber-400",
+    gradient: "from-amber-500/10 to-amber-600/5",
+    count: "Departments",
+  },
+  {
+    icon: <University className="w-5 h-5" />,
+    title: "Institutions",
+    desc: "Roll out a campus-wide digital study platform with full oversight of faculties, departments, and real-time student activity.",
+    iconBg: "bg-rose-500/15 border-rose-500/25 text-rose-400",
+    gradient: "from-rose-500/10 to-rose-600/5",
+    count: "Campus-wide",
+  },
+];
 
 export const ExpansionVision = () => {
-  const steps = [
-    { title: "Aspirants", desc: "Prepare for university with practice tests, explore departments, chat with current students, and follow a clear study plan — before you even get in.", icon: <Map className="w-6 h-6 text-[#abc7ff]" /> },
-    { title: "Undergraduates", desc: "Read smarter with AI help, chat with classmates, join study groups, track your progress, and climb the leaderboard throughout your degree.", icon: <UserCircle className="w-6 h-6 text-[#abc7ff]" /> },
-    { title: "Faculty Reps", desc: "Upload course materials, keep your department's library up to date, and serve as the go-to person for your fellow students.", icon: <GraduationCap className="w-6 h-6 text-[#abc7ff]" /> },
-    { title: "Departments", desc: "Organize academic resources, manage courses, and keep track of how students are engaging with the materials.", icon: <BookOpen className="w-6 h-6 text-[#abc7ff]" /> },
-    { title: "Institutions", desc: "Roll out a campus-wide digital study platform with full oversight of faculties, departments, and student activity.", icon: <University className="w-6 h-6 text-[#abc7ff]" /> },
-  ];
-
   return (
-    <section className="py-24 px-6 md:px-12 max-w-7xl mx-auto border-t border-white/5 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-[#0066FF]/5 via-[#131313] to-[#131313]">
-      <div className="text-center mb-16">
-        <h2 className="font-manrope text-3xl md:text-5xl font-bold text-white mb-6">
-          Built for the Entire Academic Lifecycle
-        </h2>
-        <p className="font-inter text-[#c2c6d8] max-w-2xl mx-auto text-lg leading-relaxed">
-          RCF isn&apos;t just an app; it&apos;s an evolving ecosystem designed to scale from the individual aspirant to the highest levels of university administration.
-        </p>
+    <section id="community" className="relative py-32 px-6 md:px-12 overflow-hidden">
+      <div className="absolute inset-0 -z-10 bg-[#0a0a0f]">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(0,87,231,0.04)_0%,transparent_70%)]" />
+        <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+        <div className="absolute bottom-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 relative">
-        {/* Connector Line for Desktop */}
-        <div className="hidden lg:block absolute top-[44px] left-[10%] right-[10%] h-px bg-gradient-to-r from-transparent via-white/10 to-transparent z-0" />
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+          className="text-center mb-20"
+        >
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-white/10 bg-white/[0.03] mb-6">
+            <span className="font-inter text-xs font-medium text-[#636e8a] uppercase tracking-widest">Built For Everyone</span>
+          </div>
+          <h2 className="font-manrope text-4xl md:text-5xl font-extrabold text-white mb-5 tracking-tight">
+            Built for the entire
+            <br />
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#60a5fa] to-[#f472b6]">
+              academic lifecycle.
+            </span>
+          </h2>
+          <p className="font-inter text-[#636e8a] max-w-xl mx-auto text-lg leading-relaxed">
+            Whether you&apos;re a hopeful aspirant or a department administrator, RCF E-Library is built to serve you at every stage.
+          </p>
+        </motion.div>
 
-        {steps.map((step, idx) => (
-          <motion.div
-            key={idx}
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: idx * 0.12 }}
-            className="flex flex-col items-center text-center z-10"
-          >
-            <div className="w-20 h-20 rounded-full bg-[#1c1b1b] border-4 border-[#131313] shadow-[0_0_0_1px_rgba(255,255,255,0.05)] flex items-center justify-center mb-6 relative group">
-               <div className="absolute inset-0 bg-[#0066FF] rounded-full blur-xl opacity-0 group-hover:opacity-20 transition-opacity" />
-               {step.icon}
-            </div>
-            <h3 className="font-manrope text-lg font-bold text-white mb-3">
-              {step.title}
-            </h3>
-            <p className="font-inter text-sm text-[#c2c6d8] max-w-xs mx-auto leading-relaxed">
-              {step.desc}
-            </p>
-          </motion.div>
-        ))}
+        {/* Persona Cards */}
+        <div className="flex flex-col gap-4 max-w-4xl mx-auto">
+          {personas.map((p, idx) => (
+            <motion.div
+              key={idx}
+              initial={{ opacity: 0, x: idx % 2 === 0 ? -24 : 24 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true, margin: "-40px" }}
+              transition={{ duration: 0.5, delay: idx * 0.08 }}
+              className={`group relative flex items-center gap-6 rounded-2xl border border-white/[0.06] bg-gradient-to-r ${p.gradient} bg-[#0f0f16] px-7 py-6 hover:border-white/[0.12] transition-all duration-400 overflow-hidden`}
+            >
+              <div className="absolute inset-0 bg-[#0f0f16] -z-10 rounded-2xl" />
+              <div className={`shrink-0 w-11 h-11 rounded-xl border ${p.iconBg} flex items-center justify-center`}>
+                {p.icon}
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-3 mb-1">
+                  <h3 className="font-manrope text-base font-bold text-white">{p.title}</h3>
+                  <span className="font-inter text-[10px] font-semibold text-[#4a5568] uppercase tracking-widest border border-white/5 px-2.5 py-1 rounded-full bg-white/[0.02]">
+                    {p.count}
+                  </span>
+                </div>
+                <p className="font-inter text-sm text-[#636e8a] leading-relaxed group-hover:text-[#8892b0] transition-colors line-clamp-2"
+                  dangerouslySetInnerHTML={{ __html: p.desc }}
+                />
+              </div>
+              <ChevronRight className="shrink-0 w-5 h-5 text-[#2a3444] group-hover:text-[#4a5568] transition-colors" />
+            </motion.div>
+          ))}
+        </div>
       </div>
     </section>
   );

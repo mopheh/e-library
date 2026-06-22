@@ -1,23 +1,27 @@
 export interface User {
-  id: string;
-  clerkId: string;
-  fullName: string;
-  email: string;
+  id?: string;
+  clerkId?: string;
+  fullName?: string;
+  email?: string;
   phoneNumber?: string | null;
-  year: "100" | "200" | "300" | "400" | "500" | "600";
+  /** DB column name — some API responses return this as `level` */
+  year?: "100" | "200" | "300" | "400" | "500" | "600";
+  /** /api/me alias: users.year is returned as `level` */
+  level?: "100" | "200" | "300" | "400" | "500" | "600";
   role: "STUDENT" | "ADMIN" | "FACULTY REP" | "ASPIRANT";
   facultyId: string;
   faculty?: Faculty;
   facultyName?: string;
   departmentId: string;
   department?: Department;
-  matricNo: string;
-  gender: "MALE" | "FEMALE";
-  address: string;
+  matricNo?: string;
+  gender?: "MALE" | "FEMALE";
+  address?: string;
   dateOfBirth?: string | Date | null;
   createdAt?: string | Date | null;
   lastActivityDate?: string | Date | null;
   imageUrl?: string | null;
+  onboarded?: boolean;
 }
 
 export interface Faculty {

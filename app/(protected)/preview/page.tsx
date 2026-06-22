@@ -1,5 +1,32 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import DepartmentPreview from "@/components/aspirant/DepartmentPreview";
+import { Loader2 } from "lucide-react";
 
 export default function Page() {
-  return <DepartmentPreview />;
+  const [intendedDepartmentId, setIntendedDepartmentId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/aspirant/stats")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.success) {
+          setIntendedDepartmentId(data.stats.intendedDepartmentId ?? null);
+        }
+      })
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex-1 flex items-center justify-center min-h-[60vh]">
+        <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+      </div>
+    );
+  }
+
+  return <DepartmentPreview targetDepartmentId={intendedDepartmentId ?? undefined} />;
 }

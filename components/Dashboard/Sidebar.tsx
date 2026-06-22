@@ -11,7 +11,7 @@ import {
   BookOpen, 
   ClipboardList, 
   Bookmark, 
-  MonitorPlay,
+  Layers,
   Trophy,
   Sparkles,
   Briefcase,
@@ -22,7 +22,10 @@ import {
   ShieldCheck,
   ChevronLeft,
   ChevronRight,
-  Brain
+  Brain,
+  CalendarDays,
+  Mic,
+  Grid3X3,
 } from "lucide-react";
 import { useAuth, useUser } from "@clerk/nextjs";
 import { useUserData } from "@/hooks/useUsers";
@@ -81,6 +84,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggle }) => {
        defaultOpen: true,
        items: [
          { name: "Hub Dashboard", path: "/dashboard", icon: LayoutDashboard, id: "dashboard" },
+         { name: "Profile", path: "/profile", icon: User, id: "/profile" },
          { name: "Messages", path: "/dashboard/messages", icon: MessageSquare, id: "/dashboard/messages" },
          { name: "Verification", path: "/verify", icon: Settings, id: "/verify" },
        ]
@@ -115,7 +119,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggle }) => {
        label: "Academics",
        defaultOpen: true,
        items: [
-         { name: "My Workspace", path: "/dashboard/workspaces", icon: MonitorPlay, id: "/dashboard/workspaces" },
+         { name: "My Workspaces", path: "/workspaces", icon: Layers, id: "/workspaces" },
          { name: "Library", path: "/library", icon: BookOpen, id: "/library" },
          { name: "CBT", path: "/cbt", icon: ClipboardList, id: "/cbt" },
          { name: "Saved", path: "/saved", icon: Bookmark, id: "/saved" },
@@ -135,6 +139,9 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggle }) => {
        defaultOpen: false,
        items: [
          { name: "AI Assistant", path: "/dashboard/ai", icon: Brain, id: "/dashboard/ai" },
+         { name: "Calendar", path: "/dashboard/calendar", icon: CalendarDays, id: "/dashboard/calendar" },
+         { name: "Record Lecture", path: "/dashboard/record", icon: Mic, id: "/dashboard/record" },
+         { name: "Mini Apps", path: "/dashboard/mini-apps", icon: Grid3X3, id: "/dashboard/mini-apps" },
          { name: "Opportunities", path: "/dashboard/opportunities", icon: Briefcase, id: "/dashboard/opportunities" },
          { name: "Dept Preview", path: "/preview", icon: BookOpen, id: "/preview" },
        ]

@@ -57,6 +57,8 @@ const PDFStudyView = ({ fileUrl, bookId }: PDFStudyViewProps) => {
   const [currentPage, setCurrentPage] = useState<number>(0);
   const [pageText, setPageText] = useState("");
   const [displayUrl, setDisplayUrl] = useState<string | Uint8Array>(fileUrl);
+  const [assistantInput, setAssistantInput] = useState("");
+  const [mobileTab, setMobileTab] = useState("study");
 
   const { data: dbProgress, isLoading: loadingProgress } = useQuery({
     queryKey: ["book-progress", bookId],
@@ -133,30 +135,59 @@ const PDFStudyView = ({ fileUrl, bookId }: PDFStudyViewProps) => {
     onError: () => toast.error("Failed to save note"),
   });
 
-  const renderHighlightTarget = (props: RenderHighlightTargetProps) => (
-    <div
-      style={{
-        background: "#fff",
-        border: "1px solid #e4e4e7",
-        borderRadius: "8px",
-        boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
-        display: "flex",
-        position: "absolute",
-        left: `${props.selectionRegion.left}%`,
-        top: `${props.selectionRegion.top + props.selectionRegion.height}%`,
-        transform: "translate(0, 8px)",
-        zIndex: 10,
-        padding: "4px"
-      }}
-    >
-      <button 
-        onClick={props.toggle}
-        className="text-xs font-semibold bg-indigo-50 text-indigo-600 px-3 py-1.5 rounded-md hover:bg-indigo-100 transition-colors"
+  const renderHighlightTarget = (props: RenderHighlightTargetProps) => {
+    const handleAddNote = (e: React.MouseEvent | React.TouchEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      props.toggle();
+    };
+
+    const handleAskAI = (e: React.MouseEvent | React.TouchEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const text = props.selectionData?.selectedText || window.getSelection()?.toString() || "";
+      if (text.trim()) {
+        setAssistantInput(text);
+        setSidebarMode("assistant");
+        setMobileTab("assistant");
+        window.getSelection()?.removeAllRanges();
+      }
+    };
+
+    return (
+      <div
+        style={{
+          background: "#fff",
+          border: "1px solid #e4e4e7",
+          borderRadius: "8px",
+          boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
+          display: "flex",
+          position: "absolute",
+          left: `${props.selectionRegion.left}%`,
+          top: `${props.selectionRegion.top + props.selectionRegion.height}%`,
+          transform: "translate(0, 8px)",
+          zIndex: 10,
+          padding: "4px",
+          gap: "4px"
+        }}
       >
-        Add Note
-      </button>
-    </div>
-  );
+        <button 
+          onMouseDown={handleAddNote}
+          onTouchStart={handleAddNote}
+          className="text-xs font-semibold bg-indigo-50 text-indigo-600 px-3 py-1.5 rounded-md hover:bg-indigo-100 transition-colors cursor-pointer"
+        >
+          Add Note
+        </button>
+        <button 
+          onMouseDown={handleAskAI}
+          onTouchStart={handleAskAI}
+          className="text-xs font-semibold bg-indigo-600 text-white px-3 py-1.5 rounded-md hover:bg-indigo-700 transition-colors cursor-pointer"
+        >
+          Ask AI
+        </button>
+      </div>
+    );
+  };
 
   const renderHighlightContent = (props: RenderHighlightContentProps) => {
     return (
@@ -454,7 +485,14 @@ const PDFStudyView = ({ fileUrl, bookId }: PDFStudyViewProps) => {
       <div className={`hidden md:flex border-l border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 transition-all duration-300 ease-in-out h-full overflow-hidden ${
           isSidebarOpen ? "w-[35%] opacity-100 translate-x-0" : "w-0 opacity-0 translate-x-full"
       }`}>
-         {sidebarMode === "assistant" && <AIChatAssistant pageText={pageText} bookId={bookId} />}
+         {sidebarMode === "assistant" && (
+           <AIChatAssistant 
+             pageText={pageText} 
+             bookId={bookId} 
+             inputValue={assistantInput}
+             onInputChange={setAssistantInput}
+           />
+         )}
          {sidebarMode === "outline" && (
              <div className="w-full h-full font-poppins p-4 overflow-y-auto bg-white dark:bg-zinc-900 border-l border-zinc-200 dark:border-zinc-800">
                 <h3 className="text-sm font-semibold mb-4 text-zinc-600 dark:text-zinc-300">Table of Contents</h3>
@@ -467,7 +505,7 @@ const PDFStudyView = ({ fileUrl, bookId }: PDFStudyViewProps) => {
 
       {/* Mobile Layout (Unchanged mostly, just worker update) */}
       <div className="md:hidden h-full flex flex-col w-full">
-        <Tabs defaultValue="study" className="flex flex-col h-full w-full">
+        <Tabs value={mobileTab} onValueChange={setMobileTab} className="flex flex-col h-full w-full">
           <div className="flex-1 overflow-hidden w-full">
             <TabsContent
               value="study"
@@ -520,6 +558,19 @@ const PDFStudyView = ({ fileUrl, bookId }: PDFStudyViewProps) => {
                    <Bookmarks />
                 </div>
               </div>
+            </TabsContent>
+
+            <TabsContent
+              value="assistant"
+              forceMount
+              className="h-full data-[state=inactive]:hidden w-full overflow-y-auto"
+            >
+              <AIChatAssistant 
+                pageText={pageText} 
+                bookId={bookId} 
+                inputValue={assistantInput}
+                onInputChange={setAssistantInput}
+              />
             </TabsContent>
           </div>
 

@@ -91,31 +91,31 @@ export function getMostVisiblePage(container: HTMLDivElement): number | null {
   return mostVisiblePage;
 }
 export function convertToMarkdownMath(input: string): string {
-  return (
-    input
-      // Headings for problems
-      .replace(/^(\d+)\.\s+/gm, "### $1. ")
+  if (!input) return "";
 
-      // Bolden keywords
-      .replace(/\b(Intersection|Area|Result|Ans\.)\b/gi, "**$1:**")
+  let formatted = input;
 
-      // Fix common bracket styles to dollar signs for KaTeX
-      .replace(/\\\[(.*?)\\\]/gs, (_, expr) => `$$${expr.trim()}$$`)
-      .replace(/\\\((.*?)\\\)/gs, (_, expr) => `$${expr.trim()}$`)
-      
-      // Fix standalone brackets [ ] containing math-like chars
-      .replace(/\[\s*([0-9a-zA-Z\+\-\*\/=\^\{\}\\]{2,})\s*\]/g, (_, expr) => `$$${expr.trim()}$$`)
-      
-      // Fix standalone parens ( ) containing math-like chars (risky, but helps)
-      // .replace(/\(\s*([0-9a-zA-Z\+\-\*\/=\^\{\}\\]{2,})\s*\)/g, (_, expr) => `$${expr.trim()}$`)
+  // 1. Replace double-escaped block brackets: \\\\[ ... \\\\]
+  formatted = formatted.replace(/\\\\\[([\s\S]*?)\\\\\]/g, (_, equation) => {
+    return `\n$$\n${equation.trim()}\n$$\n`;
+  });
 
-      // If a line looks like pure math, wrap as block math
-      .replace(/^( *[\(\)\d+\-\+\*\/=a-zA-Z\^\{\}\\ ]{3,}[^.?!] *)$/gm, (line) => {
-        // Only if it doesn't already have $
-        if(line.includes("$")) return line;
-        return `$$${line.trim()}$$`;
-      })
-  );
+  // 2. Replace single-escaped block brackets: \\[ ... \\]
+  formatted = formatted.replace(/\\\[([\s\S]*?)\\\]/g, (_, equation) => {
+    return `\n$$\n${equation.trim()}\n$$\n`;
+  });
+
+  // 3. Replace double-escaped inline parens: \\\\( ... \\\\)
+  formatted = formatted.replace(/\\\\\(([\s\S]*?)\\\\\)/g, (_, equation) => {
+    return `$${equation.trim()}$`;
+  });
+
+  // 4. Replace single-escaped inline parens: \\( ... \\)
+  formatted = formatted.replace(/\\\(([\s\S]*?)\\\)/g, (_, equation) => {
+    return `$${equation.trim()}$`;
+  });
+
+  return formatted;
 }
 export const b2 = new B2({
   applicationKeyId: process.env.B2_KEY_ID!, // from Backblaze
@@ -123,10 +123,9 @@ export const b2 = new B2({
 });
 
 export async function authorizeB2() {
-  //@ts-expect-error - Internal property check
-  if (!b2.authorizationToken) {
-    await b2.authorize(); // gets auth + API URLs
-  }
+  // Always re-authorize on every call — B2 tokens expire after 24h and the
+  // singleton's internal state is unreliable across serverless invocations.
+  await b2.authorize();
 }
 export const downloadFile = async (
   url: string,

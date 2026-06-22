@@ -4,8 +4,8 @@ import React, { useState, useEffect, useRef } from "react";
 import { useParams } from "next/navigation";
 import { Send, Bot, User, Sparkles, BookOpen, Loader2, Info } from "lucide-react";
 import { askAiTutor } from "@/actions/tutor";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
+import AIResponse from "@/components/Dashboard/Response";
+import { convertToMarkdownMath } from "@/lib/utils";
 
 export default function CourseTutorPage() {
   const { courseId } = useParams() as { courseId: string };
@@ -99,11 +99,7 @@ export default function CourseTutorPage() {
                   : "bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 rounded-tl-none text-zinc-800 dark:text-zinc-200"
                 }`}>
                     <div className="prose prose-sm dark:prose-invert max-w-none break-words">
-                      <ReactMarkdown 
-                       remarkPlugins={[remarkGfm]}
-                      >
-                        {msg.content}
-                      </ReactMarkdown>
+                      <AIResponse markdown={convertToMarkdownMath(msg.content)} />
                     </div>
                 </div>
 

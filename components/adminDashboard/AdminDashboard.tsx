@@ -90,7 +90,7 @@ const AdminDashboard = () => {
   const { data: faculties, isLoading: facultiesLoading, isError: facultiesError, error: facultiesErr } =
     useFaculties(facultyPage);
   const { data: departments, isLoading: deptLoading, isError: deptError, error: deptErr } =
-    useDepartments({ page: deptPage, limit: 5 });
+    useDepartments({ page: deptPage, limit: 5, search: deptSearch });
   const { data: stats, isLoading: statsLoading, isError: statsError, error: statsErr } = useAdminStats();
 
   useEffect(() => {
@@ -99,11 +99,13 @@ const AdminDashboard = () => {
     if (statsError) toast.error(statsErr?.message || "Failed to fetch stats");
   }, [facultiesError, deptError, statsError, facultiesErr?.message, deptErr?.message, statsErr?.message]);
 
-  // client-side dept search filter
-  const filteredDepts = (departments ?? []).filter((d) =>
-    deptSearch.trim().length < 2 ||
-    (d.name ?? d.departmentName ?? "").toLowerCase().includes(deptSearch.toLowerCase())
-  );
+  // Server-side filter is used now, but we check if we have data to display
+  const filteredDepts = departments ?? [];
+
+  // Reset page to 1 when searching
+  useEffect(() => {
+    setDeptPage(1);
+  }, [deptSearch]);
 
   const STAT_CARDS: StatCardProps[] = [
     {

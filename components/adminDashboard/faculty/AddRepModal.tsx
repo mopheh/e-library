@@ -19,7 +19,7 @@ export default function AddRepModal({ open, onCancel, facultyId, facultyName }: 
 
     // Filter users visually based on email or name
     const filteredUsers = users?.filter((u: User) => 
-        u.email.toLowerCase().includes(searchQuery.toLowerCase()) || 
+        u.email?.toLowerCase().includes(searchQuery.toLowerCase()) || 
         u.fullName?.toLowerCase().includes(searchQuery.toLowerCase())
     ) || [];
 
@@ -79,7 +79,7 @@ export default function AddRepModal({ open, onCancel, facultyId, facultyName }: 
                                     size="sm" 
                                     variant={u.role === "FACULTY REP" ? "secondary" : "default"}
                                     disabled={isSubmitting || u.role === "FACULTY REP"}
-                                    onClick={() => handleAssign(u.id)}
+                                    onClick={() => handleAssign(u.id || "")}
                                 >
                                     {u.role === "FACULTY REP" ? "Current Rep" : "Assign"}
                                 </Button>

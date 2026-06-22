@@ -72,7 +72,7 @@ export async function POST(req: NextRequest) {
         duration,
       })
       .onConflictDoUpdate({
-        // requires a unique index on (userId, bookId, date) — add below if not present
+        // Matches uniqueIndex("reading_user_book_date_idx") on (userId, bookId, date)
         target: [readingSessions.userId, readingSessions.bookId, readingSessions.date],
         set: {
           pagesRead: sql`${readingSessions.pagesRead} + ${pagesRead}`,
@@ -80,6 +80,7 @@ export async function POST(req: NextRequest) {
           updatedAt: new Date(),
         },
       });
+
 
     return NextResponse.json({ success: true }, { status: 200 });
   } catch (error) {

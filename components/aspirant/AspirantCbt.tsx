@@ -6,6 +6,7 @@ import { Clock, ChevronLeft, ChevronRight, CheckCircle, XCircle, Loader2, Settin
 import { Progress } from "@/components/ui/progress";
 import { saveCbtSubjects } from "@/actions/aspirant";
 import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 const STORAGE_KEY = "univault_aspirant_cbt_session";
 
@@ -20,6 +21,7 @@ const AVAILABLE_SUBJECTS = [
 // }
 
 export default function AspirantCbt() {
+  const router = useRouter();
   const [mode, setMode] = useState<"loading" | "onboarding" | "config" | "exam">("loading");
   const [profileCombos, setProfileCombos] = useState<string[]>([]);
   
@@ -403,7 +405,7 @@ export default function AspirantCbt() {
               })}
             </div>
 
-            <button onClick={() => window.location.reload()} className="mt-8 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 px-8 py-3 rounded-full font-semibold hover:scale-105 transition-transform">
+            <button onClick={() => router.push("/dashboard")} className="mt-8 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 px-8 py-3 rounded-full font-semibold hover:scale-105 transition-transform">
                Exit to Dashboard
             </button>
          </motion.div>
@@ -416,7 +418,7 @@ export default function AspirantCbt() {
       {/* Top Bar */}
       <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 bg-white dark:bg-zinc-900 p-4 rounded-2xl shadow-sm border border-zinc-100 dark:border-zinc-800 gap-4">
          <div>
-            <h1 className="text-xl font-bold">Post-UTME Assesment Engine</h1>
+            <h1 className="text-xl font-bold">Post-UTME Assessment Engine</h1>
             <p className="text-sm text-zinc-500 capitalize px-2 py-0.5 bg-zinc-100 dark:bg-zinc-800 inline-block rounded font-medium mt-2">{currentQ?.subject || 'Assessment'}</p>
          </div>
          <div className="flex items-center gap-4">

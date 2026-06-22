@@ -1,0 +1,1 @@
+CREATE INDEX "embeddingIndex" ON "book_pages" USING hnsw ("embedding" vector_cosine_ops);

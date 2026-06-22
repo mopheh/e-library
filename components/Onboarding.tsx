@@ -79,6 +79,7 @@ const Onboarding = () => {
 
   const { data: departments, isLoading: loadingDepartments } = useDepartments({
     facultyId: selectedFaculty,
+    limit: 1000,
   });
 
   const departmentName = departments?.find((d) => d.id === selectedDepartment)?.name;
@@ -164,7 +165,6 @@ const Onboarding = () => {
     setIsSubmitting(true);
     try {
       const promise = createUser({
-        //@ts-expect-error - Clerk user id mapping
         clerkId: user?.id,
         email: user?.emailAddresses[0].emailAddress || "",
         fullName: `${user?.firstName} ${user?.lastName}`,

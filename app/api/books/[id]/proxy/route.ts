@@ -10,7 +10,8 @@ export async function GET(
   context: { params: Promise<{ id: string }> }
 ) {
   try {
-    const authCheck = await requireRole(["STUDENT", "ADMIN", "FACULTY REP"]);
+    // Include ASPIRANT so pre-admission users can preview books too
+    const authCheck = await requireRole(["STUDENT", "ADMIN", "FACULTY REP", "ASPIRANT"]);
     if (!authCheck.authorized) {
       return NextResponse.json({ error: authCheck.error }, { status: authCheck.status });
     }
@@ -26,70 +27,76 @@ export async function GET(
       return NextResponse.json({ error: "Book not found" }, { status: 404 });
     }
 
-    await authorizeB2();
-
     const fileUrl = book.fileUrl;
-    
-    // Handle B2 specifically
-    if (fileUrl.includes("backblazeb2.com") || fileUrl.includes("univault-books")) {
-      const url = new URL(fileUrl);
-      
-      // Normalize domain to delivery endpoint to handle cluster mismatches
-      const deliveryEndpoint = process.env.B2_DELIVERY_ENDPOINT || "f005.backblazeb2.com";
-      url.host = deliveryEndpoint;
 
+    // Handle B2 files
+    if (fileUrl.includes("backblazeb2.com") || fileUrl.includes("univault-books")) {
+      // Always re-authorize — tokens expire and the singleton is unreliable
+      await authorizeB2();
+
+      const url = new URL(fileUrl);
+
+      // Extract the file name (everything after the bucket name in the path)
       const parts = url.pathname.split("/");
       const bucketIndex = parts.indexOf("univault-books");
-      const fileName = (bucketIndex !== -1 && bucketIndex + 1 < parts.length)
+      const rawFileName = (bucketIndex !== -1 && bucketIndex + 1 < parts.length)
         ? parts.slice(bucketIndex + 1).join("/")
         : parts.pop() || "";
 
+      // Decode the file name for use with B2's getDownloadAuthorization
+      const decodedFileName = decodeURIComponent(rawFileName);
+
       const { data: auth } = await b2.getDownloadAuthorization({
         bucketId: process.env.B2_BUCKET_ID!,
-        fileNamePrefix: decodeURIComponent(fileName),
+        fileNamePrefix: decodedFileName,
         validDurationInSeconds: 60 * 60,
       });
 
-      // Properly encode path to handle commas, spaces, etc. for B2 API compatibility
+      // Re-encode path segments individually so special chars (spaces, commas) are safe
       const decodedPath = decodeURIComponent(url.pathname);
       url.pathname = decodedPath.split("/").map(encodeURIComponent).join("/");
-
       url.searchParams.set("Authorization", auth.authorizationToken);
       const signedUrl = url.toString();
-      
-      // Pass through relevant headers like 'Range' for byte-serving
+
+      // Forward Range header for byte-range (PDF page-by-page loading)
       const requestHeaders = new Headers();
       if (req.headers.has("Range")) {
         requestHeaders.set("Range", req.headers.get("Range")!);
       }
 
       const response = await fetch(signedUrl, { headers: requestHeaders });
-      
+
       if (!response.ok && response.status !== 206) {
-        return NextResponse.json({ error: "Failed to fetch from storage" }, { status: response.status });
+        console.error(
+          `[proxy] B2 fetch failed: ${response.status} ${response.statusText}`,
+          `\nURL: ${signedUrl.substring(0, 100)}...`
+        );
+        return NextResponse.json(
+          { error: `Storage fetch failed: ${response.status}` },
+          { status: response.status }
+        );
       }
 
-      // Proxy the content
       const responseHeaders = new Headers();
-      responseHeaders.set("Content-Type", response.headers.get("Content-Type") || "application/pdf");
-      
-      // Forward headers relevant for byte-serving and performance
+      responseHeaders.set(
+        "Content-Type",
+        response.headers.get("Content-Type") || "application/pdf"
+      );
+
       const headersToForward = [
         "Content-Length",
         "Content-Range",
         "Accept-Ranges",
         "ETag",
-        "Last-Modified"
+        "Last-Modified",
       ];
-
       for (const header of headersToForward) {
         if (response.headers.has(header)) {
           responseHeaders.set(header, response.headers.get(header)!);
         }
       }
 
-      // Add caching for performance
-      responseHeaders.set("Cache-Control", "public, max-age=3600");
+      responseHeaders.set("Cache-Control", "private, max-age=3600");
 
       return new Response(response.body, {
         status: response.status,
@@ -97,10 +104,13 @@ export async function GET(
       });
     }
 
-    // If not B2, just redirect or proxy normally
+    // Non-B2 URLs — just redirect
     return NextResponse.redirect(fileUrl);
   } catch (err: any) {
-    console.error("Proxy error:", err);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    console.error("[proxy] Unhandled error:", err?.message ?? err);
+    return NextResponse.json(
+      { error: "Internal server error", detail: err?.message },
+      { status: 500 }
+    );
   }
 }

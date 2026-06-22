@@ -3,10 +3,16 @@
 import { db } from "@/database/drizzle";
 import { faculty } from "@/database/schema";
 import { eq } from "drizzle-orm";
+import { requireRole } from "@/lib/auth";
 
 export const createFaculty = async (data: { faculty: string }) => {
   try {
     if (!data.faculty) throw new Error("Faculty is required");
+
+    const authCheck = await requireRole(["ADMIN"]);
+    if (!authCheck.authorized) {
+      throw new Error(authCheck.error || "Unauthorized");
+    }
 
     const existingFaculty = await db
       .select()

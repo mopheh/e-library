@@ -1,126 +1,229 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { ArrowRight, BookOpen, BrainCircuit, MessageSquare, Flame } from "lucide-react";
+import { SignInButton, SignedIn, SignedOut } from "@clerk/nextjs";
+import { ArrowRight, BookOpen, BrainCircuit, Flame, MessageSquare, Trophy, GraduationCap, Sparkles } from "lucide-react";
+
+const floatingCards = [
+  {
+    icon: <BrainCircuit className="w-4 h-4 text-violet-400" />,
+    title: "AI Study Tutor",
+    sub: "Explain any concept instantly",
+    color: "from-violet-500/20 to-violet-600/5",
+    border: "border-violet-500/20",
+    delay: 0,
+  },
+  {
+    icon: <BookOpen className="w-4 h-4 text-blue-400" />,
+    title: "Smart Library",
+    sub: "Filtered by dept & course",
+    color: "from-blue-500/20 to-blue-600/5",
+    border: "border-blue-500/20",
+    delay: 0.15,
+  },
+  {
+    icon: <Flame className="w-4 h-4 text-amber-400" />,
+    title: "Study Streaks",
+    sub: "5-day streak 🔥",
+    color: "from-amber-500/20 to-amber-600/5",
+    border: "border-amber-500/20",
+    delay: 0.3,
+  },
+  {
+    icon: <MessageSquare className="w-4 h-4 text-pink-400" />,
+    title: "Live Messaging",
+    sub: "Chat with classmates",
+    color: "from-pink-500/20 to-pink-600/5",
+    border: "border-pink-500/20",
+    delay: 0.45,
+  },
+  {
+    icon: <Trophy className="w-4 h-4 text-yellow-400" />,
+    title: "Leaderboard",
+    sub: "Ranked #3 in your dept",
+    color: "from-yellow-500/20 to-yellow-600/5",
+    border: "border-yellow-500/20",
+    delay: 0.6,
+  },
+  {
+    icon: <GraduationCap className="w-4 h-4 text-emerald-400" />,
+    title: "Exam Practice",
+    sub: "Timed tests + instant results",
+    color: "from-emerald-500/20 to-emerald-600/5",
+    border: "border-emerald-500/20",
+    delay: 0.75,
+  },
+];
+
+const stats = [
+  { value: "11+", label: "Core Features" },
+  { value: "24/7", label: "AI Availability" },
+  { value: "100%", label: "Free to Use" },
+];
 
 export const HeroSection = () => {
-  const stats = [
-    { label: "Study Tools", value: "12+", icon: <BrainCircuit className="w-3.5 h-3.5" /> },
-    { label: "AI Tutor", value: "24/7", icon: <BookOpen className="w-3.5 h-3.5" /> },
-    { label: "Messaging", value: "Live", icon: <MessageSquare className="w-3.5 h-3.5" /> },
-  ];
-
   return (
-    <section className="relative pt-40 pb-20 px-6 md:px-12 max-w-7xl mx-auto flex flex-col lg:flex-row items-center gap-16 overflow-hidden">
-      {/* Background Glow */}
-      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[#0066FF] rounded-full blur-[120px] opacity-20 -z-10" />
+    <section className="relative min-h-screen flex flex-col items-center justify-center pt-28 pb-20 px-6 md:px-12 overflow-hidden">
+      {/* Multi-layered background */}
+      <div className="absolute inset-0 -z-10">
+        <div className="absolute inset-0 bg-[#0a0a0f]" />
+        {/* Grid lines */}
+        <div
+          className="absolute inset-0 opacity-[0.03]"
+          style={{
+            backgroundImage:
+              "linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)",
+            backgroundSize: "60px 60px",
+          }}
+        />
+        {/* Glows */}
+        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[#0057e7] rounded-full blur-[180px] opacity-[0.12]" />
+        <div className="absolute bottom-0 right-1/4 w-[400px] h-[400px] bg-[#7c3aed] rounded-full blur-[150px] opacity-[0.08]" />
+        <div className="absolute top-1/4 left-1/4 w-[300px] h-[300px] bg-[#0099ff] rounded-full blur-[120px] opacity-[0.07]" />
+      </div>
 
-      <motion.div 
-        initial={{ opacity: 0, x: -30 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: 0.6, delay: 0.1 }}
-        className="flex-1 flex flex-col items-start"
-      >
-        <div className="px-4 py-1.5 rounded-full border border-white/10 bg-white/5 text-xs font-inter uppercase tracking-widest text-[#abc7ff] mb-6">
-          Study · Collaborate · Excel
-        </div>
-        <h1 className="font-manrope text-5xl md:text-6xl font-bold text-white leading-tight mb-6">
-          Your Complete Academic <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#abc7ff] to-[#0066FF]">Study Hub</span>
-        </h1>
-        <p className="font-inter text-lg text-[#c2c6d8] leading-relaxed mb-8 max-w-2xl">
-          Study smarter with an AI tutor, stay connected with classmates, practice for exams, and track your progress — everything you need from admission prep to graduation, in one place.
-        </p>
+      <div className="max-w-7xl mx-auto w-full flex flex-col lg:flex-row items-center gap-20">
+        {/* Left — Text Content */}
+        <div className="flex-1 flex flex-col items-start">
+          {/* Badge */}
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="flex items-center gap-2 px-4 py-2 rounded-full border border-[#0057e7]/40 bg-[#0057e7]/10 mb-8"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-[#60a5fa]" />
+            <span className="font-inter text-xs font-medium text-[#93c5fd] tracking-wide uppercase">
+              RCF E-Library · Your Academic Home
+            </span>
+          </motion.div>
 
-        {/* Mini stat badges */}
-        <div className="flex flex-wrap gap-3 mb-10">
-          {stats.map((stat, i) => (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: 0.4 + i * 0.1 }}
-              className="flex items-center gap-2 px-3.5 py-2 rounded-full bg-white/5 border border-white/[0.08] text-xs font-inter text-[#c2c6d8]"
+          {/* Headline */}
+          <motion.h1
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.1 }}
+            className="font-manrope text-5xl md:text-6xl lg:text-7xl font-extrabold text-white leading-[1.08] mb-6 tracking-tight"
+          >
+            Study Smarter.
+            <br />
+            <span className="relative">
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#60a5fa] via-[#818cf8] to-[#a78bfa]">
+                Excel Further.
+              </span>
+            </span>
+          </motion.h1>
+
+          {/* Sub-headline */}
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="font-inter text-lg md:text-xl text-[#8892b0] leading-relaxed mb-10 max-w-lg"
+          >
+            Your complete academic platform — AI-powered study tools, a structured digital library, real-time collaboration, and career opportunities. All in one place, built for university students.
+          </motion.p>
+
+          {/* CTA Buttons */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+            className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto mb-12"
+          >
+            <SignedOut>
+              <SignInButton mode="modal">
+                <button className="group relative px-8 py-4 rounded-xl font-inter font-semibold text-white overflow-hidden transition-all hover:scale-[1.02] active:scale-[0.98]">
+                  <div className="absolute inset-0 bg-gradient-to-r from-[#0057e7] to-[#0099ff]" />
+                  <div className="absolute inset-0 opacity-0 group-hover:opacity-100 bg-gradient-to-r from-[#0040c8] to-[#0080ee] transition-opacity" />
+                  <span className="relative flex items-center justify-center gap-2">
+                    Start Learning Free
+                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  </span>
+                </button>
+              </SignInButton>
+            </SignedOut>
+            <SignedIn>
+              <Link
+                href="/dashboard"
+                className="group relative px-8 py-4 rounded-xl font-inter font-semibold text-white overflow-hidden transition-all hover:scale-[1.02] inline-flex items-center justify-center gap-2"
+              >
+                <div className="absolute inset-0 bg-gradient-to-r from-[#0057e7] to-[#0099ff]" />
+                <span className="relative flex items-center gap-2">
+                  Go to Dashboard
+                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                </span>
+              </Link>
+            </SignedIn>
+            <Link
+              href="#features"
+              className="px-8 py-4 rounded-xl font-inter font-semibold text-[#c2c6d8] border border-white/10 hover:border-white/20 hover:bg-white/5 transition-all text-center"
             >
-              <span className="text-[#abc7ff]">{stat.icon}</span>
-              <span className="font-bold text-white">{stat.value}</span>
-              <span>{stat.label}</span>
-            </motion.div>
-          ))}
+              See Features
+            </Link>
+          </motion.div>
+
+          {/* Stats Row */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.6, delay: 0.45 }}
+            className="flex items-center gap-8"
+          >
+            {stats.map((stat, i) => (
+              <div key={i} className="flex flex-col">
+                <span className="font-manrope text-2xl font-bold text-white">{stat.value}</span>
+                <span className="font-inter text-xs text-[#636e8a]">{stat.label}</span>
+              </div>
+            ))}
+          </motion.div>
         </div>
 
-        <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
-          <Link href="/dashboard" className="w-full sm:w-auto px-8 py-3.5 rounded-md bg-[#0066FF] hover:bg-[#005cbb] text-white font-inter font-medium flex items-center justify-center gap-2 transition-transform hover:scale-[1.02]">
-            Get Started
-            <ArrowRight className="w-4 h-4" />
-          </Link>
-          <Link href="#features" className="w-full sm:w-auto px-8 py-3.5 rounded-md border border-white/10 hover:bg-white/5 text-white font-inter font-medium flex items-center justify-center transition-colors">
-            Explore Features
-          </Link>
+        {/* Right — Feature Cards Grid */}
+        <div className="flex-1 w-full max-w-lg">
+          <div className="grid grid-cols-2 gap-3 relative">
+            {/* Central glow */}
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <div className="w-48 h-48 bg-blue-500/10 rounded-full blur-2xl" />
+            </div>
+            {floatingCards.map((card, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 24, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{ duration: 0.5, delay: 0.4 + card.delay }}
+                whileHover={{ y: -4, scale: 1.02 }}
+                className={`relative rounded-2xl border ${card.border} bg-gradient-to-br ${card.color} backdrop-blur-sm p-4 cursor-default overflow-hidden group`}
+              >
+                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity bg-white/[0.02]" />
+                <div className="relative">
+                  <div className="w-8 h-8 rounded-lg bg-black/30 flex items-center justify-center mb-3 border border-white/5">
+                    {card.icon}
+                  </div>
+                  <p className="font-manrope text-sm font-bold text-white mb-0.5">{card.title}</p>
+                  <p className="font-inter text-xs text-[#8892b0]">{card.sub}</p>
+                </div>
+              </motion.div>
+            ))}
+          </div>
         </div>
-      </motion.div>
+      </div>
 
-      <motion.div 
-        initial={{ opacity: 0, y: 30 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8, delay: 0.2 }}
-        className="flex-1 w-full max-w-2xl"
+      {/* Scroll indicator */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 1.2 }}
+        className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2"
       >
-        <div className="relative aspect-[4/3] rounded-xl border border-white/10 bg-[#1c1b1b] p-2 shadow-2xl overflow-hidden">
-          {/* Mockup Header */}
-          <div className="w-full h-8 border-b border-white/5 flex items-center px-4 gap-2 mb-4">
-            <div className="w-3 h-3 rounded-full bg-slate-700" />
-            <div className="w-3 h-3 rounded-full bg-slate-700" />
-            <div className="w-3 h-3 rounded-full bg-slate-700" />
-          </div>
-          {/* Mockup Body */}
-          <div className="flex h-full gap-4 px-2 pb-2">
-            {/* Sidebar mock */}
-            <div className="w-1/4 h-full bg-[#131313] rounded border border-white/5 flex flex-col gap-2 pt-4 px-2">
-               <div className="w-3/4 h-3 bg-white/10 rounded" />
-               <div className="w-1/2 h-3 bg-white/10 rounded" />
-               <div className="w-2/3 h-3 bg-white/10 rounded" />
-               <div className="mt-4 w-full h-2 bg-[#0066FF]/20 rounded" />
-               <div className="w-3/4 h-2 bg-white/5 rounded" />
-               <div className="w-1/2 h-2 bg-white/5 rounded" />
-            </div>
-            {/* Main content mock */}
-            <div className="flex-1 flex flex-col gap-4">
-               <div className="w-full h-1/2 bg-gradient-to-br from-[#2a2a2a] to-[#1c1b1b] rounded border border-white/5 p-4 flex flex-col justify-end">
-                  <div className="w-1/3 h-4 bg-[#0066FF]/40 rounded mb-2" />
-                  <div className="w-1/2 h-6 bg-white/20 rounded" />
-               </div>
-               <div className="flex gap-4 h-[30%]">
-                  {/* Chart mock */}
-                  <div className="w-1/2 h-full bg-[#201f1f] rounded border border-white/5 flex justify-center items-end p-2 gap-1 overflow-hidden">
-                     {[40, 70, 30, 90, 50, 60].map((v, i) => (
-                       <motion.div 
-                        initial={{ height: 0 }}
-                        animate={{ height: `${v}%` }}
-                        transition={{ duration: 1, delay: 0.5 + i*0.1 }}
-                        key={i} className="flex-1 bg-[#abc7ff]/80 rounded-t" 
-                       />
-                     ))}
-                  </div>
-                  {/* Streak / profile mock */}
-                  <div className="w-1/2 h-full bg-[#201f1f] rounded border border-white/5 p-4 flex flex-col justify-between">
-                    <div className="flex items-center gap-2">
-                      <div className="w-6 h-6 rounded-full bg-amber-500/20 flex items-center justify-center">
-                        <Flame className="w-3 h-3 text-amber-400" />
-                      </div>
-                      <div className="w-12 h-2 bg-white/10 rounded" />
-                    </div>
-                    <div className="flex gap-1">
-                      {[1,2,3,4,5,6,7].map(d => (
-                        <div key={d} className={`flex-1 h-2 rounded-full ${d <= 4 ? 'bg-emerald-500/40' : 'bg-white/5'}`} />
-                      ))}
-                    </div>
-                  </div>
-               </div>
-            </div>
-          </div>
-        </div>
+        <span className="font-inter text-xs text-[#4a5568] uppercase tracking-widest">Scroll to explore</span>
+        <motion.div
+          animate={{ y: [0, 6, 0] }}
+          transition={{ duration: 1.5, repeat: Infinity }}
+          className="w-px h-8 bg-gradient-to-b from-[#0057e7]/50 to-transparent"
+        />
       </motion.div>
     </section>
   );

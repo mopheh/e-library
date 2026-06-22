@@ -3,7 +3,7 @@ import { readingSessions, userBooks, users, studentCourses, courses } from "@/da
 import { getCurrentUser } from "@/lib/auth";
 import { NextResponse } from "next/server";
 import { and, desc, eq, gte, lte, sql } from "drizzle-orm";
-import { format, subDays, eachDayOfInterval, isSameDay, startOfWeek, endOfWeek, parseISO } from "date-fns";
+import { format, subDays, eachDayOfInterval, parseISO } from "date-fns";
 
 export async function GET() {
   try {
@@ -64,26 +64,30 @@ export async function GET() {
       .where(eq(readingSessions.userId, userId))
       .orderBy(desc(readingSessions.date));
 
-    // Dedup dates and sort desc (though DB sort helps)
-    const uniqueDates = Array.from(new Set(sessions.map(s => s.date))).sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
+    // Dedup dates and sort desc
+    // Use a string-based Set to deduplicate ISO date strings ("yyyy-MM-dd")
+    const uniqueDateStrings = Array.from(new Set(sessions.map(s => s.date))).sort().reverse();
 
     let streak = 0;
-    const today = new Date();
-    const yesterday = subDays(today, 1);
-    
+    // Use startOfDay to normalise "today" and "yesterday" to midnight local time,
+    // avoiding UTC-vs-local timezone mismatches when parsing date-only strings.
+    const todayStr = format(new Date(), "yyyy-MM-dd");
+    const yesterdayStr = format(subDays(new Date(), 1), "yyyy-MM-dd");
+
     // Check if the most recent session was today or yesterday to start the streak
-    if (uniqueDates.length > 0) {
-        const lastDate = new Date(uniqueDates[0]);
-        if (isSameDay(lastDate, today) || isSameDay(lastDate, yesterday)) {
+    if (uniqueDateStrings.length > 0) {
+        const lastDateStr = uniqueDateStrings[0];
+        if (lastDateStr === todayStr || lastDateStr === yesterdayStr) {
             streak = 1;
-            let currentDate = lastDate;
-            
-            for (let i = 1; i < uniqueDates.length; i++) {
-                const prevDate = new Date(uniqueDates[i]);
-                const expectedPrev = subDays(currentDate, 1);
-                if (isSameDay(prevDate, expectedPrev)) {
+            let currentStr = lastDateStr;
+
+            for (let i = 1; i < uniqueDateStrings.length; i++) {
+                const prevStr = uniqueDateStrings[i];
+                // The expected previous date is currentStr minus one day
+                const expectedPrevStr = format(subDays(parseISO(currentStr), 1), "yyyy-MM-dd");
+                if (prevStr === expectedPrevStr) {
                     streak++;
-                    currentDate = prevDate;
+                    currentStr = prevStr;
                 } else {
                     break;
                 }
@@ -138,40 +142,28 @@ export async function GET() {
       const deptSessions = await db
         .select({
           date: readingSessions.date,
-          minutes: readingSessions.duration,
-          userId: readingSessions.userId,
+          totalMinutes: sql<number>`sum(${readingSessions.duration})`,
+          uniqueUsers: sql<number>`count(distinct ${readingSessions.userId})`,
         })
         .from(readingSessions)
         .innerJoin(users, eq(readingSessions.userId, users.id))
         .where(and(
           eq(users.departmentId, departmentId),
           gte(readingSessions.date, format(sevenDaysAgo, "yyyy-MM-dd"))
-        ));
-
-      // Calculate average per day
-      // 1. Group by date and sum total minutes across all dept users
-      // 2. Count distinct active users per day (or total users in dept but active is more accurate for "average reader")
-      const deptDailyTotals: Record<string, { totalMins: number, users: Set<string> }> = {};
-      
-      deptSessions.forEach(s => {
-          const d = new Date(s.date);
-          const key = format(d, "yyyy-MM-dd");
-          if (!deptDailyTotals[key]) {
-             deptDailyTotals[key] = { totalMins: 0, users: new Set() };
-          }
-          deptDailyTotals[key].totalMins += (s.minutes || 0);
-          deptDailyTotals[key].users.add(s.userId);
-      });
+        ))
+        .groupBy(readingSessions.date);
 
       // Inject averages into trendsMap
-      for (const [key, data] of Object.entries(deptDailyTotals)) {
+      deptSessions.forEach(s => {
+          const d = new Date(s.date as string);
+          const key = format(d, "yyyy-MM-dd");
           if (trendsMap.has(key)) {
               const current = trendsMap.get(key);
-              const userCount = data.users.size || 1; // avoid division by zero
-              const averageMins = Math.round(data.totalMins / userCount);
+              const userCount = Number(s.uniqueUsers) || 1;
+              const averageMins = Math.round(Number(s.totalMinutes) / userCount);
               trendsMap.set(key, { ...current, department: averageMins });
           }
-      }
+      });
     }
 
     const weeklyTrends = Array.from(trendsMap.entries()).map(([date, data]) => ({

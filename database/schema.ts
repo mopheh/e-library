@@ -44,7 +44,7 @@ export const jobTypeEnum = pgEnum("job_type", [
 export const users = pgTable(
   "users",
   {
-    id: uuid("id").primaryKey().notNull().unique().defaultRandom(),
+    id: uuid("id").primaryKey().notNull().defaultRandom(),
     clerkId: varchar("clerk_id", { length: 255 }).notNull().unique(),
     fullName: varchar("full_name", { length: 255 }).notNull(),
     email: varchar("email", { length: 255 }).notNull().unique(),
@@ -79,31 +79,37 @@ export const users = pgTable(
 );
 
 export const faculty = pgTable("faculty", {
-  id: uuid("id").primaryKey().notNull().unique().defaultRandom(),
+  id: uuid("id").primaryKey().notNull().defaultRandom(),
   name: varchar("name", { length: 255 }).notNull().unique(),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
 });
 
 export const departments = pgTable("departments", {
-  id: uuid("id").primaryKey().notNull().unique().defaultRandom(),
+  id: uuid("id").primaryKey().notNull().defaultRandom(),
   name: varchar("name", { length: 255 }).notNull().unique(),
   facultyId: uuid("faculty_id")
     .notNull()
     .references(() => faculty.id, { onDelete: "cascade" }),
 });
 
-export const courses = pgTable("courses", {
-  id: uuid("id").primaryKey().notNull().unique().defaultRandom(),
-  courseCode: varchar("course_code", { length: 255 }).notNull().unique(),
-  unitLoad: integer("unit_load").notNull(),
-  level: LEVEL_ENUM("level").notNull(),
-  semester: SEMESTER_ENUM("semester").default("FIRST"),
-  title: varchar("title").notNull(),
-  examDate: timestamp("exam_date", { withTimezone: true }),
-  departmentId: uuid("department_id")
-    .notNull()
-    .references(() => departments.id, { onDelete: "cascade" }),
-});
+export const courses = pgTable(
+  "courses",
+  {
+    id: uuid("id").primaryKey().notNull().defaultRandom(),
+    courseCode: varchar("course_code", { length: 255 }).notNull().unique(),
+    unitLoad: integer("unit_load").notNull(),
+    level: LEVEL_ENUM("level").notNull(),
+    semester: SEMESTER_ENUM("semester").default("FIRST"),
+    title: varchar("title").notNull(),
+    examDate: timestamp("exam_date", { withTimezone: true }),
+    departmentId: uuid("department_id")
+      .notNull()
+      .references(() => departments.id, { onDelete: "cascade" }),
+  },
+  (table) => ({
+    departmentIdx: index("courses_department_idx").on(table.departmentId),
+  })
+);
 // Junction table: departments that "borrow" / co-offer a course
 export const courseDepartments = pgTable(
   "course_departments",
@@ -173,7 +179,9 @@ export const comments = pgTable("comments", {
   content: text("content").notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
-});
+}, (table) => ({
+  threadDateIdx: index("comments_thread_date_idx").on(table.threadId, table.createdAt),
+}));
 
 export const jobs = pgTable("jobs", {
   id: uuid("id").defaultRandom().primaryKey(),
@@ -186,35 +194,55 @@ export const jobs = pgTable("jobs", {
   lockedAt: timestamp("locked_at"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
-});
+}, (table) => ({
+  statusAttemptsDateIdx: index("jobs_status_attempts_date_idx").on(table.status, table.attempts, table.createdAt),
+}));
 
-export const books = pgTable("books", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  title: varchar("title", { length: 255 }).notNull(),
-  description: varchar("description", { length: 255 }).notNull(),
-  type: varchar("type", { length: 255 }).notNull().default("Material"),
-  departmentId: uuid("department_id")
-    .notNull()
-    .references(() => departments.id, { onDelete: "cascade" }),
-  parseStatus: parseStatusEnum("parse_status").default("pending"),
-  fileUrl: varchar("file_url", { length: 1000 }),
-  fileSize: integer("file_size"),
+export const books = pgTable(
+  "books",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    title: varchar("title", { length: 255 }).notNull(),
+    description: varchar("description", { length: 255 }).notNull(),
+    type: varchar("type", { length: 255 }).notNull().default("Material"),
+    departmentId: uuid("department_id")
+      .notNull()
+      .references(() => departments.id, { onDelete: "cascade" }),
+    parseStatus: parseStatusEnum("parse_status").default("pending"),
+    fileUrl: varchar("file_url", { length: 1000 }),
+    fileSize: integer("file_size"),
 
-  pageCount: integer("page_count"),
-  postedBy: uuid("user_id")
-    .notNull()
-    .references(() => users.id, { onDelete: "cascade" }),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
-});
-export const bookCourses = pgTable("book_courses", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  bookId: uuid("book_id")
-    .notNull()
-    .references(() => books.id, { onDelete: "cascade" }),
-  courseId: uuid("course_id")
-    .notNull()
-    .references(() => courses.id, { onDelete: "cascade" }),
-});
+    pageCount: integer("page_count"),
+    postedBy: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  },
+  (table) => ({
+    departmentIdx: index("books_department_idx").on(table.departmentId),
+    createdAtIdx: index("books_created_at_idx").on(table.createdAt),
+  })
+);
+export const bookCourses = pgTable(
+  "book_courses",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    bookId: uuid("book_id")
+      .notNull()
+      .references(() => books.id, { onDelete: "cascade" }),
+    courseId: uuid("course_id")
+      .notNull()
+      .references(() => courses.id, { onDelete: "cascade" }),
+  },
+  (table) => ({
+    bookIdx: index("book_courses_book_idx").on(table.bookId),
+    courseIdx: index("book_courses_course_idx").on(table.courseId),
+    bookCourseUniq: uniqueIndex("book_courses_book_course_idx").on(
+      table.bookId,
+      table.courseId
+    ),
+  })
+);
 
 export const userBooks = pgTable(
   "user_books",
@@ -222,10 +250,10 @@ export const userBooks = pgTable(
     id: uuid("id").primaryKey().defaultRandom(),
     userId: uuid("user_id")
       .notNull()
-      .references(() => users.id),
+      .references(() => users.id, { onDelete: "cascade" }),
     bookId: uuid("book_id")
       .notNull()
-      .references(() => books.id),
+      .references(() => books.id, { onDelete: "cascade" }),
 
     readCount: integer("read_count").default(0).notNull(),
     downloadCount: integer("download_count").default(0).notNull(),
@@ -261,11 +289,11 @@ export const readingSessions = pgTable(
 
     userId: uuid("user_id")
       .notNull()
-      .references(() => users.id),
+      .references(() => users.id, { onDelete: "cascade" }),
 
     bookId: uuid("book_id")
       .notNull()
-      .references(() => books.id),
+      .references(() => books.id, { onDelete: "cascade" }),
 
     date: date("date").notNull(), // The day the session happened
     pagesRead: integer("pages_read").notNull().default(0), // Number of pages read
@@ -274,13 +302,13 @@ export const readingSessions = pgTable(
     updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
   },
   (table) => ({
-    userDateIdx: index("reading_user_date_idx").on(table.userId, table.date),
+    userBookDateIdx: uniqueIndex("reading_user_book_date_idx").on(table.userId, table.bookId, table.date),
   }),
 );
 export const bookPages = pgTable(
   "book_pages",
   {
-    id: uuid("id").primaryKey().unique().defaultRandom(),
+    id: uuid("id").primaryKey().defaultRandom(),
     bookId: uuid("book_id")
       .notNull()
       .references(() => books.id, { onDelete: "cascade" }),
@@ -293,26 +321,31 @@ export const bookPages = pgTable(
   },
   (t) => ({
     uniq: unique().on(t.bookId, t.pageNumber),
+    embeddingIndex: index("embeddingIndex").using("hnsw", t.embedding.op("vector_cosine_ops")),
   }),
 );
 
 export const questions = pgTable("questions", {
-  id: uuid("id").primaryKey().unique().defaultRandom(),
+  id: uuid("id").primaryKey().defaultRandom(),
   courseId: uuid("course_id").references(() => courses.id),
   questionText: varchar("question_text").notNull(),
   type: varchar("type").notNull().default("mcq"),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => ({
+  courseIdx: index("questions_course_idx").on(table.courseId),
+}));
 
 export const options = pgTable("options", {
-  id: uuid("id").primaryKey().unique().defaultRandom(),
-  questionId: uuid("question_id").references(() => questions.id),
+  id: uuid("id").primaryKey().defaultRandom(),
+  questionId: uuid("question_id").references(() => questions.id, { onDelete: "cascade" }),
   optionText: text("option_text").notNull(),
   isCorrect: boolean("is_correct").default(false),
-});
+}, (table) => ({
+  questionIdx: index("options_question_idx").on(table.questionId),
+}));
 
 export const sessions = pgTable("sessions", {
-  id: uuid("id").primaryKey().unique().defaultRandom(),
+  id: uuid("id").primaryKey().defaultRandom(),
   userId: uuid("user_id").references(() => users.id),
   courseId: uuid("course_id").references(() => courses.id),
   startedAt: timestamp("started_at").defaultNow(),
@@ -321,15 +354,15 @@ export const sessions = pgTable("sessions", {
 });
 
 export const answers = pgTable("answers", {
-  id: uuid("id").primaryKey().unique().defaultRandom(),
-  sessionId: uuid("session_id").references(() => sessions.id),
-  questionId: uuid("question_id").references(() => questions.id),
-  selectedOptionId: uuid("selected_option_id").references(() => options.id),
+  id: uuid("id").primaryKey().defaultRandom(),
+  sessionId: uuid("session_id").references(() => sessions.id, { onDelete: "cascade" }),
+  questionId: uuid("question_id").references(() => questions.id, { onDelete: "cascade" }),
+  selectedOptionId: uuid("selected_option_id").references(() => options.id, { onDelete: "cascade" }),
   isCorrect: boolean("is_correct"),
 });
 
 export const activities = pgTable("activities", {
-  id: uuid("id").unique().defaultRandom().primaryKey(),
+  id: uuid("id").defaultRandom().primaryKey(),
   userId: uuid("user_id")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
@@ -403,7 +436,9 @@ export const notifications = pgTable("notifications", {
   targetId: uuid("target_id"),
   isRead: boolean("is_read").default(false).notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
-});
+}, (table) => ({
+  userReadDateIdx: index("notifications_user_read_date_idx").on(table.userId, table.isRead, table.createdAt),
+}));
 
 // Pre-Admission Hub Tables
 
@@ -411,7 +446,7 @@ export const verificationStatusEnum = pgEnum("verification_status", ["PENDING", 
 
 export const candidateProfiles = pgTable("candidate_profiles", {
   id: uuid("id").primaryKey().defaultRandom(),
-  userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  userId: uuid("user_id").notNull().unique().references(() => users.id, { onDelete: "cascade" }),
   jambScore: integer("jamb_score"),
   intendedDepartmentId: uuid("intended_department_id").references(() => departments.id),
   subjectCombinations: jsonb("subject_combinations").$type<string[]>(),
@@ -476,7 +511,10 @@ export const studentConnections = pgTable("student_connections", {
   status: connectionStatusEnum("status").default("PENDING").notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
-});
+}, (table) => ({
+  aspirantStatusIdx: index("student_conn_aspirant_status_idx").on(table.aspirantId, table.status),
+  studentStatusIdx: index("student_conn_student_status_idx").on(table.studentId, table.status),
+}));
 
 export const chatRooms = pgTable("chat_rooms", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -485,6 +523,7 @@ export const chatRooms = pgTable("chat_rooms", {
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 }, (t) => ({
   uniqRoom: uniqueIndex("chat_rooms_users_idx").on(t.userOneId, t.userTwoId),
+  userTwoIdx: index("chat_rooms_user_two_idx").on(t.userTwoId),
 }));
 
 export const chatMessages = pgTable("chat_messages", {
@@ -494,7 +533,9 @@ export const chatMessages = pgTable("chat_messages", {
   content: text("content").notNull(),
   isRead: boolean("is_read").default(false).notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
-});
+}, (table) => ({
+  roomDateIdx: index("chat_messages_room_date_idx").on(table.roomId, table.createdAt),
+}));
 
 export const departmentCommunities = pgTable("department_communities", {
   id: uuid("id").primaryKey().defaultRandom(),

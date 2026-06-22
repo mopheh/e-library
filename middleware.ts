@@ -18,9 +18,47 @@ const isProtectedRoute = createRouteMatcher([
   "/verify(.*)",
 ]);
 
+import { Ratelimit } from "@upstash/ratelimit";
+import { Redis } from "@upstash/redis";
+
+// Initialize rate limiter only if ENV vars exist
+const redis = process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN 
+  ? new Redis({
+      url: process.env.UPSTASH_REDIS_REST_URL,
+      token: process.env.UPSTASH_REDIS_REST_TOKEN,
+    })
+  : null;
+
+// Create a new ratelimiter, that allows 20 requests per 10 seconds
+const ratelimit = redis ? new Ratelimit({
+  redis: redis,
+  limiter: Ratelimit.slidingWindow(20, "10 s"),
+  analytics: true,
+}) : null;
+
 export default clerkMiddleware(async (auth, req) => {
   const { userId, sessionClaims } = await auth();
   const path = req.nextUrl.pathname;
+
+  // Rate Limiting for API routes
+  if (path.startsWith("/api") && ratelimit) {
+    const ip = req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip") || "127.0.0.1";
+    const { success, pending, limit, reset, remaining } = await ratelimit.limit(ip);
+    
+    if (!success) {
+      return NextResponse.json(
+        { error: "Too many requests. Please try again later." },
+        { 
+          status: 429,
+          headers: {
+            "X-RateLimit-Limit": limit.toString(),
+            "X-RateLimit-Remaining": remaining.toString(),
+            "X-RateLimit-Reset": reset.toString()
+          }
+        }
+      );
+    }
+  }
 
   // 1. If hitting a protected route, ensure we have a userId
   if (isProtectedRoute(req)) {

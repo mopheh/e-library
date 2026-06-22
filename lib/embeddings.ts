@@ -1,19 +1,32 @@
-import { GoogleGenAI } from "@google/genai";
-import { withRetry } from "./ai-utils";
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+import { pipeline } from '@xenova/transformers';
+
+class PipelineSingleton {
+  static task = 'feature-extraction';
+  static model = 'Xenova/all-mpnet-base-v2';
+  static instance: any = null;
+
+  static async getInstance(progress_callback?: any) {
+    if (this.instance === null) {
+      // @ts-ignore
+      this.instance = pipeline(this.task, this.model, { progress_callback });
+    }
+    return this.instance;
+  }
+}
 
 /**
- * Returns the embeddings for the given text using Gemini.
+ * Returns the embeddings for the given text using a local ML model.
+ * This runs completely offline and avoids all API quotas and costs!
  * @param text The string to embed
  * @returns An array of numbers representing the vector (768 dimensions)
  */
 export async function getEmbedding(text: string): Promise<number[]> {
-  return withRetry(async () => {
-    const response = await ai.models.embedContent({
-      model: "gemini-embedding-001",
-      contents: [{ parts: [{ text }] }],
-    });
-    
-    return response.embeddings?.[0]?.values || [];
-  }, 3, 1000, 30000);
+  try {
+    const extractor = await PipelineSingleton.getInstance();
+    const output = await extractor(text, { pooling: 'mean', normalize: true });
+    return Array.from(output.data);
+  } catch (error) {
+    console.error("Local embedding generation failed:", error);
+    return [];
+  }
 }

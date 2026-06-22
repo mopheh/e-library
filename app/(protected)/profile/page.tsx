@@ -5,6 +5,7 @@ import axios from "axios";
 import { motion } from "framer-motion";
 import { Loader2Icon } from "lucide-react";
 import { UserProfile } from "@clerk/nextjs";
+import { useUserData } from "@/hooks/useUsers";
 
 import {
   Tabs,
@@ -17,10 +18,15 @@ import ProfileOverview from "@/components/profile/ProfileOverview";
 import ProfileForm from "@/components/profile/ProfileForm";
 import ActivityHistory from "@/components/profile/ActivityHistory";
 import PreferencesSettings from "@/components/profile/PreferencesSettings";
+import AspirantProfile from "@/components/aspirant/AspirantProfile";
 
 export default function ProfilePage() {
+  const { data: userData, isLoading: userLoading } = useUserData();
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+
+  const role = userData?.role?.toLowerCase() || "";
+  const isAspirant = role === "aspirant";
 
   const loadProfile = async () => {
     try {
@@ -35,15 +41,24 @@ export default function ProfilePage() {
   };
 
   useEffect(() => {
-    loadProfile();
-  }, []);
+    if (!isAspirant) {
+      loadProfile();
+    } else {
+      setLoading(false);
+    }
+  }, [isAspirant]);
 
-  if (loading && !profile) {
+  if (userLoading || (loading && !isAspirant && !profile)) {
     return (
       <div className="flex fixed inset-0 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-sm z-50 h-screen w-full justify-center items-center">
         <Loader2Icon className="w-10 h-10 animate-spin text-zinc-900 dark:text-zinc-100" />
       </div>
     );
+  }
+
+  // Aspirants get their own dedicated profile experience
+  if (isAspirant) {
+    return <AspirantProfile />;
   }
 
   return (
@@ -70,7 +85,7 @@ export default function ProfilePage() {
             Edit Profile
           </TabsTrigger>
           <TabsTrigger value="activity" className="rounded-lg py-2 px-4 shadow-none data-[state=active]:shadow-sm">
-             Activity & Stats
+             Activity &amp; Stats
           </TabsTrigger>
           <TabsTrigger value="preferences" className="rounded-lg py-2 px-4 shadow-none data-[state=active]:shadow-sm">
              Preferences

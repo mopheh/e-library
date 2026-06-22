@@ -23,8 +23,9 @@ import { useUserData } from "@/hooks/useUsers";
 import { useDashboard } from "@/hooks/useDashboard";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useUser } from "@clerk/nextjs";
-import { cn } from "@/lib/utils";
-import ReactMarkdown from "react-markdown";
+import { cn, convertToMarkdownMath } from "@/lib/utils";
+import AIResponse from "@/components/Dashboard/Response";
+
 
 /* ─── Types ──────────────────────────────────────────────── */
 interface Message {
@@ -145,7 +146,7 @@ function MessageBubble({ msg, userImageUrl }: { msg: Message; userImageUrl?: str
             <p>{msg.content}</p>
           ) : (
             <div className="prose prose-sm dark:prose-invert max-w-none prose-p:my-1 prose-headings:font-cabin prose-headings:tracking-tight prose-li:my-0.5">
-              <ReactMarkdown>{msg.content}</ReactMarkdown>
+              <AIResponse markdown={convertToMarkdownMath(msg.content)} />
             </div>
           )}
         </div>

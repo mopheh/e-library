@@ -9,6 +9,7 @@ import {
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { auth } from "@clerk/nextjs/server";
 import { v4 as uuidv4 } from "uuid";
+import { requireRole } from "@/lib/auth";
 
 export async function POST(req: Request) {
   try {
@@ -26,10 +27,11 @@ export async function POST(req: Request) {
       responseChecksumValidation: "WHEN_REQUIRED",
     });
 
-    const { userId } = await auth();
-    if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const authCheck = await requireRole(["ADMIN", "FACULTY REP"]);
+    if (!authCheck.authorized) {
+      return NextResponse.json({ error: authCheck.error }, { status: authCheck.status });
     }
+    const userId = authCheck.user!.id;
 
     const body = await req.json();
     const { action, fileName, fileType, uploadId, key, parts } = body;

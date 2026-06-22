@@ -28,26 +28,32 @@ export async function GET(
 
     if (fileUrl && (fileUrl.includes("backblazeb2.com") || fileUrl.includes(bucketName))) {
       try {
+        // Always re-authorize — tokens expire after 24h and the singleton is unreliable
         await authorizeB2();
-        
+
         const url = new URL(fileUrl);
         const parts = url.pathname.split("/");
-        
+
         // Find the index after the bucket name
         const bucketIndex = parts.indexOf(bucketName);
-        const fileName = (bucketIndex !== -1 && bucketIndex + 1 < parts.length)
+        const rawFileName = (bucketIndex !== -1 && bucketIndex + 1 < parts.length)
           ? parts.slice(bucketIndex + 1).join("/")
           : parts.pop() || "";
 
+        // Decode first so B2 can match the exact file name
+        const decodedFileName = decodeURIComponent(rawFileName);
+
         const { data: auth } = await b2.getDownloadAuthorization({
           bucketId: process.env.B2_BUCKET_ID!,
-          fileNamePrefix: fileName,
+          fileNamePrefix: decodedFileName,
           validDurationInSeconds: 60 * 60,
         });
 
-        // Use URLSearchParams for reliable query param management
+        // Re-encode path segments individually to handle spaces/commas safely
+        const decodedPath = decodeURIComponent(url.pathname);
+        url.pathname = decodedPath.split("/").map(encodeURIComponent).join("/");
         url.searchParams.set("Authorization", auth.authorizationToken);
-        
+
         book = {
           ...book,
           fileUrl: url.toString(),

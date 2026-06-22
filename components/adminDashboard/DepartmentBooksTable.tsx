@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -21,6 +21,11 @@ import {
   HelpCircle,
   ChevronLeft,
   ChevronRight,
+  Sparkles,
+  Loader2,
+  CheckCircle2,
+  Clock,
+  AlertCircle,
 } from "lucide-react";
 import { useBooks } from "@/hooks/useBooks";
 import { useCourses } from "@/hooks/useCourses";
@@ -57,6 +62,65 @@ const TYPE_STYLES: Record<string, { color: string; icon: React.ReactNode }> = {
 };
 
 const PAGE_SIZE = 8;
+
+// Book types that support AI question generation
+const QUESTION_ELIGIBLE_TYPES = new Set(["past question", "material", "handout"]);
+
+// ── Parse-status badge ─────────────────────────────────────────────────────
+const PARSE_STATUS_CONFIG: Record<
+  string,
+  { label: string; color: string; icon: React.ElementType; spin?: boolean }
+> = {
+  pending:             { label: "Pending",     color: "text-zinc-500  bg-zinc-100  dark:bg-zinc-800",             icon: Clock },
+  parsing:             { label: "Parsing…",    color: "text-blue-600  bg-blue-50   dark:bg-blue-900/30",         icon: Loader2, spin: true },
+  parsed:              { label: "Parsed",      color: "text-indigo-600 bg-indigo-50 dark:bg-indigo-900/30",      icon: CheckCircle2 },
+  processing:          { label: "Processing…", color: "text-amber-600  bg-amber-50  dark:bg-amber-900/30",      icon: Loader2, spin: true },
+  generating_questions:{ label: "Generating…", color: "text-purple-600 bg-purple-50 dark:bg-purple-900/30",     icon: Loader2, spin: true },
+  completed:           { label: "AI Ready",    color: "text-emerald-600 bg-emerald-50 dark:bg-emerald-900/30",  icon: CheckCircle2 },
+  failed:              { label: "Failed",      color: "text-red-600    bg-red-50    dark:bg-red-900/30",        icon: AlertCircle },
+};
+
+function ParseStatusBadge({ status }: { status?: Book["parseStatus"] | null }) {
+  if (!status) return null;
+  const cfg = PARSE_STATUS_CONFIG[status] ?? PARSE_STATUS_CONFIG.pending;
+  const Icon = cfg.icon;
+  return (
+    <span className={`inline-flex items-center gap-1 text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full font-cabin ${cfg.color}`}>
+      <Icon className={`w-2.5 h-2.5 ${cfg.spin ? "animate-spin" : ""}`} />
+      {cfg.label}
+    </span>
+  );
+}
+
+// ── Generate Questions hook ────────────────────────────────────────────────
+function useGenerateQuestions() {
+  const queryClient = useQueryClient();
+  const [generating, setGenerating] = useState<Set<string>>(new Set());
+
+  const generate = useCallback(async (book: Book) => {
+    if (generating.has(book.id)) return;
+    setGenerating((prev) => new Set(prev).add(book.id));
+    const toastId = toast.loading(`Generating questions for "${book.title}"…`, {
+      description: "This may take up to a minute. You can keep working.",
+    });
+    try {
+      const res = await fetch(`/api/books/${book.id}/question`, { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Generation failed");
+      toast.success("Questions generated!", {
+        id: toastId,
+        description: `MCQs are now live for "${book.title}".`,
+      });
+      await queryClient.invalidateQueries({ queryKey: ["books"] });
+    } catch (err: any) {
+      toast.error("Generation failed", { id: toastId, description: err.message });
+    } finally {
+      setGenerating((prev) => { const s = new Set(prev); s.delete(book.id); return s; });
+    }
+  }, [generating, queryClient]);
+
+  return { generate, generating };
+}
 
 // ──────────────────────────────────────────────────
 // Delete Confirmation
@@ -283,6 +347,7 @@ interface Props {
 const DepartmentBooksTable: React.FC<Props> = ({ departmentId, department }) => {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const { generate, generating } = useGenerateQuestions();
 
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState("ALL");
@@ -459,6 +524,11 @@ const DepartmentBooksTable: React.FC<Props> = ({ departmentId, department }) => 
                     {book.type}
                   </span>
 
+                  {/* Parse status badge */}
+                  <span className="hidden md:block shrink-0">
+                    <ParseStatusBadge status={book.parseStatus} />
+                  </span>
+
                   {/* Date */}
                   <span className="hidden lg:block text-[10px] text-zinc-400 font-poppins shrink-0">
                     {new Date(book.createdAt).toLocaleDateString("en-NG", { dateStyle: "medium" })}
@@ -466,6 +536,24 @@ const DepartmentBooksTable: React.FC<Props> = ({ departmentId, department }) => 
 
                   {/* Actions — visible on hover */}
                   <div className="flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                    {/* Generate Questions button — only for eligible book types */}
+                    {QUESTION_ELIGIBLE_TYPES.has(book.type?.toLowerCase()) && (
+                      <button
+                        onClick={() => generate(book)}
+                        disabled={generating.has(book.id) || book.parseStatus === "parsing" || book.parseStatus === "generating_questions" || book.parseStatus === "processing"}
+                        title={book.parseStatus === "completed" ? "Re-generate questions" : "Generate AI questions"}
+                        className="h-8 px-2.5 rounded-xl bg-violet-50 dark:bg-violet-900/20 text-violet-600 hover:bg-violet-100 dark:hover:bg-violet-900/40 flex items-center gap-1.5 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                      >
+                        {generating.has(book.id) ? (
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        ) : (
+                          <Sparkles className="w-3.5 h-3.5" />
+                        )}
+                        <span className="text-[9px] font-black font-cabin uppercase tracking-widest hidden xl:block">
+                          {generating.has(book.id) ? "Generating…" : "Gen. Questions"}
+                        </span>
+                      </button>
+                    )}
                     <button
                       onClick={() => router.push(`/book/${book.id}`)}
                       title="Open book"

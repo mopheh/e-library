@@ -3,7 +3,6 @@ import { db } from "@/database/drizzle";
 import { books } from "@/database/schema";
 import { eq } from "drizzle-orm";
 import { authorizeB2, b2 } from "@/lib/utils";
-
 import { requireRole } from "@/lib/auth";
 
 export async function GET(
@@ -11,11 +10,12 @@ export async function GET(
   context: { params: Promise<{ id: string }> }
 ) {
   try {
-    const authCheck = await requireRole(["STUDENT", "ADMIN", "FACULTY REP"]);
+    const authCheck = await requireRole(["STUDENT", "ADMIN", "FACULTY REP", "ASPIRANT"]);
     if (!authCheck.authorized) {
       return NextResponse.json({ error: authCheck.error }, { status: authCheck.status });
     }
 
+    // Always re-authorize — tokens expire and the singleton state is unreliable
     await authorizeB2();
 
     const { id: bookId } = await context.params;
@@ -24,13 +24,19 @@ export async function GET(
       .from(books)
       .where(eq(books.id, bookId))
       .limit(1);
-    if (!book)
+
+    if (!book) {
       return NextResponse.json({ error: "Book not found" }, { status: 404 });
+    }
 
     const fileUrl = book.fileUrl!;
     const parts = fileUrl.split("/");
     const bucketName = process.env.B2_BUCKET || "univault-books";
-    const fileName = parts.slice(parts.indexOf(bucketName) + 1).join("/");
+    const bucketIndex = parts.indexOf(bucketName);
+    const rawFileName = bucketIndex !== -1
+      ? parts.slice(bucketIndex + 1).join("/")
+      : parts.pop() || "";
+    const fileName = decodeURIComponent(rawFileName);
 
     const { data: auth } = await b2.getDownloadAuthorization({
       bucketId: process.env.B2_BUCKET_ID!,
@@ -42,7 +48,7 @@ export async function GET(
 
     return NextResponse.json({ url: signedUrl });
   } catch (err: any) {
-    console.error("Download error:", err);
+    console.error("[download] Error:", err?.message ?? err);
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }

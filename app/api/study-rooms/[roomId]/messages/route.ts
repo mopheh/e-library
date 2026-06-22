@@ -15,6 +15,8 @@ const messageSchema = z.object({
   text: z.string().min(1, "Message text is required").max(1000),
 });
 
+import { moderateText } from "@/lib/moderation";
+
 export async function POST(
   req: Request,
   { params }: { params: Promise<{ roomId: string }> },
@@ -33,6 +35,15 @@ export async function POST(
       );
     }
     const { text } = result.data;
+
+    // Toxicity moderation check
+    const modResult = await moderateText(text);
+    if (modResult.flagged) {
+      return NextResponse.json(
+        { error: `Message flagged for inappropriate content (${modResult.reason}).` },
+        { status: 400 }
+      );
+    }
 
     const messageData = {
       id: crypto.randomUUID(),

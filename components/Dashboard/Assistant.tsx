@@ -9,6 +9,8 @@ interface AIChatAssistantProps {
   pageText?: string;
   title?: string;
   bookId?: string;
+  inputValue?: string;
+  onInputChange?: (value: string) => void;
 }
 
 type Message = {
@@ -20,13 +22,18 @@ export default function AIChatAssistant({
   pageText,
   title = "Study Assistant",
   bookId,
+  inputValue = "",
+  onInputChange,
 }: AIChatAssistantProps) {
   const containerRef = useRef<HTMLDivElement>(null);
 
   const [messages, setMessages] = useState<Message[]>([]);
-  const [input, setInput] = useState("");
+  const [input, setInput] = useState(inputValue);
   const [loading, setLoading] = useState(false);
 
+  useEffect(() => {
+    setInput(inputValue);
+  }, [inputValue]);
   // Ref for the scrollable container (parent of messages)
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   
@@ -71,6 +78,7 @@ export default function AIChatAssistant({
     const currentMessages = [systemMessage, ...messages, userMessage];
 
     setInput("");
+    if (onInputChange) onInputChange("");
     setLoading(true);
 
     try {
@@ -146,9 +154,7 @@ export default function AIChatAssistant({
                         key={suggestion}
                         onClick={() => {
                             setInput(suggestion);
-                            // Optional: auto-send
-                            // const fakeEvent = { preventDefault: () => {} } as React.FormEvent<HTMLFormElement>;
-                            // sendMessage(fakeEvent);
+                            if (onInputChange) onInputChange(suggestion);
                         }}
                         className="text-xs px-3 py-1.5 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-full hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors text-zinc-600 dark:text-zinc-300"
                     >
@@ -208,7 +214,10 @@ export default function AIChatAssistant({
             <input
             type="text"
             value={input}
-            onChange={(e) => setInput(e.target.value)}
+            onChange={(e) => {
+              setInput(e.target.value);
+              if (onInputChange) onInputChange(e.target.value);
+            }}
             className="flex-1 pl-4 pr-12 py-2.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 border-transparent focus:bg-white dark:focus:bg-zinc-950 border focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 outline-none transition-all text-sm dark:text-white placeholder:text-zinc-400"
             placeholder="Ask a question..."
             disabled={loading}

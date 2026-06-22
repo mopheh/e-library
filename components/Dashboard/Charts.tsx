@@ -12,6 +12,7 @@ import {
 import { useReadingSession } from "@/hooks/useUsers";
 import { useIsDarkMode } from "../is-dark";
 import { Skeleton } from "@/components/ui/skeleton";
+import { BookOpen } from "lucide-react";
 
 
 
@@ -24,6 +25,21 @@ export default function Charts() {
     return (
       <div className="w-[445px] relative transform -translate-x-10 sm:translate-x-0 md:w-full h-[90%]">
         <Skeleton className="w-full h-full rounded-md" />
+      </div>
+    );
+  }
+
+  // Show empty state if no reading activity at all
+  const hasActivity = Array.isArray(data) && data.some((d: any) => (d.pagesRead || 0) > 0 || (d.departmentAverage || 0) > 0);
+
+  if (!hasActivity) {
+    return (
+      <div className="w-full h-[90%] flex flex-col items-center justify-center gap-3 text-zinc-400">
+        <BookOpen className="w-10 h-10 opacity-30" />
+        <p className="text-sm font-semibold font-cabin">No reading activity yet</p>
+        <p className="text-xs text-zinc-400 font-poppins text-center max-w-[200px]">
+          Open a book and start reading — your chart will fill up as you study.
+        </p>
       </div>
     );
   }
@@ -67,7 +83,16 @@ export default function Charts() {
           <XAxis
             dataKey="date"
             tick={{ fontSize: 12 }}
-            tickFormatter={(d) => d.slice(5)} // shows MM-DD
+            tickFormatter={(d) => {
+              // Try to get short day name from date string "yyyy-MM-dd"
+              if (!d) return "";
+              const parts = d.split("-");
+              if (parts.length === 3) {
+                const date = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+                return date.toLocaleDateString("en-US", { weekday: "short" });
+              }
+              return d.slice(5); // fallback MM-DD
+            }}
           />
           <YAxis
             allowDecimals={false}
@@ -115,3 +140,4 @@ export default function Charts() {
     </div>
   );
 }
+

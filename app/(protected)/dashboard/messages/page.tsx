@@ -133,7 +133,7 @@ function MessagesPage() {
                         <div className="flex-1 min-h-0">
                             <ChatWindow 
                                 roomId={activeRoomId} 
-                                currentUserId={userData.id} 
+                                currentUserId={userData.id || ""} 
                                 otherUserName={activeRoom?.otherUser?.fullName || "Chat"} 
                                 otherUserImage={activeRoom?.otherUser?.imageUrl || null}
                                 currentUserImage={userData.imageUrl || null}

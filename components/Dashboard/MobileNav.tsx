@@ -9,6 +9,7 @@ import {
   User,
   Users2,
   Menu,
+  Layers,
 } from "lucide-react";
 import { motion, useScroll, useMotionValueEvent } from "framer-motion";
 import { useKeyboardOpen } from "@/hooks/useKeyboardOpen";
@@ -47,10 +48,10 @@ export default function BottomNav({
       id: "/library",
     },
     {
-      name: "Study",
-      path: "/cbt",
-      icon: ClipboardList,
-      id: "/cbt",
+      name: "Workspaces",
+      path: "/workspaces",
+      icon: Layers,
+      id: "/workspaces",
     },
     {
       name: "Community",
@@ -66,7 +67,7 @@ export default function BottomNav({
     },
   ];
 
-  const HIDDEN_ROUTES = ["/cbt", "/book", "/library/read", "/viewer", "/dashboard/workspaces", "/dashboard/study-rooms"];
+  const HIDDEN_ROUTES = ["/cbt", "/book", "/library/read", "/viewer", "/dashboard/study-rooms"];
   const hardHide = HIDDEN_ROUTES.some((route) => pathname.startsWith(route));
 
   const [mounted, setMounted] = useState(false);

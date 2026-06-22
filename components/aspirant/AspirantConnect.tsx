@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Pusher from "pusher-js";
@@ -48,7 +48,7 @@ export default function AspirantConnect() {
     roomId?: string | null;
     interests?: string | null;
   } | null>(null);
-  const [activeFilter, setActiveFilter] = useState("all");
+  const [activeFilter, setActiveFilter] = useState<"all" | "mentors" | "new" | "faculty">("all");
   const [data, setData] = useState<{ 
     departmentId: string; 
     interests?: string | null; 
@@ -71,6 +71,8 @@ export default function AspirantConnect() {
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [customTag, setCustomTag] = useState("");
   const [isUpdating, setIsUpdating] = useState(false);
+  const [communityNews, setCommunityNews] = useState<{ id: string; content: string; authorName: string; authorRole: string; createdAt: string }[]>([]);
+  const communityInputRef = useRef<HTMLInputElement>(null);
 
   const refreshData = useCallback(async () => {
     setLoading(true);
@@ -80,6 +82,18 @@ export default function AspirantConnect() {
       // Show expertise prompt if current student has no interests
       if (!isAspirant && res.data && !res.data.interests) {
         setShowExpertisePrompt(true);
+      }
+      // Fetch community news (recent posts) from the department's community
+      if (res.data.departmentId) {
+        try {
+          const newsRes = await fetch(`/api/aspirant/community?departmentId=${res.data.departmentId}`);
+          const newsData = await newsRes.json();
+          if (newsData.success && newsData.posts) {
+            setCommunityNews(newsData.posts.slice(0, 5));
+          }
+        } catch {
+          // silently fail — non-critical
+        }
       }
     }
     setLoading(false);
@@ -184,7 +198,15 @@ export default function AspirantConnect() {
     setCustomTag("");
   };
 
-  const studentsToMap = data?.peers || [];
+  const allPeers = data?.peers || [];
+
+  const studentsToMap = allPeers.filter((s) => {
+    if (activeFilter === "all") return true;
+    if (activeFilter === "faculty") return s.role === "FACULTY REP";
+    if (activeFilter === "mentors") return s.level === "300" || s.level === "400" || s.level === "500";
+    if (activeFilter === "new") return s.level === "100" || s.level === "200";
+    return true;
+  });
   const postsToMap = data?.recentDiscussions || [];
 
   const suggestedTags = [
@@ -306,12 +328,14 @@ export default function AspirantConnect() {
 
         {/* Filter Chips */}
         <div className="flex flex-wrap gap-2 pt-2">
-          {[
-            { id: "all", label: "All Discovery", icon: <TrendingUp className="w-3.5 h-3.5" /> },
-            { id: "mentors", label: "Top Mentors", icon: <Award className="w-3.5 h-3.5" /> },
-            { id: "new", label: "Recently Joined", icon: <Clock className="w-3.5 h-3.5" /> },
-            { id: "faculty", label: "Faculty Reps", icon: <UsersIcon className="w-3.5 h-3.5" /> }
-          ].map((f) => (
+          {(
+            [
+              { id: "all" as const, label: "All Discovery", icon: <TrendingUp className="w-3.5 h-3.5" /> },
+              { id: "mentors" as const, label: "Top Mentors", icon: <Award className="w-3.5 h-3.5" /> },
+              { id: "new" as const, label: "Recently Joined", icon: <Clock className="w-3.5 h-3.5" /> },
+              { id: "faculty" as const, label: "Faculty Reps", icon: <UsersIcon className="w-3.5 h-3.5" /> },
+            ] as const
+          ).map((f) => (
              <button 
                key={f.id}
                onClick={() => setActiveFilter(f.id)}
@@ -440,7 +464,8 @@ export default function AspirantConnect() {
                
                {/* Community Input - Unified for Aspirant and Student */}
                <form onSubmit={handlePostSubmit} className="mb-8 relative group">
-                  <Input 
+                  <Input
+                     ref={communityInputRef}
                     placeholder="Ask a question or share an academic tip..."
                     value={newPostContent}
                     onChange={(e) => setNewPostContent(e.target.value)}
@@ -515,47 +540,76 @@ export default function AspirantConnect() {
          {/* Sidebar Navigation */}
          <div className="lg:col-span-4 space-y-8">
             <div className="bg-gradient-to-br from-zinc-900 to-black rounded-[2.5rem] p-8 text-white shadow-2xl overflow-hidden relative group">
-               <div className="relative z-10 space-y-6">
+               <div className="relative z-10 space-y-5">
                  <div className="bg-white/10 w-fit p-3 rounded-2xl backdrop-blur-md">
                     <UsersIcon className="w-6 h-6 text-blue-400" />
                  </div>
                  <div className="space-y-2">
-                    <h3 className="font-bold text-2xl font-cabin tracking-tight">Active Circles</h3>
-                    <p className="text-zinc-400 text-sm font-light leading-relaxed">Join specialized study groups and social circles organized by department reps.</p>
+                    <h3 className="font-bold text-2xl font-cabin tracking-tight">Community Feed</h3>
+                    <p className="text-zinc-400 text-sm font-light leading-relaxed">
+                      {isAspirant
+                        ? "Upgrade to join discussions and engage with mentors directly in your department community."
+                        : "Ask questions, share tips, and engage with your department community in real time."
+                      }
+                    </p>
                  </div>
-                 
-                 <div className="space-y-3">
-                   {['Core Tech Stack Review', 'Faculty Engineering 101', 'Finalist Job Pipeline'].map((g, i) => (
-                     <div key={i} className="bg-white/5 backdrop-blur-sm border border-white/10 p-4 rounded-3xl flex items-center justify-between cursor-pointer hover:bg-white/10 transition-all group/item" onClick={() => isAspirant ? setShowUpgradeModal(true) : alert("Coming soon")}>
-                        <span className="font-semibold text-xs tracking-tight group-hover/item:text-blue-400">{g}</span>
-                        {isAspirant ? <Lock className="w-3.5 h-3.5 text-zinc-600" /> : <ChevronRight className="w-4 h-4 text-zinc-400 group-hover/item:translate-x-1 transition-transform" />}
+
+                 <div className="bg-white/5 border border-white/10 p-4 rounded-3xl space-y-3">
+                   <div className="flex items-center gap-2 text-xs text-zinc-400">
+                     <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                     Live Community · {data?.recentDiscussions?.length ?? 0} recent posts
+                   </div>
+                   {(data?.recentDiscussions || []).slice(0, 2).map((post) => (
+                     <div key={post.id} className="text-xs text-zinc-300 line-clamp-2 border-l-2 border-blue-500/50 pl-3">
+                       {post.content}
                      </div>
                    ))}
+                   {(!data?.recentDiscussions || data.recentDiscussions.length === 0) && (
+                     <p className="text-xs text-zinc-500">No posts yet — be the first!</p>
+                   )}
                  </div>
-                 
-                 <button className="w-full bg-white text-black font-bold py-4 rounded-3xl text-sm mt-4 hover:shadow-blue-500/20 shadow-xl transition-all">
-                    Explore All Groups
-                 </button>
+
+                 {isAspirant ? (
+                   <button
+                     onClick={() => setShowUpgradeModal(true)}
+                     className="w-full bg-white text-black font-bold py-4 rounded-3xl text-sm hover:opacity-90 shadow-xl transition-all flex items-center justify-center gap-2"
+                   >
+                     <Lock className="w-4 h-4" /> Unlock Full Access
+                   </button>
+                 ) : (
+                   <button
+                     onClick={() => communityInputRef.current?.focus()}
+                     className="w-full bg-white text-black font-bold py-4 rounded-3xl text-sm hover:opacity-90 shadow-xl transition-all flex items-center justify-center gap-2"
+                   >
+                     <ChevronRight className="w-4 h-4" /> Post to Community
+                   </button>
+                 )}
                </div>
 
                {/* Decorative Gradient Blob */}
-               <div className="absolute -bottom-20 -right-20 w-64 h-64 bg-blue-600/20 rounded-full blur-[100px] pointer-events-none group-hover:bg-blue-600/30 transition-all"></div>
+               <div className="absolute -bottom-20 -right-20 w-64 h-64 bg-blue-600/20 rounded-full blur-[100px] pointer-events-none group-hover:bg-blue-600/30 transition-all" />
             </div>
 
-            <div className="bg-zinc-50 dark:bg-zinc-900/40 border border-zinc-200/60 dark:border-zinc-800/60 rounded-[2.5rem] p-8 space-y-6">
+            <div className="bg-zinc-50 dark:bg-zinc-900/40 border border-zinc-200/60 dark:border-zinc-800/60 rounded-[2.5rem] p-8 space-y-4">
                <h3 className="text-lg font-bold font-cabin flex items-center gap-2">
-                  <TrendingUp className="w-5 h-5 text-blue-600" /> Community News
+                  <TrendingUp className="w-5 h-5 text-blue-600" /> Community Activity
                </h3>
-               {[
-                 "Maths 101 Discussion is trending",
-                 "New mentor joined Engineering department",
-                 "Post-UTME prep session starting in 2h"
-               ].map((item, i) => (
-                 <div key={i} className="flex gap-4 items-start group cursor-pointer">
-                    <div className="w-2 h-2 rounded-full bg-blue-500 mt-1.5 shrink-0 group-hover:scale-150 transition-transform"></div>
-                    <p className="text-sm text-zinc-600 dark:text-zinc-400 font-light group-hover:text-blue-600 transition-colors">{item}</p>
+               {communityNews.length === 0 ? (
+                 <div className="text-center py-6">
+                   <MessageCircle className="w-8 h-8 text-zinc-200 mx-auto mb-2" />
+                   <p className="text-xs text-zinc-400">No activity yet in this community.</p>
                  </div>
-               ))}
+               ) : (
+                 communityNews.map((post) => (
+                   <div key={post.id} className="flex gap-3 items-start group cursor-pointer">
+                      <div className="w-2 h-2 rounded-full bg-blue-500 mt-1.5 shrink-0 group-hover:scale-150 transition-transform" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-semibold text-zinc-700 dark:text-zinc-300 truncate">{post.authorName}</p>
+                        <p className="text-xs text-zinc-500 dark:text-zinc-400 font-light line-clamp-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">{post.content}</p>
+                      </div>
+                   </div>
+                 ))
+               )}
             </div>
          </div>
       </div>

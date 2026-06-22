@@ -31,6 +31,7 @@ workers/notificationWorker.ts
 # misc
 .DS_Store
 *.pem
+public/fallback-*.js
 
 # debug
 npm-debug.log*
@@ -61,6 +62,11 @@ build_output.txt
 /scratch/
 redis.js
 fix-env.js
+check_jobs.js
+check_migrations.js
+repair_embeddings.js
+test-openrouter.js
+test_db.js
 
 # --- One-time setup scripts (move to scripts/ and ignore root copies) ---
 execute_new_cors.mjs

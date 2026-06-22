@@ -358,6 +358,34 @@
       "when": 1780340696091,
       "tag": "0050_late_korg",
       "breakpoints": true
+    },
+    {
+      "idx": 51,
+      "version": "7",
+      "when": 1780782619269,
+      "tag": "0051_crazy_dragon_lord",
+      "breakpoints": true
+    },
+    {
+      "idx": 52,
+      "version": "7",
+      "when": 1781611570995,
+      "tag": "0052_chunky_green_goblin",
+      "breakpoints": true
+    },
+    {
+      "idx": 53,
+      "version": "7",
+      "when": 1781612318855,
+      "tag": "0053_broken_shaman",
+      "breakpoints": true
+    },
+    {
+      "idx": 54,
+      "version": "7",
+      "when": 1781620062361,
+      "tag": "0054_outgoing_rawhide_kid",
+      "breakpoints": true
     }
   ]
 }

@@ -3,6 +3,7 @@
 import { db } from "@/database/drizzle";
 import { courses, courseDepartments } from "@/database/schema";
 import { eq } from "drizzle-orm";
+import { requireRole } from "@/lib/auth";
 
 type Courses = {
   courseCode: string;
@@ -17,6 +18,11 @@ type Courses = {
 export const createCourses = async (data: Courses) => {
   try {
     if (!data) throw new Error("Course is required");
+
+    const authCheck = await requireRole(["ADMIN", "FACULTY REP"]);
+    if (!authCheck.authorized) {
+      throw new Error(authCheck.error || "Unauthorized");
+    }
 
     const existingCourse = await db
       .select()
@@ -76,6 +82,11 @@ export const updateCourseDepartments = async (
   courseId: string,
   departmentIds: string[],
 ) => {
+  const authCheck = await requireRole(["ADMIN", "FACULTY REP"]);
+  if (!authCheck.authorized) {
+    throw new Error(authCheck.error || "Unauthorized");
+  }
+
   // Delete existing entries
   await db
     .delete(courseDepartments)

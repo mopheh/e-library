@@ -2,100 +2,145 @@
 
 import React from "react";
 import { motion } from "framer-motion";
-import { Target, TrendingUp, MessageSquare, BookOpen } from "lucide-react";
+import { Target, TrendingUp, MessageSquare, BookOpen, ArrowRight } from "lucide-react";
+import Link from "next/link";
+import { SignInButton, SignedIn, SignedOut } from "@clerk/nextjs";
+
+const cards = [
+  {
+    icon: <Target className="w-5 h-5" />,
+    title: "Practice Tests",
+    desc: "Try timed exams built from real university course materials. Understand where you stand before exams begin.",
+    iconBg: "bg-blue-500/15 border-blue-500/25 text-blue-400",
+    tag: "Pre-Admission Ready",
+  },
+  {
+    icon: <BookOpen className="w-5 h-5" />,
+    title: "Explore Departments",
+    desc: "Browse real course materials, outlines, and textbooks from your intended faculty — before you even apply.",
+    iconBg: "bg-violet-500/15 border-violet-500/25 text-violet-400",
+    tag: "Open Access",
+  },
+  {
+    icon: <MessageSquare className="w-5 h-5" />,
+    title: "Chat with Seniors",
+    desc: "Connect directly with students in your target department. Ask about workload, courses, and campus reality.",
+    iconBg: "bg-emerald-500/15 border-emerald-500/25 text-emerald-400",
+    tag: "Community-Powered",
+  },
+  {
+    icon: <TrendingUp className="w-5 h-5" />,
+    title: "Study Roadmap",
+    desc: "Follow a structured, milestone-based preparation plan for your target department. Track every step of your journey.",
+    iconBg: "bg-amber-500/15 border-amber-500/25 text-amber-400",
+    tag: "Guided Path",
+  },
+];
 
 export const PreAdmissionHub = () => {
-  const features = [
-    {
-      title: "Practice Tests",
-      desc: "Try timed practice exams with questions from real university courses. See your score instantly and learn exactly which areas need more attention.",
-      icon: <Target className="w-6 h-6 text-[#abc7ff]" />,
-      reverse: false,
-    },
-    {
-      title: "Explore Departments",
-      desc: "Peek inside your intended department. Browse real textbooks, course outlines, and materials so you know what to expect before you apply.",
-      icon: <BookOpen className="w-6 h-6 text-[#abc7ff]" />,
-      reverse: true,
-    },
-    {
-      title: "Chat with Seniors",
-      desc: "Connect with current students in your dream department. Ask them anything — about courses, workload, campus life — and get honest answers from people already there.",
-      icon: <MessageSquare className="w-6 h-6 text-[#abc7ff]" />,
-      reverse: false,
-    },
-    {
-      title: "Study Roadmap",
-      desc: "Follow a structured, step-by-step preparation roadmap tailored to your target department. Track progress, hit milestones, and build genuine readiness.",
-      icon: <TrendingUp className="w-6 h-6 text-[#abc7ff]" />,
-      reverse: true,
-    },
-  ];
-
   return (
-    <section id="preadmission" className="py-24 px-6 md:px-12 max-w-7xl mx-auto border-t border-white/5 relative">
-      <div className="absolute top-0 right-1/4 w-96 h-96 bg-[#abc7ff] rounded-full blur-[150px] opacity-10 -z-10" />
-
-      <div className="text-center mb-24">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5 }}
-        >
-          <div className="inline-block px-4 py-1.5 rounded-full border border-white/10 bg-white/5 text-xs font-inter uppercase tracking-widest text-[#abc7ff] mb-6">
-            Pre-Admission Hub
-          </div>
-          <h2 className="font-manrope text-4xl md:text-5xl font-bold text-white mb-6">
-            Start Before You Enter
-          </h2>
-          <p className="font-inter text-[#c2c6d8] max-w-2xl mx-auto text-lg leading-relaxed">
-            RCF gives university aspirants real tools — practice tests, department previews, senior connections, and guided roadmaps — so you can start preparing before admission day.
-          </p>
-        </motion.div>
+    <section id="preadmission" className="relative py-32 px-6 md:px-12 overflow-hidden">
+      {/* Background */}
+      <div className="absolute inset-0 -z-10 bg-[#080810]">
+        <div className="absolute inset-0 opacity-[0.025]"
+          style={{
+            backgroundImage: "radial-gradient(circle at 1px 1px, rgba(255,255,255,0.8) 1px, transparent 0)",
+            backgroundSize: "40px 40px",
+          }}
+        />
+        <div className="absolute right-0 top-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-violet-500/[0.06] rounded-full blur-3xl" />
+        <div className="absolute left-0 top-1/3 w-[400px] h-[400px] bg-blue-500/[0.06] rounded-full blur-3xl" />
+        <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+        <div className="absolute bottom-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
       </div>
 
-      <div className="flex flex-col gap-32">
-        {features.map((feature, idx) => (
-          <div key={idx} className={`flex flex-col lg:flex-row items-center gap-16 ${feature.reverse ? "lg:flex-row-reverse" : ""}`}>
-            
-            <motion.div 
-              initial={{ opacity: 0, x: feature.reverse ? 30 : -30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true, margin: "-100px" }}
-              transition={{ duration: 0.6 }}
-              className="flex-1 flex flex-col items-start"
-            >
-              <div className="w-12 h-12 rounded-lg bg-[#2a2a2a] border border-white/5 flex items-center justify-center mb-6">
-                {feature.icon}
-              </div>
-              <h3 className="font-manrope text-3xl md:text-3xl font-bold text-white mb-4">
-                {feature.title}
-              </h3>
-              <p className="font-inter text-lg text-[#c2c6d8] leading-relaxed">
-                {feature.desc}
-              </p>
-            </motion.div>
-
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.95 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true, margin: "-100px" }}
-              transition={{ duration: 0.6 }}
-              className="flex-1 w-full"
-            >
-              <div className="aspect-[4/3] rounded-xl bg-[#1c1b1b] border border-white/5 relative overflow-hidden shadow-2xl flex items-center justify-center group">
-                <div className="absolute inset-0 opacity-5 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]" />
-                <div className="text-white/20 font-inter text-sm flex flex-col items-center gap-2 transition-transform group-hover:scale-105">
-                  <div className="px-4 py-2 border border-white/10 bg-[#2a2a2a]/50 rounded-lg backdrop-blur-sm">
-                    [ {feature.title} Preview ]
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+          className="text-center mb-20"
+        >
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-violet-500/30 bg-violet-500/[0.08] mb-6">
+            <span className="font-inter text-xs font-medium text-violet-300 uppercase tracking-widest">For Aspirants</span>
           </div>
-        ))}
+          <h2 className="font-manrope text-4xl md:text-5xl font-extrabold text-white mb-5 tracking-tight">
+            Your academic journey
+            <br />
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#818cf8] to-[#60a5fa]">
+              starts before day one.
+            </span>
+          </h2>
+          <p className="font-inter text-[#636e8a] max-w-xl mx-auto text-lg leading-relaxed">
+            Whether you&apos;re awaiting admission or just curious — explore your dream department, practice real exam questions, and connect with students who&apos;ve already walked the path.
+          </p>
+        </motion.div>
+
+        {/* Feature Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-16">
+          {cards.map((card, idx) => (
+            <motion.div
+              key={idx}
+              initial={{ opacity: 0, y: 28 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-40px" }}
+              transition={{ duration: 0.5, delay: idx * 0.1 }}
+              className="group relative rounded-2xl border border-white/[0.06] bg-[#0f0f16] p-7 hover:border-white/[0.12] transition-all duration-400 overflow-hidden"
+            >
+              <div className="absolute inset-0 opacity-0 group-hover:opacity-100 bg-gradient-to-br from-white/[0.02] to-transparent transition-opacity duration-500 rounded-2xl" />
+              <div className="relative">
+                <div className="flex items-start justify-between mb-5">
+                  <div className={`w-11 h-11 rounded-xl border ${card.iconBg} flex items-center justify-center`}>
+                    {card.icon}
+                  </div>
+                  <span className="font-inter text-[10px] font-semibold text-[#4a5568] uppercase tracking-widest border border-white/5 px-3 py-1.5 rounded-full bg-white/[0.02]">
+                    {card.tag}
+                  </span>
+                </div>
+                <h3 className="font-manrope text-xl font-bold text-white mb-3">{card.title}</h3>
+                <p className="font-inter text-sm text-[#636e8a] leading-relaxed group-hover:text-[#8892b0] transition-colors">{card.desc}</p>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+
+        {/* CTA Banner */}
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+          className="relative rounded-2xl border border-violet-500/20 bg-gradient-to-r from-violet-500/10 via-blue-500/10 to-violet-500/10 p-10 text-center overflow-hidden"
+        >
+          <div className="absolute inset-0 opacity-5 bg-gradient-to-br from-violet-500 to-blue-500 rounded-2xl" />
+          <div className="relative">
+            <h3 className="font-manrope text-2xl md:text-3xl font-bold text-white mb-3">
+              Not a student yet? That&apos;s okay.
+            </h3>
+            <p className="font-inter text-[#636e8a] mb-8 max-w-md mx-auto">
+              Start exploring now — browse departments, take practice tests, and connect with the community before you even receive your admission letter.
+            </p>
+            <SignedOut>
+              <SignInButton mode="modal">
+                <button className="inline-flex items-center gap-2 px-8 py-3.5 rounded-xl bg-white text-[#0a0a0f] font-inter font-semibold text-sm hover:bg-white/90 transition-all hover:scale-[1.02]">
+                  Explore as Aspirant
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+              </SignInButton>
+            </SignedOut>
+            <SignedIn>
+              <Link
+                href="/dashboard"
+                className="inline-flex items-center gap-2 px-8 py-3.5 rounded-xl bg-white text-[#0a0a0f] font-inter font-semibold text-sm hover:bg-white/90 transition-all hover:scale-[1.02]"
+              >
+                Go to Dashboard
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+            </SignedIn>
+          </div>
+        </motion.div>
       </div>
     </section>
   );

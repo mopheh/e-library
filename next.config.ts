@@ -1,5 +1,6 @@
 import type { NextConfig } from "next";
 import withPWA from "next-pwa";
+import { withSentryConfig } from "@sentry/nextjs";
 
 const nextConfig: NextConfig = {
   serverExternalPackages: ["canvas", "pdfjs-dist"],
@@ -27,9 +28,15 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  // @ts-ignore
+  sentry: {
+    widenClientFileUpload: true,
+    hideSourceMaps: true,
+    disableLogger: true,
+  }
 };
 
-export default withPWA({
+const pwaConfig = withPWA({
   dest: "public",
   disable: process.env.NODE_ENV === "development", // disable PWA in dev
   // @ts-ignore
@@ -77,3 +84,17 @@ export default withPWA({
   ],
   // @ts-ignore
 })(nextConfig);
+
+export default withSentryConfig(pwaConfig, {
+  // For all available options, see:
+  // https://github.com/getsentry/sentry-webpack-plugin#options
+
+  org: "rcf-elibrary",
+  project: "e-library",
+
+  // Only print logs for uploading source maps in CI or when debug is enabled
+  silent: !process.env.CI,
+
+  // Forstands to not upload source maps in development or when SENTRY_AUTH_TOKEN is missing
+  disableLogger: true,
+});

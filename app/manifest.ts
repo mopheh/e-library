@@ -3,8 +3,8 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
     return {
-        name: "RCF — E-Library",
-        short_name: "RCF",
+        name: "RCF E-Library",
+        short_name: "RCF E-Library",
         description: "Academic e-library for students — read, download, and study offline.",
         start_url: "/?source=pwa",
         display: "standalone", // looks like a native app

@@ -173,7 +173,7 @@ const Onboarding = () => {
       toast.promise(promise, {
         loading: "Creating your profile...",
         success: "Profile created successfully!",
-        error: "Failed to create profile. Please try again.",
+        error: (err: any) => err.message || "Failed to create profile. Please try again.",
       });
 
       await promise;

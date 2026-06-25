@@ -101,7 +101,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggle }) => {
        label: "Community",
        defaultOpen: false,
        items: [
-         { name: "Dept Preview", path: "/preview", icon: BookOpen, id: "/preview" },
+         { name: "Faculties & Depts", path: "/preview", icon: BookOpen, id: "/preview" },
          { name: "Connect", path: "/connect", icon: User, id: "/connect" },
        ]
     }
@@ -143,7 +143,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggle }) => {
          { name: "Record Lecture", path: "/dashboard/record", icon: Mic, id: "/dashboard/record" },
          { name: "Mini Apps", path: "/dashboard/mini-apps", icon: Grid3X3, id: "/dashboard/mini-apps" },
          { name: "Opportunities", path: "/dashboard/opportunities", icon: Briefcase, id: "/dashboard/opportunities" },
-         { name: "Dept Preview", path: "/preview", icon: BookOpen, id: "/preview" },
+         { name: "Faculties & Depts", path: "/preview", icon: BookOpen, id: "/preview" },
        ]
     }
   ];

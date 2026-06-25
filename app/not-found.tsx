@@ -34,7 +34,7 @@ export default function NotFound() {
               This page drifted out of the library.
             </h2>
             <p className="text-base text-zinc-500 dark:text-zinc-400 font-poppins max-w-xs mx-auto">
-              The chapter you are looking for doesn't exist or has been moved to another shelf.
+              The chapter you are looking for doesn&apos;t exist or has been moved to another shelf.
             </p>
           </div>
         </div>

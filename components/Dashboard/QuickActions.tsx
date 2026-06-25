@@ -44,12 +44,14 @@ const actions = [
   },
 ];
 
-export default function QuickActions() {
+export default function QuickActions({ hideSectionLabel }: { hideSectionLabel?: boolean } = {}) {
   return (
     <div>
-      <p className="text-[10px] font-black uppercase tracking-[0.18em] text-zinc-400 font-cabin mb-4 px-1">
-        Quick Access
-      </p>
+      {!hideSectionLabel && (
+        <p className="text-[10px] font-black uppercase tracking-[0.18em] text-zinc-400 font-cabin mb-4 px-1">
+          Quick Access
+        </p>
+      )}
       <div className="grid grid-cols-4 gap-3">
         {actions.map((action, i) => (
           <motion.div
@@ -66,7 +68,7 @@ export default function QuickActions() {
                 <action.icon className={`w-5 h-5 ${action.color}`} strokeWidth={2} />
               </div>
               <div className="text-center">
-                <p className={`text-[11px] font-black font-cabin uppercase tracking-wider ${action.color}`}>
+                <p className={`text-[8px] sm:text-[11px] font-black font-cabin uppercase tracking-wider ${action.color}`}>
                   {action.label}
                 </p>
                 <p className="text-[9px] text-zinc-400 font-poppins hidden sm:block mt-0.5">

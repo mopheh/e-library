@@ -100,7 +100,7 @@ export default function CourseWorkspacePage({
     return (
       <div className="flex flex-col items-center justify-center h-[70vh] gap-4">
         <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
-        <p className="text-zinc-500 text-xs font-medium font-poppins font-poppins">
+        <p className="text-zinc-500 text-xs font-medium font-poppins">
           Loading workspace...
         </p>
       </div>

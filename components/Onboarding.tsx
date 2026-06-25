@@ -10,7 +10,7 @@ import { useDepartments } from "@/hooks/useDepartments";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { motion, AnimatePresence } from "framer-motion";
-import { Loader2, ArrowRight, ArrowLeft, BookOpen } from "lucide-react";
+import { Loader2, ArrowRight, ArrowLeft, BookOpen, CheckCircle2, GraduationCap, UserCircle2 } from "lucide-react";
 import { getSubjectCombination } from "@/lib/subjectCombinations";
 
 import {
@@ -47,6 +47,12 @@ const onboardingSchema = z.object({
 });
 
 type OnboardingFormData = z.infer<typeof onboardingSchema>;
+
+const STEPS = [
+  { id: 1, label: "Role & ID",    icon: UserCircle2 },
+  { id: 2, label: "Academics",    icon: GraduationCap },
+  { id: 3, label: "Personal",     icon: BookOpen },
+];
 
 const Onboarding = () => {
   const { data: faculties, isError, error } = useFaculties(1, 1000);
@@ -101,20 +107,14 @@ const Onboarding = () => {
   useEffect(() => {
     const checkExistingUser = async () => {
       if (!userId || !user) return;
-
       try {
         const res = await fetch(`/api/users?clerkId=${userId}`);
         const data = await res.json();
-
-        // If user already exists in DB, they are already onboarded
         if (data && data.length > 0) {
-          // Use the server action to sync metadata (since publicMetadata is server-only)
           const { syncUserMetadata } = await import("@/actions/sync");
           const result = await syncUserMetadata();
-          
           if (result.success) {
             toast.success("Profile found! Syncing and redirecting...");
-            // Force a reload to ensure the new session token is picked up
             window.location.href = "/dashboard";
           }
         }
@@ -122,7 +122,6 @@ const Onboarding = () => {
         console.error("Error checking existing user:", err);
       }
     };
-
     checkExistingUser();
   }, [userId, user, router]);
 
@@ -136,30 +135,22 @@ const Onboarding = () => {
 
   const validateStep = async () => {
     let fieldsToValidate: (keyof OnboardingFormData)[] = [];
-    
     if (step === 1) {
       fieldsToValidate = ["accountType", "matric"];
     } else if (step === 2) {
       fieldsToValidate = ["faculty", "department"];
-      if (accountType === "STUDENT") {
-        fieldsToValidate.push("level");
-      }
+      if (accountType === "STUDENT") fieldsToValidate.push("level");
     } else if (step === 3) {
       fieldsToValidate = ["tel", "gender", "address"];
     }
-
-    const isValid = await trigger(fieldsToValidate);
-    return isValid;
+    return await trigger(fieldsToValidate);
   };
 
   const handleNext = async () => {
-    const isValid = await validateStep();
-    if (isValid) setStep((s) => s + 1);
+    if (await validateStep()) setStep((s) => s + 1);
   };
 
-  const handlePrev = () => {
-    setStep((s) => Math.max(1, s - 1));
-  };
+  const handlePrev = () => setStep((s) => Math.max(1, s - 1));
 
   const onSubmit = async (data: OnboardingFormData) => {
     setIsSubmitting(true);
@@ -186,7 +177,6 @@ const Onboarding = () => {
       });
 
       await promise;
-
       await user?.update({
         unsafeMetadata: {
           ...data,
@@ -194,16 +184,11 @@ const Onboarding = () => {
           onboarded: true,
         },
       });
-
       await fetch("/api/activity", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          type: "ONBOARDING",
-          meta: { action: "Onboarding Completed" },
-        }),
+        body: JSON.stringify({ type: "ONBOARDING", meta: { action: "Onboarding Completed" } }),
       });
-
       router.push("/dashboard");
     } catch (e) {
       console.error(e);
@@ -211,319 +196,345 @@ const Onboarding = () => {
     }
   };
 
+  const inputClass = "h-12 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 text-zinc-900 dark:text-white placeholder:text-zinc-400 dark:placeholder:text-zinc-600 font-poppins text-sm focus-visible:ring-2 focus-visible:ring-blue-500/20 focus-visible:border-blue-500 transition-all";
+  const labelClass = "font-poppins text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1.5";
+
   return (
-    <div className="w-full max-w-2xl mx-auto py-8 font-poppins h-full">
-      <div className="bg-white dark:bg-zinc-900 shadow-2xl rounded-3xl p-8 border border-zinc-200 dark:border-zinc-800 relative overflow-hidden">
-        
-        {/* Progress Bar Header */}
-        <div className="mb-8">
-           <h1 className="text-2xl font-bold font-open-sans mb-2 tracking-tight">Setup Your Account</h1>
-           <p className="text-zinc-500 text-sm mb-6">Let&apos;s get you ready to explore RCF&apos;s academic ecosystem.</p>
-           
-           <div className="flex items-center gap-2 mb-2">
-              {[1, 2, 3].map((i) => (
-                 <div key={i} className={`h-1.5 flex-1 rounded-full transition-colors duration-500 ${step >= i ? "bg-blue-600" : "bg-zinc-100 dark:bg-zinc-800"}`} />
-              ))}
-           </div>
-           <div className="flex justify-between text-xs font-semibold text-zinc-400 uppercase tracking-widest">
-              <span className={step >= 1 ? "text-blue-600" : ""}>Role</span>
-              <span className={step >= 2 ? "text-blue-600" : ""}>Academics</span>
-              <span className={step >= 3 ? "text-blue-600" : ""}>Details</span>
-           </div>
+    <div className="w-full max-w-xl mx-auto font-poppins">
+      {/* Card */}
+      <div className="bg-white dark:bg-zinc-900 shadow-xl shadow-zinc-200/60 dark:shadow-black/30 rounded-2xl border border-zinc-200 dark:border-zinc-800 overflow-hidden">
+
+        {/* Progress header */}
+        <div className="px-7 pt-7 pb-6 border-b border-zinc-100 dark:border-zinc-800">
+          <h1 className="font-cabin text-xl font-black text-zinc-900 dark:text-white tracking-tight mb-0.5">
+            Complete Your Profile
+          </h1>
+          <p className="font-poppins text-sm text-zinc-500 dark:text-zinc-400">
+            Step {step} of 3 — {STEPS[step - 1].label}
+          </p>
+
+          {/* Step bar */}
+          <div className="flex items-center gap-2 mt-4">
+            {STEPS.map((s, i) => {
+              const isCompleted = step > s.id;
+              const isCurrent  = step === s.id;
+              const Icon = s.icon;
+              return (
+                <React.Fragment key={s.id}>
+                  <div className="flex items-center gap-1.5">
+                    <div
+                      className={`w-7 h-7 rounded-full flex items-center justify-center transition-all duration-300 text-xs font-bold
+                        ${isCompleted ? "bg-blue-600 text-white" : isCurrent ? "bg-blue-50 dark:bg-blue-900/30 border-2 border-blue-600 text-blue-600 dark:text-blue-400" : "bg-zinc-100 dark:bg-zinc-800 text-zinc-400 dark:text-zinc-600"}`}
+                    >
+                      {isCompleted ? <CheckCircle2 className="w-4 h-4" /> : <Icon className="w-3.5 h-3.5" />}
+                    </div>
+                    <span className={`text-xs font-medium hidden sm:block transition-colors ${isCurrent ? "text-blue-600 dark:text-blue-400" : isCompleted ? "text-blue-500" : "text-zinc-400 dark:text-zinc-600"}`}>
+                      {s.label}
+                    </span>
+                  </div>
+                  {i < STEPS.length - 1 && (
+                    <div className={`flex-1 h-px transition-all duration-500 ${step > s.id ? "bg-blue-500" : "bg-zinc-200 dark:bg-zinc-700"}`} />
+                  )}
+                </React.Fragment>
+              );
+            })}
+          </div>
         </div>
 
-        <Form {...form}>
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 relative min-h-[300px]">
-            <AnimatePresence mode="wait">
-              
-              {/* --- STEP 1: ROLE & ID --- */}
-              {step === 1 && (
-                <motion.div
-                  key="step1"
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: 20 }}
-                  transition={{ duration: 0.3 }}
-                  className="space-y-6"
-                >
-                  <FormField
-                    control={control}
-                    name="accountType"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>I am a...</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl>
-                            <SelectTrigger className="h-14 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800">
-                              <SelectValue placeholder="Select your role" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="STUDENT">Current University Student</SelectItem>
-                            <SelectItem value="ASPIRANT">Post-UTME / Aspirant</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+        {/* Form body */}
+        <div className="px-7 py-6">
+          <Form {...form}>
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-5 relative min-h-[280px]">
+              <AnimatePresence mode="wait">
 
-                  <FormField
-                    control={control}
-                    name="matric"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>
-                           {accountType === "ASPIRANT" ? "JAMB Registration Number" : "Matriculation Number"}
-                        </FormLabel>
-                        <FormControl>
-                          <Input 
-                            placeholder={accountType === "ASPIRANT" ? "e.g. 20230010484GA" : "e.g. 19/52HL012"} 
-                            className="h-14 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800" 
-                            {...field} 
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </motion.div>
-              )}
-
-
-              {/* --- STEP 2: ACADEMICS --- */}
-              {step === 2 && (
-                <motion.div
-                  key="step2"
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: 20 }}
-                  transition={{ duration: 0.3 }}
-                  className="space-y-6"
-                >
-                  <FormField
-                    control={control}
-                    name="faculty"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Faculty</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl>
-                            <SelectTrigger className="h-14 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800">
-                              <SelectValue placeholder="Select Faculty" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {faculties?.map((faculty) => (
-                              <SelectItem key={faculty.id} value={faculty.id}>
-                                {faculty.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={control}
-                    name="department"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Department</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value} disabled={!selectedFaculty || loadingDepartments}>
-                          <FormControl>
-                            <SelectTrigger className="h-14 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800">
-                              <SelectValue placeholder={
-                                !selectedFaculty ? "Select a faculty first" :
-                                loadingDepartments ? "Loading departments..." : "Select Department"
-                              } />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {departments?.map((dept) => (
-                              <SelectItem key={dept.id} value={dept.id}>
-                                {dept.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  {accountType === "ASPIRANT" && subjectCombination && (
-                    <motion.div
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="bg-blue-50/50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-800 rounded-2xl p-4"
-                    >
-                      <div className="flex items-center gap-2 mb-3">
-                        <BookOpen className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                        <h4 className="font-semibold text-blue-900 dark:text-blue-100 text-sm">
-                          Required Subject Combination
-                        </h4>
-                      </div>
-                      <div className="space-y-3 text-sm">
-                         <div>
-                            <span className="font-medium text-blue-800 dark:text-blue-300">JAMB: </span>
-                            <span className="text-blue-700/80 dark:text-blue-200/70">{subjectCombination.jamb.join(", ")}</span>
-                         </div>
-                         <div>
-                            <span className="font-medium text-blue-800 dark:text-blue-300">Post-UTME: </span>
-                            <span className="text-blue-700/80 dark:text-blue-200/70">{subjectCombination.postUtme.join(", ")}</span>
-                         </div>
-                         {subjectCombination.requirements && (
-                           <div className="pt-2 mt-2 border-t border-blue-200/50 dark:border-blue-800/50">
-                             <p className="text-blue-700/80 dark:text-blue-200/70 text-xs">{subjectCombination.requirements}</p>
-                           </div>
-                         )}
-                      </div>
-                    </motion.div>
-                  )}
-
-                  {accountType === "STUDENT" && (
+                {/* STEP 1 */}
+                {step === 1 && (
+                  <motion.div
+                    key="step1"
+                    initial={{ opacity: 0, x: -24 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: 24 }}
+                    transition={{ duration: 0.25, ease: "easeInOut" }}
+                    className="space-y-5"
+                  >
                     <FormField
                       control={control}
-                      name="level"
+                      name="accountType"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Current Level</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <FormControl>
-                              <SelectTrigger className="h-14 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800">
-                                <SelectValue placeholder="Select Academic Level" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {["100", "200", "300", "400", "500", "600"].map((lvl) => (
-                                <SelectItem key={lvl} value={lvl}>{lvl} Level</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
+                          <FormLabel className={labelClass}>I am a...</FormLabel>
+                          <div className="grid grid-cols-2 gap-3">
+                            {[
+                              { value: "STUDENT", label: "University Student", desc: "Currently enrolled" },
+                              { value: "ASPIRANT", label: "Post-UTME Aspirant", desc: "Seeking admission" },
+                            ].map((opt) => (
+                              <button
+                                key={opt.value}
+                                type="button"
+                                onClick={() => field.onChange(opt.value)}
+                                className={`relative text-left rounded-xl p-4 border-2 transition-all duration-200 ${
+                                  field.value === opt.value
+                                    ? "border-emerald-500 bg-emerald-50/50 dark:bg-emerald-500/10"
+                                    : "border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/30 hover:border-zinc-300 dark:hover:border-zinc-600"
+                                }`}
+                              >
+                                {field.value === opt.value && (
+                                  <div className="absolute top-3 right-3 w-4 h-4 rounded-full bg-emerald-500 flex items-center justify-center">
+                                    <div className="w-1.5 h-1.5 rounded-full bg-white" />
+                                  </div>
+                                )}
+                                <p className={`text-sm font-semibold ${field.value === opt.value ? "text-emerald-700 dark:text-emerald-400" : "text-zinc-800 dark:text-zinc-200"}`}>
+                                  {opt.label}
+                                </p>
+                                <p className="text-xs text-zinc-500 dark:text-zinc-500 mt-0.5">{opt.desc}</p>
+                              </button>
+                            ))}
+                          </div>
+                          <FormMessage className="text-xs text-red-500 mt-1" />
                         </FormItem>
                       )}
                     />
-                  )}
-                </motion.div>
-              )}
 
+                    <FormField
+                      control={control}
+                      name="matric"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className={labelClass}>
+                            {accountType === "ASPIRANT" ? "JAMB Registration Number" : "Matriculation Number"}
+                          </FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder={accountType === "ASPIRANT" ? "e.g. 20230010484GA" : "e.g. 19/52HL012"}
+                              className={inputClass}
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage className="text-xs text-red-500 mt-1" />
+                        </FormItem>
+                      )}
+                    />
+                  </motion.div>
+                )}
 
-              {/* --- STEP 3: PERSONAL INFO --- */}
-              {step === 3 && (
-                <motion.div
-                  key="step3"
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: 20 }}
-                  transition={{ duration: 0.3 }}
-                  className="space-y-6"
-                >
-                  <div className="grid grid-cols-2 gap-4">
-                     <FormField
+                {/* STEP 2 */}
+                {step === 2 && (
+                  <motion.div
+                    key="step2"
+                    initial={{ opacity: 0, x: -24 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: 24 }}
+                    transition={{ duration: 0.25, ease: "easeInOut" }}
+                    className="space-y-5"
+                  >
+                    <FormField
+                      control={control}
+                      name="faculty"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className={labelClass}>Faculty</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger className={inputClass}>
+                                <SelectValue placeholder="Select your faculty" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent className="font-inter rounded-xl border border-zinc-200 dark:border-zinc-700 shadow-xl">
+                              {faculties?.map((f) => (
+                                <SelectItem key={f.id} value={f.id} className="rounded-lg">{f.name}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage className="text-xs text-red-500 mt-1" />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={control}
+                      name="department"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className={labelClass}>Department</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value} disabled={!selectedFaculty || loadingDepartments}>
+                            <FormControl>
+                              <SelectTrigger className={inputClass}>
+                                <SelectValue placeholder={
+                                  !selectedFaculty ? "Select a faculty first" :
+                                  loadingDepartments ? "Loading departments..." : "Select your department"
+                                } />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent className="font-inter rounded-xl border border-zinc-200 dark:border-zinc-700 shadow-xl">
+                              {departments?.map((d) => (
+                                <SelectItem key={d.id} value={d.id} className="rounded-lg">{d.name}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage className="text-xs text-red-500 mt-1" />
+                        </FormItem>
+                      )}
+                    />
+
+                    {accountType === "ASPIRANT" && subjectCombination && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="rounded-xl p-4 bg-blue-50/60 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-800/40"
+                      >
+                        <div className="flex items-center gap-2 mb-2">
+                          <BookOpen className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                          <p className="text-sm font-semibold text-blue-900 dark:text-blue-200">Required Subject Combination</p>
+                        </div>
+                        <p className="text-xs text-blue-700/80 dark:text-blue-300/70">
+                          <span className="font-semibold">JAMB: </span>{subjectCombination.jamb.join(", ")}
+                        </p>
+                        <p className="text-xs text-blue-700/80 dark:text-blue-300/70 mt-1">
+                          <span className="font-semibold">Post-UTME: </span>{subjectCombination.postUtme.join(", ")}
+                        </p>
+                        {subjectCombination.requirements && (
+                          <p className="text-xs text-blue-700/60 dark:text-blue-300/50 mt-2 pt-2 border-t border-blue-200/40 dark:border-blue-800/30">
+                            {subjectCombination.requirements}
+                          </p>
+                        )}
+                      </motion.div>
+                    )}
+
+                    {accountType === "STUDENT" && (
+                      <FormField
+                        control={control}
+                        name="level"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className={labelClass}>Current Level</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                              <FormControl>
+                                <SelectTrigger className={inputClass}>
+                                  <SelectValue placeholder="Select your academic level" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent className="font-inter rounded-xl border border-zinc-200 dark:border-zinc-700 shadow-xl">
+                                {["100", "200", "300", "400", "500", "600"].map((lvl) => (
+                                  <SelectItem key={lvl} value={lvl} className="rounded-lg">{lvl} Level</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage className="text-xs text-red-500 mt-1" />
+                          </FormItem>
+                        )}
+                      />
+                    )}
+                  </motion.div>
+                )}
+
+                {/* STEP 3 */}
+                {step === 3 && (
+                  <motion.div
+                    key="step3"
+                    initial={{ opacity: 0, x: -24 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: 24 }}
+                    transition={{ duration: 0.25, ease: "easeInOut" }}
+                    className="space-y-5"
+                  >
+                    <div className="grid grid-cols-2 gap-4">
+                      <FormField
                         control={control}
                         name="tel"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Phone Number</FormLabel>
+                            <FormLabel className={labelClass}>Phone Number</FormLabel>
                             <FormControl>
-                              <Input type="tel" placeholder="+234..." className="h-14 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800" {...field} />
+                              <Input type="tel" placeholder="+234..." className={inputClass} {...field} />
                             </FormControl>
-                            <FormMessage />
+                            <FormMessage className="text-xs text-red-500 mt-1" />
                           </FormItem>
                         )}
                       />
-
                       <FormField
                         control={control}
                         name="gender"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Gender</FormLabel>
+                            <FormLabel className={labelClass}>Gender</FormLabel>
                             <Select onValueChange={field.onChange} defaultValue={field.value}>
                               <FormControl>
-                                <SelectTrigger className="h-14 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800">
-                                  <SelectValue placeholder="Gender" />
+                                <SelectTrigger className={inputClass}>
+                                  <SelectValue placeholder="Select" />
                                 </SelectTrigger>
                               </FormControl>
-                              <SelectContent>
-                                <SelectItem value="MALE">Male</SelectItem>
-                                <SelectItem value="FEMALE">Female</SelectItem>
+                              <SelectContent className="font-inter rounded-xl border border-zinc-200 dark:border-zinc-700 shadow-xl">
+                                <SelectItem value="MALE" className="rounded-lg">Male</SelectItem>
+                                <SelectItem value="FEMALE" className="rounded-lg">Female</SelectItem>
                               </SelectContent>
                             </Select>
-                            <FormMessage />
+                            <FormMessage className="text-xs text-red-500 mt-1" />
                           </FormItem>
                         )}
                       />
-                  </div>
+                    </div>
 
-                  <FormField
-                    control={control}
-                    name="address"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Residential Address</FormLabel>
-                        <FormControl>
-                          <Textarea 
-                            placeholder="Enter your full address..." 
-                            className="resize-none rounded-2xl bg-zinc-50 dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 p-4" 
-                            rows={3} 
-                            {...field} 
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </motion.div>
-              )}
+                    <FormField
+                      control={control}
+                      name="address"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className={labelClass}>Residential Address</FormLabel>
+                          <FormControl>
+                            <Textarea
+                              placeholder="Enter your full residential address..."
+                              className="resize-none rounded-xl bg-white dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/60 text-zinc-900 dark:text-white placeholder:text-zinc-400 dark:placeholder:text-zinc-600 font-inter text-sm focus-visible:ring-2 focus-visible:ring-emerald-500/30 focus-visible:border-emerald-500 transition-all p-3"
+                              rows={3}
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage className="text-xs text-red-500 mt-1" />
+                        </FormItem>
+                      )}
+                    />
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
-            </AnimatePresence>
+              {/* Navigation */}
+              <div className="flex items-center justify-between pt-4 border-t border-zinc-100 dark:border-zinc-800">
+                {step > 1 ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handlePrev}
+                    disabled={isSubmitting}
+                    className="rounded-xl h-12 px-5 rounded-xl border-zinc-200 dark:border-zinc-700 font-poppins font-medium text-sm hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-all"
+                  >
+                    <ArrowLeft className="w-4 h-4 mr-1.5" /> Back
+                  </Button>
+                ) : <div />}
 
-            {/* Navigation Buttons */}
-            <div className="flex items-center justify-between pt-8 mt-auto">
-               {step > 1 ? (
-                 <Button 
-                   type="button" 
-                   variant="outline" 
-                   onClick={handlePrev}
-                   className="rounded-xl h-12 px-6 border-zinc-200 dark:border-zinc-800"
-                   disabled={isSubmitting}
-                 >
-                    <ArrowLeft className="w-4 h-4 mr-2" /> Back
-                 </Button>
-               ) : (
-                 <div /> // Empty div to keep 'Next' aligned to the right
-               )}
-
-               {step < 3 ? (
-                 <Button 
-                   type="button"
-                   onClick={handleNext}
-                   className="rounded-xl h-12 px-8 bg-blue-600 hover:bg-blue-700 text-white"
-                 >
-                    Next <ArrowRight className="w-4 h-4 ml-2" />
-                 </Button>
-               ) : (
-                 <Button 
-                   type="submit"
-                   disabled={isSubmitting}
-                   className="rounded-xl h-12 px-8 bg-black dark:bg-white text-white dark:text-black font-semibold shadow-lg hover:scale-105 transition-transform"
-                 >
+                {step < 3 ? (
+                  <Button
+                    type="button"
+                    onClick={handleNext}
+                    className="h-11 px-6 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-poppins font-semibold text-sm shadow-sm hover:shadow-md transition-all"
+                  >
+                    Continue <ArrowRight className="w-4 h-4 ml-1.5" />
+                  </Button>
+                ) : (
+                  <Button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="h-11 px-6 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-poppins font-semibold text-sm shadow-sm hover:shadow-md transition-all disabled:opacity-60"
+                  >
                     {isSubmitting ? (
-                      <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Finalizing...</>
+                      <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Setting up...</>
                     ) : (
-                      "Complete Setup"
+                      <>Complete Setup <CheckCircle2 className="w-4 h-4 ml-1.5" /></>
                     )}
-                 </Button>
-               )}
-            </div>
-            
-          </form>
-        </Form>
+                  </Button>
+                )}
+              </div>
+            </form>
+          </Form>
+        </div>
       </div>
     </div>
   );

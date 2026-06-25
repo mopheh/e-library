@@ -2,7 +2,7 @@ import { books, jobs } from "@/database/schema";
 import { JobPayload, JobType } from "@/types";
 import { eq, sql } from "drizzle-orm";
 import { db } from "./db";
-import { parsePdfPages } from "@/actions/parseBook";
+import { parsePdfPages, parseDocxPages } from "@/actions/parseBook";
 import { generateQuestionsFromBook } from "@/lib/generateQuestions";
 import * as fs from "fs";
 import * as os from "os";
@@ -30,7 +30,9 @@ export async function processJob(job: {
       throw new Error(`Book ${bookId} has no fileUrl`);
     }
 
-    const tmpPath = path.join(os.tmpdir(), `book_${bookId}_${Date.now()}.pdf`);
+    const isDocx = book.fileUrl.toLowerCase().includes(".docx") || book.fileUrl.toLowerCase().includes(".doc");
+    const extension = isDocx ? ".docx" : ".pdf";
+    const tmpPath = path.join(os.tmpdir(), `book_${bookId}_${Date.now()}${extension}`);
 
     try {
       let downloadUrl = book.fileUrl;
@@ -80,7 +82,12 @@ export async function processJob(job: {
         clearTimeout(timeout);
       }
 
-      const pageCount = await parsePdfPages(tmpPath, bookId);
+      let pageCount = 0;
+      if (isDocx) {
+        pageCount = await parseDocxPages(tmpPath, bookId);
+      } else {
+        pageCount = await parsePdfPages(tmpPath, bookId);
+      }
 
       const skipGenerationTypes = ["past question", "past_question", "handwritten", "note"];
       const shouldSkip = skipGenerationTypes.some(t => book.type.toLowerCase().includes(t));

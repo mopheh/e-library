@@ -46,6 +46,42 @@ const renderLoader = (percentages: number) => (
   </div>
 );
 
+const DocxReader = ({ pages, currentPage, setCurrentPage }: { pages: any[], currentPage: number, setCurrentPage: (p: number) => void }) => {
+  return (
+    <div className="h-full w-full overflow-y-auto bg-white dark:bg-zinc-900 p-8 md:p-16 flex flex-col font-serif text-lg leading-relaxed mx-auto shadow-sm">
+      <div className="max-w-3xl mx-auto w-full">
+        {pages?.length > 0 ? (
+          <div className="space-y-6 whitespace-pre-wrap text-zinc-800 dark:text-zinc-200 text-justify">
+             {pages[currentPage]?.textChunk}
+             <div className="flex items-center justify-between mt-12 pt-6 border-t border-zinc-200 dark:border-zinc-800 pb-16">
+               <button 
+                  onClick={() => setCurrentPage(Math.max(0, currentPage - 1))}
+                  disabled={currentPage === 0}
+                  className="px-4 py-2 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors rounded disabled:opacity-50 text-sm font-sans font-medium"
+               >
+                  Previous
+               </button>
+               <span className="text-sm font-sans text-zinc-500">Page {currentPage + 1} of {pages.length}</span>
+               <button 
+                  onClick={() => setCurrentPage(Math.min(pages.length - 1, currentPage + 1))}
+                  disabled={currentPage === pages.length - 1}
+                  className="px-4 py-2 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors rounded disabled:opacity-50 text-sm font-sans font-medium"
+               >
+                  Next
+               </button>
+             </div>
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center h-full min-h-[300px] text-zinc-500">
+            <div className="w-8 h-8 rounded-full border-4 border-zinc-200 border-t-zinc-600 animate-spin mb-4" />
+            <span className="text-sm font-medium">Loading text...</span>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
 const PDFStudyView = ({ fileUrl, bookId }: PDFStudyViewProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const viewedPages = useRef<Set<number>>(new Set());
@@ -59,6 +95,8 @@ const PDFStudyView = ({ fileUrl, bookId }: PDFStudyViewProps) => {
   const [displayUrl, setDisplayUrl] = useState<string | Uint8Array>(fileUrl);
   const [assistantInput, setAssistantInput] = useState("");
   const [mobileTab, setMobileTab] = useState("study");
+  
+  const isDocx = fileUrl.toLowerCase().includes(".docx") || fileUrl.toLowerCase().includes(".doc");
 
   const { data: dbProgress, isLoading: loadingProgress } = useQuery({
     queryKey: ["book-progress", bookId],
@@ -457,6 +495,9 @@ const PDFStudyView = ({ fileUrl, bookId }: PDFStudyViewProps) => {
          <div className="flex-1 relative bg-zinc-50 dark:bg-zinc-950/50">
             <div className="absolute inset-0 overflow-hidden">
                 {displayUrl ? (
+                  isDocx ? (
+                    <DocxReader pages={pages || []} currentPage={currentPage} setCurrentPage={setCurrentPage} />
+                  ) : (
                   <Worker workerUrl="/pdf.worker.min.js">
                     <Viewer
                       fileUrl={displayUrl}
@@ -472,6 +513,7 @@ const PDFStudyView = ({ fileUrl, bookId }: PDFStudyViewProps) => {
                       onPageChange={(e) => setCurrentPage(e.currentPage)}
                     />
                   </Worker>
+                  )
                 ) : (
                   <div className="flex items-center justify-center h-full">
                     {renderLoader(0)}
@@ -529,6 +571,9 @@ const PDFStudyView = ({ fileUrl, bookId }: PDFStudyViewProps) => {
                 </div>
                 <div className="flex-1 overflow-hidden relative"> 
                     {displayUrl ? (
+                      isDocx ? (
+                        <DocxReader pages={pages || []} currentPage={currentPage} setCurrentPage={setCurrentPage} />
+                      ) : (
                       <Worker workerUrl="/pdf.worker.min.js">
                           <Viewer
                           fileUrl={displayUrl}
@@ -538,6 +583,7 @@ const PDFStudyView = ({ fileUrl, bookId }: PDFStudyViewProps) => {
                           plugins={[zoomPluginInstance, pageNavPluginInstance, scrollPluginInstance, searchPluginInstance, bookmarkPluginInstance, highlightPluginInstance]}
                           />
                       </Worker>
+                      )
                     ) : (
                       <div className="flex items-center justify-center h-full">
                         {renderLoader(0)}

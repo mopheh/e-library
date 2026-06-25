@@ -55,7 +55,7 @@ export const BookMaterialCard = ({ book, courseId }: BookMaterialCardProps) => {
     <div className="group relative flex gap-3 p-4 rounded-xl border border-zinc-250 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-blue-200 dark:hover:border-blue-800 hover:shadow-md transition-all duration-200">
       {/* Type icon */}
       <div
-        className={`flex-shrink-0 w-9 h-9 rounded-xl bg-gradient-to-br ${config.gradient} flex items-center justify-center shadow-sm`}
+        className={`shrink-0 w-9 h-9 rounded-xl bg-linear-to-br ${config.gradient} flex items-center justify-center shadow-sm`}
       >
         <Icon className="w-4.5 h-4.5 text-white" />
       </div>
@@ -71,7 +71,7 @@ export const BookMaterialCard = ({ book, courseId }: BookMaterialCardProps) => {
           </p>
           {isIndexed && (
             <span
-              className="flex-shrink-0 flex items-center gap-0.5 text-[9px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/30 px-1.5 py-0.5 rounded-full font-poppins"
+              className="shrink-0 flex items-center gap-0.5 text-[9px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/30 px-1.5 py-0.5 rounded-full font-poppins"
               title="AI-indexed"
             >
               <Zap className="w-2.5 h-2.5" />

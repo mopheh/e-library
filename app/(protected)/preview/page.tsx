@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import DepartmentPreview from "@/components/aspirant/DepartmentPreview";
+import FacultyExplorer from "@/components/aspirant/FacultyExplorer";
 import { Loader2 } from "lucide-react";
 
 export default function Page() {
@@ -28,5 +28,6 @@ export default function Page() {
     );
   }
 
-  return <DepartmentPreview targetDepartmentId={intendedDepartmentId ?? undefined} />;
+  return <FacultyExplorer initialDepartmentId={intendedDepartmentId} />;
 }
+

@@ -1,9 +1,84 @@
 "use server";
 
 import { db } from "@/database/drizzle";
-import { departments, books, users, courses } from "@/database/schema";
+import { departments, books, users, courses, faculty } from "@/database/schema";
 import { eq, sql, inArray } from "drizzle-orm";
 import { auth } from "@clerk/nextjs/server";
+
+export async function getFacultiesWithStats() {
+  try {
+    const { userId } = await auth();
+    if (!userId) throw new Error("Unauthorized");
+
+    const facultiesWithCount = await db
+      .select({
+        id: faculty.id,
+        name: faculty.name,
+        departmentCount: sql<number>`count(${departments.id})`,
+      })
+      .from(faculty)
+      .leftJoin(departments, eq(departments.facultyId, faculty.id))
+      .groupBy(faculty.id, faculty.name)
+      .orderBy(faculty.name);
+
+    return {
+      success: true,
+      data: facultiesWithCount.map(f => ({
+        ...f,
+        departmentCount: Number(f.departmentCount || 0)
+      })),
+    };
+  } catch (error) {
+    console.error("Error fetching faculties with stats:", error);
+    return { success: false, error: error instanceof Error ? error.message : "Unknown error" };
+  }
+}
+
+export async function getDepartmentsOfFaculty(facultyId: string) {
+  try {
+    const { userId } = await auth();
+    if (!userId) throw new Error("Unauthorized");
+
+    const depts = await db
+      .select()
+      .from(departments)
+      .where(eq(departments.facultyId, facultyId))
+      .orderBy(departments.name);
+
+    const deptsWithStats = await Promise.all(
+      depts.map(async (dept) => {
+        const booksCountResult = await db
+          .select({ count: sql<number>`count(*)` })
+          .from(books)
+          .where(eq(books.departmentId, dept.id));
+
+        const studentsCountResult = await db
+          .select({ count: sql<number>`count(*)` })
+          .from(users)
+          .where(sql`${users.departmentId} = ${dept.id} AND ${users.role} = 'STUDENT'`);
+
+        return {
+          id: dept.id,
+          name: dept.name,
+          facultyId: dept.facultyId,
+          stats: {
+            booksCount: Number(booksCountResult[0]?.count || 0),
+            studentsCount: Number(studentsCountResult[0]?.count || 0),
+          },
+        };
+      })
+    );
+
+    return {
+      success: true,
+      data: deptsWithStats,
+    };
+  } catch (error) {
+    console.error("Error fetching departments of faculty:", error);
+    return { success: false, error: error instanceof Error ? error.message : "Unknown error" };
+  }
+}
+
 
 export async function getDepartmentPreview(departmentId: string) {
   try {

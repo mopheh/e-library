@@ -1,5 +1,5 @@
 import { db } from "@/database/drizzle";
-import { readingSessions, userBooks, users, studentCourses, courses } from "@/database/schema";
+import { readingSessions, userBooks, users, studentCourses, courses, academicCalendarEvents } from "@/database/schema";
 import { getCurrentUser } from "@/lib/auth";
 import { NextResponse } from "next/server";
 import { and, desc, eq, gte, lte, sql } from "drizzle-orm";
@@ -15,22 +15,49 @@ export async function GET() {
     const userId = user.id;
     const departmentId = user.departmentId;
 
-    // 0. Fetch enrolled courses for dynamic metadata (like exam dates)
-    const userCourses = await db
-      .select({
-        id: courses.id,
-        examDate: courses.examDate
-      })
-      .from(studentCourses)
-      .innerJoin(courses, eq(studentCourses.courseId, courses.id))
-      .where(eq(studentCourses.userId, userId));
+    // 0. Fetch upcoming exam date from TWO sources and use the soonest:
+    //    a) courses.examDate — set per-course by admin
+    //    b) academic_calendar_events with category="exam" — set via the Calendar admin UI
+    //    Run both in parallel.
+    const today = format(new Date(), "yyyy-MM-dd");
 
-    const soonestExam = userCourses
-      .filter(c => c.examDate)
-      .map(c => new Date(c.examDate!))
-      .sort((a, b) => a.getTime() - b.getTime())[0];
+    const [userCourses, calendarExams] = await Promise.all([
+      // Source A: per-course exam dates for courses the student is enrolled in
+      db
+        .select({ examDate: courses.examDate })
+        .from(studentCourses)
+        .innerJoin(courses, eq(studentCourses.courseId, courses.id))
+        .where(eq(studentCourses.userId, userId)),
 
-    const daysToExam = soonestExam 
+      // Source B: academic calendar events with category "exam" that are published and upcoming
+      db
+        .select({ startDate: academicCalendarEvents.startDate })
+        .from(academicCalendarEvents)
+        .where(
+          and(
+            eq(academicCalendarEvents.category, "exam"),
+            eq(academicCalendarEvents.isPublished, true),
+            gte(academicCalendarEvents.startDate, today),
+          )
+        )
+        .orderBy(academicCalendarEvents.startDate)
+        .limit(10),
+    ]);
+
+    // Collect all candidate exam dates (filter out nulls and past dates)
+    const candidateDates: Date[] = [
+      ...userCourses
+        .filter(c => c.examDate)
+        .map(c => new Date(c.examDate!)),
+      ...calendarExams
+        .map(e => new Date(e.startDate)),
+    ]
+      .filter(d => d >= new Date()) // only future/today
+      .sort((a, b) => a.getTime() - b.getTime());
+
+    const soonestExam = candidateDates[0] ?? null;
+
+    const daysToExam = soonestExam
       ? Math.max(0, Math.ceil((soonestExam.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)))
       : null;
 

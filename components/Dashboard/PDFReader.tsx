@@ -95,7 +95,14 @@ const PDFStudyView = ({ fileUrl, bookId }: PDFStudyViewProps) => {
   const [displayUrl, setDisplayUrl] = useState<string | Uint8Array>(fileUrl);
   const [assistantInput, setAssistantInput] = useState("");
   const [mobileTab, setMobileTab] = useState("study");
-  
+
+  // Unified page-change handler: updates state AND records the page visit in the
+  // viewedPages ref so the 60-second reading-session interval always has data.
+  const handlePageChange = (pageIndex: number) => {
+    setCurrentPage(pageIndex);
+    viewedPages.current.add(pageIndex);
+  };
+
   const isDocx = fileUrl.toLowerCase().includes(".docx") || fileUrl.toLowerCase().includes(".doc");
 
   const { data: dbProgress, isLoading: loadingProgress } = useQuery({
@@ -362,6 +369,11 @@ const PDFStudyView = ({ fileUrl, bookId }: PDFStudyViewProps) => {
   }, [pages, currentPage]);
 
 
+  // Seed page 0 on mount — opening the book counts as reading the first page.
+  useEffect(() => {
+    viewedPages.current.add(0);
+  }, []);
+
   useEffect(() => {
     fetch("/api/activity", {
       method: "POST",
@@ -496,7 +508,7 @@ const PDFStudyView = ({ fileUrl, bookId }: PDFStudyViewProps) => {
             <div className="absolute inset-0 overflow-hidden">
                 {displayUrl ? (
                   isDocx ? (
-                    <DocxReader pages={pages || []} currentPage={currentPage} setCurrentPage={setCurrentPage} />
+                    <DocxReader pages={pages || []} currentPage={currentPage} setCurrentPage={handlePageChange} />
                   ) : (
                   <Worker workerUrl="/pdf.worker.min.js">
                     <Viewer
@@ -508,9 +520,10 @@ const PDFStudyView = ({ fileUrl, bookId }: PDFStudyViewProps) => {
                         pageNavPluginInstance,
                         searchPluginInstance,
                         bookmarkPluginInstance,
-                        highlightPluginInstance
+                        highlightPluginInstance,
+                        scrollPluginInstance,
                       ]}
-                      onPageChange={(e) => setCurrentPage(e.currentPage)}
+                      onPageChange={(e) => handlePageChange(e.currentPage)}
                     />
                   </Worker>
                   )
@@ -572,13 +585,13 @@ const PDFStudyView = ({ fileUrl, bookId }: PDFStudyViewProps) => {
                 <div className="flex-1 overflow-hidden relative"> 
                     {displayUrl ? (
                       isDocx ? (
-                        <DocxReader pages={pages || []} currentPage={currentPage} setCurrentPage={setCurrentPage} />
+                        <DocxReader pages={pages || []} currentPage={currentPage} setCurrentPage={handlePageChange} />
                       ) : (
                       <Worker workerUrl="/pdf.worker.min.js">
                           <Viewer
                           fileUrl={displayUrl}
                           defaultScale={0.8}
-                          onPageChange={(e) => setCurrentPage(e.currentPage)}
+                          onPageChange={(e) => handlePageChange(e.currentPage)}
                           renderLoader={renderLoader}
                           plugins={[zoomPluginInstance, pageNavPluginInstance, scrollPluginInstance, searchPluginInstance, bookmarkPluginInstance, highlightPluginInstance]}
                           />

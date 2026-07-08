@@ -3,6 +3,7 @@
 import { SignUp, useUser } from "@clerk/nextjs";
 import React from "react";
 import { motion } from "framer-motion";
+import { LogoLoader } from "@/components/LogoLoader";
 
 export default function Page() {
   const { isLoaded } = useUser();
@@ -57,13 +58,7 @@ export default function Page() {
             />
           </motion.div>
         ) : (
-          <div className="flex bg-white/80 h-screen w-full justify-center items-center animate-fade-in col-span-3">
-            <img
-              src="/rcf-logo.png"
-              alt="Loading RCF..."
-              className="h-20 w-auto animate-pulse mb-4"
-            />
-          </div>
+          <LogoLoader />
         )}
       </div>
 

@@ -6,13 +6,18 @@ import { useRef, useState } from "react";
 import BottomNav from "@/components/Dashboard/MobileNav";
 import MobileMessagingButton from "@/components/Dashboard/MobileMessagingButton";
 import { usePathname } from "next/navigation";
+import { useUser } from "@clerk/nextjs";
+import { LogoLoader } from "@/components/LogoLoader";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
+  const { isLoaded } = useUser();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-
-  const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const pathname = usePathname();
+
+  const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
+
+  if (!isLoaded) return <LogoLoader />;
   return (
     <>
       <div className="bg-zinc-50 dark:bg-zinc-900 flex h-screen">

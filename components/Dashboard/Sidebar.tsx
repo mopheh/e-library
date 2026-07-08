@@ -177,7 +177,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggle }) => {
             <Image
               src="/rcf-logo-full.png"
               alt="RCF Logo"
-              className="dark:brightness-200 w-40 h-auto"
+              className="dark:brightness-200 h-9 w-auto"
               width={385}
               height={177}
               priority

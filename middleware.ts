@@ -19,20 +19,21 @@ const isProtectedRoute = createRouteMatcher([
 ]);
 
 import { Ratelimit } from "@upstash/ratelimit";
-import { Redis } from "@upstash/redis";
+import { redis } from "@/lib/redis";
 
-// Initialize rate limiter only if ENV vars exist
-const redis = process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN 
-  ? new Redis({
-      url: process.env.UPSTASH_REDIS_REST_URL,
-      token: process.env.UPSTASH_REDIS_REST_TOKEN,
-    })
-  : null;
-
-// Create a new ratelimiter, that allows 20 requests per 10 seconds
+// General API rate-limiter: 20 requests per 10 seconds per IP
 const ratelimit = redis ? new Ratelimit({
-  redis: redis,
+  redis,
   limiter: Ratelimit.slidingWindow(20, "10 s"),
+  analytics: true,
+}) : null;
+
+// Stricter limiter for the AI /ask endpoint: 10 requests per 60 seconds per IP
+// This protects against LLM cost abuse at scale.
+const askRatelimit = redis ? new Ratelimit({
+  redis,
+  limiter: Ratelimit.slidingWindow(10, "60 s"),
+  prefix: "ratelimit:ask",
   analytics: true,
 }) : null;
 
@@ -41,22 +42,27 @@ export default clerkMiddleware(async (auth, req) => {
   const path = req.nextUrl.pathname;
 
   // Rate Limiting for API routes
-  if (path.startsWith("/api") && ratelimit) {
+  if (path.startsWith("/api")) {
     const ip = req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip") || "127.0.0.1";
-    const { success, pending, limit, reset, remaining } = await ratelimit.limit(ip);
-    
-    if (!success) {
-      return NextResponse.json(
-        { error: "Too many requests. Please try again later." },
-        { 
-          status: 429,
-          headers: {
-            "X-RateLimit-Limit": limit.toString(),
-            "X-RateLimit-Remaining": remaining.toString(),
-            "X-RateLimit-Reset": reset.toString()
+
+    // Apply the stricter AI limiter first
+    const limiter = (path === "/api/ask" && askRatelimit) ? askRatelimit : ratelimit;
+
+    if (limiter) {
+      const { success, limit, reset, remaining } = await limiter.limit(ip);
+      if (!success) {
+        return NextResponse.json(
+          { error: "Too many requests. Please try again later." },
+          {
+            status: 429,
+            headers: {
+              "X-RateLimit-Limit":     limit.toString(),
+              "X-RateLimit-Remaining": remaining.toString(),
+              "X-RateLimit-Reset":     reset.toString(),
+            },
           }
-        }
-      );
+        );
+      }
     }
   }
 

@@ -3,7 +3,7 @@
 import React, { useState, useEffect, use } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useUser } from "@clerk/nextjs";
-import Pusher from "pusher-js";
+import { getPusherClient, releasePusher } from "@/lib/pusher-client";
 import { Send, Users, ArrowLeft, Loader2, StickyNote, MessageSquare } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -32,15 +32,8 @@ export default function StudyRoomPage({ params }: { params: Promise<{ roomId: st
   useEffect(() => {
     if (!user || !roomId) return;
 
-    // Initialize Pusher
-    const pusher = new Pusher(process.env.NEXT_PUBLIC_PUSHER_KEY!, {
-      cluster: process.env.NEXT_PUBLIC_PUSHER_CLUSTER!,
-      channelAuthorization: {
-        endpoint: "/api/pusher/auth",
-        transport: "ajax",
-      },
-    });
-
+    // Use the app-wide singleton — avoids opening a new WebSocket per mount.
+    const pusher  = getPusherClient();
     const channel = pusher.subscribe(`presence-room-${roomId}`);
 
     channel.bind("pusher:subscription_succeeded", (members: any) => {
@@ -63,7 +56,7 @@ export default function StudyRoomPage({ params }: { params: Promise<{ roomId: st
 
     return () => {
       pusher.unsubscribe(`presence-room-${roomId}`);
-      pusher.disconnect();
+      releasePusher();
     };
   }, [user, roomId]);
 

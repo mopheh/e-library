@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import Pusher from "pusher-js";
+import { getPusherClient, releasePusher } from "@/lib/pusher-client";
 import { Bell, UserPlus, Zap, CheckCircle2, ArrowRight, ShieldCheck, MessageSquare } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
@@ -28,24 +28,23 @@ export default function NotificationBell() {
         fetchNotifs();
     }, []);
 
-    // Pusher setup
+    // Pusher setup — uses the app-wide singleton to avoid connection-limit blowout
     useEffect(() => {
         if (!userId) return;
 
-        const pusher = new Pusher(process.env.NEXT_PUBLIC_PUSHER_KEY!, {
-            cluster: process.env.NEXT_PUBLIC_PUSHER_CLUSTER!,
-        });
-
+        const pusher  = getPusherClient();
         const channel = pusher.subscribe(`user-${userId}`);
-        
+
         channel.bind("new-notification", (newNotif: any) => {
             setNotifications((prev) => [newNotif, ...prev]);
         });
 
         return () => {
             pusher.unsubscribe(`user-${userId}`);
+            releasePusher();
         };
     }, [userId]);
+
 
     const unreadCount = notifications.filter(n => !n.isRead).length;
 

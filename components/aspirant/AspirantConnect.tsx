@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import Pusher from "pusher-js";
+import { getPusherClient, releasePusher } from "@/lib/pusher-client";
 import { 
   MessageCircle, 
   UserPlus, 
@@ -103,13 +103,11 @@ export default function AspirantConnect() {
     refreshData();
   }, [isAspirant, refreshData]);
 
-  // Pusher setup for real-time updates (discussions & connection statuses)
+  // Pusher setup — uses the app-wide singleton to avoid connection-limit blowout
   useEffect(() => {
     if (!userData?.id || !data?.departmentId) return;
 
-    const pusher = new Pusher(process.env.NEXT_PUBLIC_PUSHER_KEY!, {
-      cluster: process.env.NEXT_PUBLIC_PUSHER_CLUSTER!,
-    });
+    const pusher = getPusherClient();
 
     // Sub to community feed
     const communityChannel = pusher.subscribe(`dept-community-${data.departmentId}`);
@@ -141,6 +139,7 @@ export default function AspirantConnect() {
     return () => {
       pusher.unsubscribe(`dept-community-${data.departmentId}`);
       pusher.unsubscribe(`user-${userData.id}`);
+      releasePusher();
     };
   }, [data?.departmentId, userData?.id]);
 

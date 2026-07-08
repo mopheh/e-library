@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { getMessages, sendMessage } from "@/actions/chat";
 import { formatDistanceToNow } from "date-fns";
-import Pusher from "pusher-js";
+import { getPusherClient, releasePusher } from "@/lib/pusher-client";
 
 interface ChatWindowProps {
     roomId: string;
@@ -38,8 +38,7 @@ export default function ChatWindow({ roomId, currentUserId, otherUserName, other
     useEffect(() => {
         if (!roomId || !currentUserId) return;
 
-        console.log("Initializing Pusher connection...");
-        const pusherKey = process.env.NEXT_PUBLIC_PUSHER_KEY;
+        const pusherKey     = process.env.NEXT_PUBLIC_PUSHER_KEY;
         const pusherCluster = process.env.NEXT_PUBLIC_PUSHER_CLUSTER;
 
         if (!pusherKey || !pusherCluster) {
@@ -47,15 +46,11 @@ export default function ChatWindow({ roomId, currentUserId, otherUserName, other
             return;
         }
 
-        const pusher = new Pusher(pusherKey, {
-            cluster: pusherCluster,
-            authEndpoint: "/api/pusher/auth",
-        });
-
+        // Use the app-wide singleton — avoids opening a new WebSocket per mount.
+        const pusher  = getPusherClient();
         const channel = pusher.subscribe(`private-chat-room-${roomId}`);
-        
+
         channel.bind("new-message", (data: any) => {
-            console.log("Real-time message received:", data);
             setMessages((prev) => {
                 if (prev.some(m => m.id === data.id)) return prev;
                 return [...prev, data];
@@ -71,10 +66,9 @@ export default function ChatWindow({ roomId, currentUserId, otherUserName, other
         });
 
         return () => {
-            console.log("Cleaning up Pusher connection...");
             channel.unbind_all();
             pusher.unsubscribe(`private-chat-room-${roomId}`);
-            pusher.disconnect();
+            releasePusher();
         };
     }, [roomId, currentUserId]);
 

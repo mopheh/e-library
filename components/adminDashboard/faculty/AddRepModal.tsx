@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { useUsers } from "@/hooks/useUsers";
 import { Input } from "@/components/ui/input";
 import { User } from "@/types";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
 export default function AddRepModal({ open, onCancel, facultyId, facultyName }: {
     open: boolean;
@@ -71,9 +72,17 @@ export default function AddRepModal({ open, onCancel, facultyId, facultyName }: 
 
                         {!isLoading && filteredUsers.map((u: User) => (
                             <div key={u.id} className="flex items-center justify-between p-2 hover:bg-zinc-50 dark:hover:bg-zinc-900 rounded-lg border border-transparent hover:border-zinc-200 dark:hover:border-zinc-800 transition-colors">
-                                <div>
-                                    <p className="text-sm font-medium font-poppins">{u.fullName}</p>
-                                    <p className="text-xs text-zinc-500">{u.email}</p>
+                                <div className="flex items-center gap-3">
+                                    <Avatar className="h-8 w-8">
+                                        <AvatarImage src={u.imageUrl || undefined} alt={u.fullName} />
+                                        <AvatarFallback className="text-[10px] bg-zinc-100 dark:bg-zinc-800 text-zinc-500">
+                                            {u.fullName?.split(" ").map((n) => n[0]).join("") || "?"}
+                                        </AvatarFallback>
+                                    </Avatar>
+                                    <div>
+                                        <p className="text-sm font-medium font-poppins">{u.fullName}</p>
+                                        <p className="text-xs text-zinc-500">{u.email}</p>
+                                    </div>
                                 </div>
                                 <Button 
                                     size="sm" 

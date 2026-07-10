@@ -40,17 +40,15 @@ export async function GET(req: NextRequest) {
       department: r.departments,
     }));
 
-    const repClerkIds = results
-      .filter((u) => u.role === "FACULTY REP")
-      .map((u) => u.clerkId);
+    const clerkIds = results.map((u) => u.clerkId);
 
-    if (repClerkIds.length > 0) {
+    if (clerkIds.length > 0) {
       try {
         const client = await clerkClient();
-        // userIds array allows fetching multiple users by their ID
+        // Fetch up to 500 users
         const clerkUsersResp = await client.users.getUserList({
-          userId: repClerkIds,
-          limit: 100,
+          userId: clerkIds,
+          limit: 500,
         });
 
         // Map clerkId to imageUrl
@@ -59,13 +57,7 @@ export async function GET(req: NextRequest) {
         );
 
         const mappedResults = results.map((u) => {
-          if (
-            (u.role === "FACULTY REP") &&
-            clerkUserMap.has(u.clerkId)
-          ) {
-            return { ...u, imageUrl: clerkUserMap.get(u.clerkId) };
-          }
-          return u;
+          return { ...u, imageUrl: clerkUserMap.get(u.clerkId) || null };
         });
 
         return NextResponse.json(mappedResults);

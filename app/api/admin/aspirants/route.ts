@@ -10,6 +10,7 @@ import {
 } from "@/database/schema";
 import { eq, desc, count, sql, ilike, or, and } from "drizzle-orm";
 import { requireRole } from "@/lib/auth";
+import { clerkClient } from "@clerk/nextjs/server";
 
 export async function GET(req: NextRequest) {
   try {
@@ -42,6 +43,7 @@ export async function GET(req: NextRequest) {
         fullName: users.fullName,
         email: users.email,
         createdAt: users.createdAt,
+        clerkId: users.clerkId,
         // From candidateProfiles
         jambScore: candidateProfiles.jambScore,
         intendedDepartmentId: candidateProfiles.intendedDepartmentId,
@@ -89,6 +91,26 @@ export async function GET(req: NextRequest) {
     const total = filtered.length;
     const paginated = filtered.slice((page - 1) * pageSize, page * pageSize);
 
+    // Fetch Clerk imageUrls for the paginated aspirants
+    let aspirantsWithImages = paginated;
+    if (paginated.length > 0) {
+      try {
+        const clerkIds = paginated.map((a) => a.clerkId);
+        const client = await clerkClient();
+        const clerkUsers = await client.users.getUserList({
+          userId: clerkIds,
+          limit: 100,
+        });
+        const clerkMap = new Map(clerkUsers.data.map((u) => [u.id, u.imageUrl]));
+        aspirantsWithImages = paginated.map((a) => ({
+          ...a,
+          imageUrl: clerkMap.get(a.clerkId) || null,
+        }));
+      } catch (err) {
+        console.error("Failed to fetch clerk images for aspirants:", err);
+      }
+    }
+
     // --- Summary stats ---
     const pending = allAspirants.filter((a) => a.verificationStatus === "PENDING").length;
     const approved = allAspirants.filter((a) => a.verificationStatus === "APPROVED").length;
@@ -96,7 +118,7 @@ export async function GET(req: NextRequest) {
     const noRequest = allAspirants.filter((a) => !a.verificationStatus).length;
 
     return NextResponse.json({
-      aspirants: paginated,
+      aspirants: aspirantsWithImages,
       total,
       totalPages: Math.max(1, Math.ceil(total / pageSize)),
       page,

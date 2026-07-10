@@ -11,7 +11,7 @@ import {
     departments
 } from "@/database/schema";
 import { eq, or, and, desc, inArray } from "drizzle-orm";
-import { auth } from "@clerk/nextjs/server";
+import { auth, clerkClient } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import { pusherServer } from "@/lib/pusher";
 
@@ -46,6 +46,28 @@ export async function getResourceRequests() {
             },
             orderBy: [desc(resourceRequests.createdAt)]
         });
+
+        if (requests.length > 0) {
+            try {
+                const clerkIds = requests.map((r) => r.user.clerkId);
+                const client = await clerkClient();
+                const clerkUsers = await client.users.getUserList({
+                    userId: clerkIds,
+                    limit: 500,
+                });
+                const clerkMap = new Map(clerkUsers.data.map((u) => [u.id, u.imageUrl]));
+                const mappedRequests = requests.map((r) => ({
+                    ...r,
+                    user: {
+                        ...r.user,
+                        imageUrl: clerkMap.get(r.user.clerkId) || null,
+                    },
+                }));
+                return { success: true, data: mappedRequests };
+            } catch (err) {
+                console.error("Failed to fetch clerk images for resource requests:", err);
+            }
+        }
 
         return { success: true, data: requests };
     } catch (error) {

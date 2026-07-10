@@ -4,6 +4,7 @@ import { useUser } from "@clerk/nextjs"
 import HomeDashboard from "@/components/Dashboard/HomeDashboard"
 import AspirantDashboard from "@/components/Dashboard/AspirantDashboard"
 import MobileDashboard from "@/components/Dashboard/MobileDashboard"
+import MobileAspirantDashboard from "@/components/Dashboard/MobileAspirantDashboard"
 import { useUserData } from "@/hooks/useUsers"
 import { LogoLoader } from "@/components/LogoLoader"
 
@@ -21,7 +22,7 @@ const Page = () => {
         {dbUser?.role === "ASPIRANT" ? <AspirantDashboard /> : <HomeDashboard />}
       </div>
       <div className="sm:hidden">
-        <MobileDashboard />
+        {dbUser?.role === "ASPIRANT" ? <MobileAspirantDashboard /> : <MobileDashboard />}
       </div>
     </>
   )

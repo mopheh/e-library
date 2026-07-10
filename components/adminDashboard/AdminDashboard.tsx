@@ -29,6 +29,7 @@ import { useDepartments } from "@/hooks/useDepartments";
 import { SkeletonRow } from "@/components/adminDashboard/SkeletonRow";
 import { useAdminStats } from "@/hooks/useAdminStats";
 import CourseManagement from "@/components/adminDashboard/CourseManagement";
+import CbtQuestionManager from "@/components/adminDashboard/CbtQuestionManager";
 
 // ─── Stat card ────────────────────────────────────────────
 interface StatCardProps {
@@ -85,7 +86,7 @@ const AdminDashboard = () => {
   const [deptSearch, setDeptSearch] = useState("");
   const [open, setOpen] = useState(false);
   const [type, setType] = useState("");
-  const [activeSection, setActiveSection] = useState<"overview" | "courses">("overview");
+  const [activeSection, setActiveSection] = useState<"overview" | "courses" | "cbt">("overview");
 
   const { data: faculties, isLoading: facultiesLoading, isError: facultiesError, error: facultiesErr } =
     useFaculties(facultyPage);
@@ -170,10 +171,11 @@ const AdminDashboard = () => {
   return (
     <>
       {/* ── Section toggle ─────────────────────── */}
-      <div className="flex gap-3 mb-8">
+      <div className="flex flex-wrap gap-3 mb-8">
         {[
           { id: "overview", label: "Structure" },
           { id: "courses", label: "Courses", icon: GraduationCap },
+          { id: "cbt", label: "CBT Questions", icon: BarChart3 },
         ].map((s) => (
           <button
             key={s.id}
@@ -190,6 +192,7 @@ const AdminDashboard = () => {
       </div>
 
       {activeSection === "courses" && <CourseManagement />}
+      {activeSection === "cbt" && <CbtQuestionManager />}
 
       {activeSection === "overview" && (
         <>

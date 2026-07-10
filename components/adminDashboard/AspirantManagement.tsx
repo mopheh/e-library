@@ -39,6 +39,7 @@ interface Aspirant {
   facultyName: string | null;
   cbtAttempts: number;
   verificationCreatedAt: string | null;
+  imageUrl?: string | null;
 }
 
 interface Stats {
@@ -166,8 +167,12 @@ function AspirantDetailModal({
             <div className="flex items-start justify-between gap-4">
               <div className="flex items-center gap-4">
                 {/* Avatar */}
-                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-white font-black font-cabin text-xl shadow-lg shadow-indigo-500/25">
-                  {aspirant.fullName?.charAt(0)?.toUpperCase()}
+                <div className="w-14 h-14 rounded-2xl overflow-hidden bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-white font-black font-cabin text-xl shadow-lg shadow-indigo-500/25">
+                  {aspirant.imageUrl ? (
+                    <img src={aspirant.imageUrl} alt={aspirant.fullName} className="w-full h-full object-cover" />
+                  ) : (
+                    aspirant.fullName?.charAt(0)?.toUpperCase() ?? "?"
+                  )}
                 </div>
                 <div>
                   <h3 className="text-lg font-black font-cabin text-zinc-900 dark:text-zinc-50">
@@ -459,8 +464,12 @@ const AspirantManagement: React.FC = () => {
                   className="w-full flex items-center gap-5 px-10 py-4 hover:bg-zinc-50/80 dark:hover:bg-zinc-900/40 transition-colors group text-left"
                 >
                   {/* Avatar */}
-                  <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-white font-black font-cabin text-sm shrink-0 shadow-md shadow-indigo-500/20">
-                    {aspirant.fullName?.charAt(0)?.toUpperCase()}
+                  <div className="w-10 h-10 rounded-2xl overflow-hidden bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-white font-black font-cabin text-sm shrink-0 shadow-md shadow-indigo-500/20">
+                    {aspirant.imageUrl ? (
+                      <img src={aspirant.imageUrl} alt={aspirant.fullName} className="w-full h-full object-cover" />
+                    ) : (
+                      aspirant.fullName?.charAt(0)?.toUpperCase() ?? "?"
+                    )}
                   </div>
 
                   {/* Info */}

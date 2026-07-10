@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { formatDistanceToNow } from "date-fns";
 import FormModal from "@/components/FormDialogBody";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
 export default function ResourceRequestsTable() {
     const [requests, setRequests] = useState<any[]>([]);
@@ -124,9 +125,12 @@ export default function ResourceRequestsTable() {
                                 <tr key={req.id} className="hover:bg-zinc-50/50 dark:hover:bg-zinc-900/20 transition-colors">
                                     <td className="px-6 py-4">
                                         <div className="flex items-center gap-3">
-                                            <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400 font-bold text-xs uppercase">
-                                                {req.user.fullName?.charAt(0)}
-                                            </div>
+                                            <Avatar className="h-8 w-8 border border-zinc-100 dark:border-zinc-800">
+                                                <AvatarImage src={req.user.imageUrl || undefined} alt={req.user.fullName} />
+                                                <AvatarFallback className="text-[10px] bg-zinc-100 dark:bg-zinc-800 text-zinc-500">
+                                                    {req.user.fullName?.split(" ").map((n: any) => n[0]).join("") || "?"}
+                                                </AvatarFallback>
+                                            </Avatar>
                                             <div>
                                                 <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">{req.user.fullName}</p>
                                                 <p className="text-[10px] text-zinc-500">{req.department.name}</p>

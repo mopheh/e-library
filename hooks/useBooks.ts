@@ -11,6 +11,16 @@ type BookFilters = {
   search?: string;
 };
 
+// Background jobs (PDF parsing, AI question generation) update a book's
+// parseStatus asynchronously via a worker queue - these are the non-terminal
+// states where we should keep polling until the job finishes.
+const NON_TERMINAL_PARSE_STATUSES = new Set([
+  "pending",
+  "parsing",
+  "generating_questions",
+  "processing",
+]);
+
 export const useBooks = (filters: BookFilters) => {
   const {
     departmentId,
@@ -42,6 +52,15 @@ export const useBooks = (filters: BookFilters) => {
     },
     enabled: !!departmentId, // Only fetch when departmentId is available
     staleTime: 5 * 60 * 1000,
+    // Poll every 5s only while a book on this page is still being processed
+    // in the background; otherwise don't poll at all.
+    refetchInterval: (query) => {
+      const data = query.state.data as { books?: { parseStatus?: string | null }[] } | undefined;
+      const hasPendingJob = data?.books?.some(
+        (b) => b.parseStatus && NON_TERMINAL_PARSE_STATUSES.has(b.parseStatus)
+      );
+      return hasPendingJob ? 5000 : false;
+    },
   });
 };
 

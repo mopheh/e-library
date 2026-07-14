@@ -9,6 +9,11 @@ import { clerkClient } from "@clerk/nextjs/server";
 
 export async function GET(req: NextRequest) {
   try {
+    const { userId } = await auth();
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const { searchParams } = new URL(req.url);
     const facultyId = searchParams.get("facultyId");
     const departmentId = searchParams.get("departmentId");
@@ -32,7 +37,14 @@ export async function GET(req: NextRequest) {
         .from(users).leftJoin(departments, eq(users.departmentId, departments.id))
         .where(eq(users.departmentId, departmentId));
     } else {
-      rawResults = await db.select().from(users).leftJoin(departments, eq(users.departmentId, departments.id));
+      // No legitimate caller needs a full unfiltered user dump (checked: every
+      // call site passes facultyId/departmentId/clerkId) - refusing this avoids
+      // an accidental full-table PII scan (name, email, matric number, etc.)
+      // as the app grows past a handful of users.
+      return NextResponse.json(
+        { error: "At least one of clerkId, facultyId, or departmentId is required" },
+        { status: 400 }
+      );
     }
 
     const results = rawResults.map((r) => ({

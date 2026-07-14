@@ -55,36 +55,39 @@ export async function getConnectData() {
         }
     }
 
-    // For each peer, check if a connection request exists (either way) and merge image/roomId
-    const peersWithStatus = await Promise.all(
-        peers.map(async (peer) => {
-            const connection = await db.query.studentConnections.findFirst({
-                where: or(
-                    and(eq(studentConnections.aspirantId, currentUser.id), eq(studentConnections.studentId, peer.id)),
-                    and(eq(studentConnections.aspirantId, peer.id), eq(studentConnections.studentId, currentUser.id))
-                )
-            });
-
-            let roomId = null;
-            if (connection?.status === "ACCEPTED") {
-                const [u1, u2] = [currentUser.id, peer.id].sort();
-                const room = await db.query.chatRooms.findFirst({
-                    where: and(
-                        eq(chatRooms.userOneId, u1),
-                        eq(chatRooms.userTwoId, u2)
-                    )
-                });
-                roomId = room?.id || null;
-            }
-
-            return { 
-                ...peer, 
-                imageUrl: clerkUserMap.get(peer.clerkId) || null,
-                connectionStatus: connection?.status || null,
-                roomId 
-            };
+    // For each peer, check if a connection request exists (either way) and merge image/roomId.
+    // Batched into one query per lookup instead of one round trip per peer.
+    const peerIds = peers.map((p) => p.id);
+    const connections = peerIds.length > 0
+        ? await db.query.studentConnections.findMany({
+            where: or(
+                and(eq(studentConnections.aspirantId, currentUser.id), inArray(studentConnections.studentId, peerIds)),
+                and(eq(studentConnections.studentId, currentUser.id), inArray(studentConnections.aspirantId, peerIds))
+            )
         })
+        : [];
+    const connectionByPeerId = new Map(
+        connections.map((c) => [c.aspirantId === currentUser.id ? c.studentId : c.aspirantId, c])
     );
+
+    const currentUserRooms = await db.query.chatRooms.findMany({
+        where: or(eq(chatRooms.userOneId, currentUser.id), eq(chatRooms.userTwoId, currentUser.id))
+    });
+    const roomByPeerId = new Map(
+        currentUserRooms.map((r) => [r.userOneId === currentUser.id ? r.userTwoId : r.userOneId, r.id])
+    );
+
+    const peersWithStatus = peers.map((peer) => {
+        const connection = connectionByPeerId.get(peer.id);
+        const roomId = connection?.status === "ACCEPTED" ? (roomByPeerId.get(peer.id) ?? null) : null;
+
+        return {
+            ...peer,
+            imageUrl: clerkUserMap.get(peer.clerkId) || null,
+            connectionStatus: connection?.status || null,
+            roomId
+        };
+    });
 
     // Fetch recent discussions in the user's department community
     let deptCommunity = await db.query.departmentCommunities.findFirst({
@@ -176,7 +179,9 @@ export async function sendConnectionRequest(targetStudentId: string) {
             }).returning();
 
             if (matchNotif.length > 0) {
-                await pusherServer.trigger(`user-${targetStudentId}`, "new-notification", matchNotif[0]);
+                pusherServer
+                    .trigger(`user-${targetStudentId}`, "new-notification", matchNotif[0])
+                    .catch((err) => console.error("Pusher trigger failed (match notification):", err));
             }
 
             return { success: true, message: "Mutual interest detected! You are now connected." };
@@ -231,7 +236,9 @@ export async function sendConnectionRequest(targetStudentId: string) {
             }).returning();
 
             if (newNotif.length > 0) {
-                await pusherServer.trigger(`user-${targetStudentId}`, "new-notification", newNotif[0]);
+                pusherServer
+                    .trigger(`user-${targetStudentId}`, "new-notification", newNotif[0])
+                    .catch((err) => console.error("Pusher trigger failed (connection request):", err));
             }
         }
 
@@ -298,11 +305,15 @@ export async function respondToConnectionRequest(connectionId: string, status: "
                 }).returning();
 
                 if (newNotif.length > 0) {
-                    await pusherServer.trigger(`user-${requester.id}`, "new-notification", newNotif[0]);
-                    await pusherServer.trigger(`user-${requester.id}`, "connection-accepted", { 
-                        peerId: currentUser.id,
-                        roomId: roomId
-                    });
+                    pusherServer
+                        .trigger(`user-${requester.id}`, "new-notification", newNotif[0])
+                        .catch((err) => console.error("Pusher trigger failed (accepted notification):", err));
+                    pusherServer
+                        .trigger(`user-${requester.id}`, "connection-accepted", {
+                            peerId: currentUser.id,
+                            roomId: roomId
+                        })
+                        .catch((err) => console.error("Pusher trigger failed (connection-accepted):", err));
                 }
             }
         }
@@ -364,7 +375,9 @@ export async function createDiscussionPost(content: string) {
             };
             
             // Trigger Pusher for the entire department community
-            await pusherServer.trigger(`dept-community-${deptCommunity.id}`, "new-post", postWithAuthor);
+            pusherServer
+                .trigger(`dept-community-${deptCommunity.id}`, "new-post", postWithAuthor)
+                .catch((err) => console.error("Pusher trigger failed (new-post):", err));
         }
 
         return { success: true };

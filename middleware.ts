@@ -49,19 +49,27 @@ export default clerkMiddleware(async (auth, req) => {
     const limiter = (path === "/api/ask" && askRatelimit) ? askRatelimit : ratelimit;
 
     if (limiter) {
-      const { success, limit, reset, remaining } = await limiter.limit(ip);
-      if (!success) {
-        return NextResponse.json(
-          { error: "Too many requests. Please try again later." },
-          {
-            status: 429,
-            headers: {
-              "X-RateLimit-Limit":     limit.toString(),
-              "X-RateLimit-Remaining": remaining.toString(),
-              "X-RateLimit-Reset":     reset.toString(),
-            },
-          }
-        );
+      try {
+        const { success, limit, reset, remaining } = await limiter.limit(ip);
+        if (!success) {
+          return NextResponse.json(
+            { error: "Too many requests. Please try again later." },
+            {
+              status: 429,
+              headers: {
+                "X-RateLimit-Limit":     limit.toString(),
+                "X-RateLimit-Remaining": remaining.toString(),
+                "X-RateLimit-Reset":     reset.toString(),
+              },
+            }
+          );
+        }
+      } catch (err) {
+        // Fail OPEN: a Redis/Upstash hiccup should degrade rate-limiting,
+        // not take down every API route on the site. This middleware runs
+        // in front of all /api/* traffic, so an unhandled throw here would
+        // turn a transient Redis blip into a site-wide 500 outage.
+        console.error("[middleware] Rate limiter unavailable, allowing request through:", err);
       }
     }
   }

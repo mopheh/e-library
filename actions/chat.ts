@@ -2,7 +2,7 @@
 
 import { db } from "@/database/drizzle";
 import { users, chatRooms, chatMessages, notifications } from "@/database/schema";
-import { eq, or, and, desc, asc, sql } from "drizzle-orm";
+import { eq, or, and, desc, asc, sql, inArray } from "drizzle-orm";
 import { auth, clerkClient } from "@clerk/nextjs/server";
 import { pusherServer } from "@/lib/pusher";
 
@@ -22,44 +22,61 @@ export async function getChatRooms() {
                 eq(chatRooms.userTwoId, currentUser.id)
             ),
             limit: 20, // ADDED LIMIT to prevent excessive DB calls
-            with: {
-                // We'll need to define relations in schema for better fetching, 
-                // but for now, we'll manually fetch the participant info.
-            },
             orderBy: [desc(chatRooms.createdAt)]
         });
 
-        const roomsWithParticipants = await Promise.all(rooms.map(async (room) => {
+        if (rooms.length === 0) {
+            return { success: true, data: [] };
+        }
+
+        const otherUserIds = rooms.map((room) =>
+            room.userOneId === currentUser.id ? room.userTwoId : room.userOneId
+        );
+        const roomIds = rooms.map((room) => room.id);
+
+        // Batch-fetch every "other participant" in one query instead of one per room.
+        const otherUsers = await db
+            .select({ id: users.id, fullName: users.fullName })
+            .from(users)
+            .where(inArray(users.id, otherUserIds));
+        const otherUserById = new Map(otherUsers.map((u) => [u.id, u]));
+
+        // Batch-fetch the latest message per room in one query instead of one per room.
+        const lastMessagesResult = await db.execute(sql`
+            SELECT DISTINCT ON (room_id)
+                room_id    AS "roomId",
+                content    AS "content",
+                created_at AS "createdAt",
+                sender_id  AS "senderId"
+            FROM chat_messages
+            WHERE room_id IN ${roomIds}
+            ORDER BY room_id, created_at DESC
+        `);
+        const lastMessageByRoom = new Map(
+            (lastMessagesResult.rows as any[]).map((m) => [m.roomId as string, m])
+        );
+
+        const roomsWithParticipants = rooms.map((room) => {
             const otherUserId = room.userOneId === currentUser.id ? room.userTwoId : room.userOneId;
-            const otherUser = await db.query.users.findFirst({
-                where: eq(users.id, otherUserId)
-            });
-
-            // Get last message
-            const lastMessage = await db.query.chatMessages.findFirst({
-                where: eq(chatMessages.roomId, room.id),
-                orderBy: [desc(chatMessages.createdAt)]
-            });
-
-            // Get other user image from Clerk
-            let imageUrl = null;
-            // Clerk API call removed to prevent massive N+1 HTTP latency.
-            // Avatars should be managed locally or fetched via batch if necessary.
+            const otherUser = otherUserById.get(otherUserId);
+            const lastMessage = lastMessageByRoom.get(room.id);
 
             return {
                 id: room.id,
                 otherUser: {
                     id: otherUser?.id,
                     fullName: otherUser?.fullName,
-                    imageUrl,
+                    // Clerk API call removed to prevent massive N+1 HTTP latency.
+                    // Avatars should be managed locally or fetched via batch if necessary.
+                    imageUrl: null,
                 },
                 lastMessage: lastMessage ? {
-                    content: lastMessage.content,
-                    createdAt: lastMessage.createdAt,
-                    senderId: lastMessage.senderId,
+                    content: lastMessage.content as string,
+                    createdAt: lastMessage.createdAt as string,
+                    senderId: lastMessage.senderId as string,
                 } : null
             };
-        }));
+        });
 
         return { success: true, data: roomsWithParticipants };
 
@@ -91,12 +108,15 @@ export async function getMessages(roomId: string) {
         });
         if (!room) throw new Error("Access denied");
 
-        const messages = await db.query.chatMessages.findMany({
+        // Cap history to the most recent 200 messages so a long-lived room
+        // doesn't force an ever-growing, unbounded payload on every open.
+        const recentMessages = await db.query.chatMessages.findMany({
             where: eq(chatMessages.roomId, roomId),
-            orderBy: [asc(chatMessages.createdAt)]
+            orderBy: [desc(chatMessages.createdAt)],
+            limit: 200,
         });
 
-        return { success: true, data: messages };
+        return { success: true, data: recentMessages.reverse() };
     } catch (error) {
         console.error("Error fetching messages:", error);
         return { success: false, error: "Failed to load message history" };
@@ -131,9 +151,11 @@ export async function sendMessage(roomId: string, content: string) {
             content,
         }).returning();
 
-        // Trigger real-time event
-        console.log(`Triggering Pusher event on channel private-chat-room-${roomId}`);
-        await pusherServer.trigger(`private-chat-room-${roomId}`, "new-message", newMessage);
+        // Trigger real-time event. Fire-and-forget: a Pusher hiccup shouldn't
+        // make an already-saved message report back to the user as "failed".
+        pusherServer
+            .trigger(`private-chat-room-${roomId}`, "new-message", newMessage)
+            .catch((err) => console.error("Pusher trigger failed (new-message):", err));
 
         // Notify recipient
         const recipientId = room.userOneId === currentUser.id ? room.userTwoId : room.userOneId;
@@ -144,7 +166,9 @@ export async function sendMessage(roomId: string, content: string) {
             targetId: roomId,
         }).returning();
 
-        await pusherServer.trigger(`user-${recipientId}`, "new-notification", notif);
+        pusherServer
+            .trigger(`user-${recipientId}`, "new-notification", notif)
+            .catch((err) => console.error("Pusher trigger failed (new-notification):", err));
 
         return { success: true, data: newMessage };
         

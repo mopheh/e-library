@@ -32,8 +32,10 @@ export async function GET(req: NextRequest) {
     const level = searchParams.get("level");
     const search = searchParams.get("search");
 
-    const page = parseInt(searchParams.get("page") || "1");
-    const pageSize = parseInt(searchParams.get("pageSize") || "12");
+    const page = Math.max(1, parseInt(searchParams.get("page") || "1") || 1);
+    // Clamp pageSize so a caller can't request an unbounded page (e.g. pageSize=999999)
+    // and force a full-table scan/response.
+    const pageSize = Math.min(100, Math.max(1, parseInt(searchParams.get("pageSize") || "12") || 12));
 
     if (!departmentId && !search) {
       return NextResponse.json(
@@ -82,6 +84,7 @@ export async function GET(req: NextRequest) {
         departmentId: books.departmentId,
         fileUrl: books.fileUrl,
         fileSize: books.fileSize,
+        parseStatus: books.parseStatus,
         createdAt: books.createdAt,
         // Aggregate all linked course codes into one comma-separated string
         course: sql<string>`string_agg(distinct ${courses.courseCode}, ', ' order by ${courses.courseCode})`,
@@ -107,6 +110,7 @@ export async function GET(req: NextRequest) {
         books.departmentId,
         books.fileUrl,
         books.fileSize,
+        books.parseStatus,
         books.createdAt,
       )
       .orderBy(desc(books.createdAt))

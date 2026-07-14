@@ -6,7 +6,58 @@ import { getEmbedding } from "@/lib/embeddings";
 import { sql } from "drizzle-orm";
 
 import * as path from "path";
+import * as fs from "fs";
+import * as os from "os";
+import { execFile } from "child_process";
+import { promisify } from "util";
 import * as mammoth from "mammoth";
+
+const execFileAsync = promisify(execFile);
+
+const PAGE_BREAK_RE = /<!--\s*PAGE_BREAK\s*-->/g;
+
+// Postgres text columns reject a raw NUL byte, and pdf2md's font-glyph
+// decoding can emit one (or other stray control characters) when a PDF's
+// embedded font maps a glyph to an undecodable code point - observed in
+// practice on real library PDFs with footnote/bullet glyphs. Built from
+// character codes rather than escape-sequence literals to avoid any risk
+// of those literals being written out as the raw bytes they represent.
+const KEEP_CONTROL_CODES = new Set([9, 10, 13]); // tab, newline, carriage return
+const DISALLOWED_CONTROL_CODES: number[] = [];
+for (let c = 0; c < 32; c++) {
+  if (!KEEP_CONTROL_CODES.has(c)) DISALLOWED_CONTROL_CODES.push(c);
+}
+const DISALLOWED_CONTROL_REGEX = new RegExp(
+  "[" + DISALLOWED_CONTROL_CODES.map((c) => String.fromCharCode(c)).join("") + "]",
+  "g",
+);
+
+function sanitizeExtractedText(text: string): string {
+  return text.replace(DISALLOWED_CONTROL_REGEX, "");
+}
+
+/**
+ * Converts a PDF to Markdown using @opendocsg/pdf2md, run in a throwaway
+ * child process (see lib/pdf2md-worker.cjs for why). Returns null on any
+ * failure so callers can fall back to the legacy raw-text extraction -
+ * this must never be the reason a book fails to parse.
+ */
+async function convertPdfToMarkdownIsolated(pdfPath: string): Promise<string | null> {
+  const outputPath = path.join(os.tmpdir(), `pdf2md_${Date.now()}_${Math.random().toString(36).slice(2)}.md`);
+  try {
+    await execFileAsync(
+      process.execPath,
+      [path.join(process.cwd(), "lib", "pdf2md-worker.cjs"), pdfPath, outputPath],
+      { timeout: 8 * 60 * 1000, maxBuffer: 1024 * 1024 * 50 },
+    );
+    return fs.readFileSync(outputPath, "utf-8");
+  } catch (err: any) {
+    console.warn(`⚠️ pdf2md conversion failed, falling back to legacy text extraction: ${err.message}`);
+    return null;
+  } finally {
+    if (fs.existsSync(outputPath)) fs.unlinkSync(outputPath);
+  }
+}
 
 export async function parsePdfPages(filePath: string, bookId: string) {
   const standardFontDataUrl = path.join(process.cwd(), "node_modules", "pdfjs-dist", "standard_fonts") + "/";
@@ -21,6 +72,29 @@ export async function parsePdfPages(filePath: string, bookId: string) {
 
   const numPages = pdf.numPages;
 
+  // Try the Markdown-aware extraction first (preserves headings/lists/
+  // footnotes and strips repeated running headers/footers, which meaningfully
+  // improves RAG chunk quality). `<!-- PAGE_BREAK -->` markers let us keep the
+  // exact same per-page structure the rest of the pipeline (OCR fallback,
+  // annotations, AI citations by page number) depends on. If pdf2md fails, or
+  // its page-break count doesn't match the PDF's actual page count, we fall
+  // back to the original raw pdfjs-dist text join for every page rather than
+  // risk misaligned page numbers.
+  let mdPages: string[] | null = null;
+  const markdown = await convertPdfToMarkdownIsolated(filePath);
+  if (markdown) {
+    const candidate = sanitizeExtractedText(markdown)
+      .split(PAGE_BREAK_RE)
+      .map((s) => s.trim());
+    if (candidate.length === numPages) {
+      mdPages = candidate;
+    } else {
+      console.warn(
+        `⚠️ pdf2md page count (${candidate.length}) doesn't match PDF page count (${numPages}) for book ${bookId}. Falling back to legacy text extraction.`,
+      );
+    }
+  }
+
   const pages: {
     bookId: string;
     pageNumber: number;
@@ -28,13 +102,18 @@ export async function parsePdfPages(filePath: string, bookId: string) {
   }[] = [];
 
   for (let i = 1; i <= numPages; i++) {
-    const page = await pdf.getPage(i);
-    const content = await page.getTextContent();
+    let text: string;
 
-    let text = content.items
-      .map((item) => ("str" in item ? (item as { str: string }).str : ""))
-      .join(" ")
-      .trim();
+    if (mdPages) {
+      text = mdPages[i - 1];
+    } else {
+      const page = await pdf.getPage(i);
+      const content = await page.getTextContent();
+      text = content.items
+        .map((item) => ("str" in item ? (item as { str: string }).str : ""))
+        .join(" ")
+        .trim();
+    }
 
     const lowerText = text.toLowerCase();
     // A typical scanned page with a watermark might only yield the watermark text.
@@ -46,9 +125,9 @@ export async function parsePdfPages(filePath: string, bookId: string) {
     if (!text || isLikelyScannedImage) {
       const reason = !text ? "no text" : `suspiciously short or watermark-only (${text.length} chars)`;
       console.log(`📷 Page ${i} has ${reason}. Running OCR...`);
-      
+
       const ocrText = await extractTextWithOCR(pdf, i);
-      
+
       // If OCR extracted more meaningful content than the initial parse, use it
       if (ocrText.trim().length > text.trim().length || !text) {
         text = ocrText;
@@ -58,7 +137,7 @@ export async function parsePdfPages(filePath: string, bookId: string) {
     pages.push({
       bookId,
       pageNumber: i,
-      textChunk: text,
+      textChunk: sanitizeExtractedText(text),
     });
   }
 
@@ -135,16 +214,16 @@ export async function parseDocxPages(filePath: string, bookId: string) {
 
   for (const p of paragraphs) {
     if ((currentPage.length + p.length) > PAGE_SIZE && currentPage.length > 0) {
-      pages.push({ bookId, pageNumber, textChunk: currentPage.trim() });
+      pages.push({ bookId, pageNumber, textChunk: sanitizeExtractedText(currentPage.trim()) });
       pageNumber++;
       currentPage = p + "\n\n";
     } else {
       currentPage += p + "\n\n";
     }
   }
-  
+
   if (currentPage.trim().length > 0) {
-    pages.push({ bookId, pageNumber, textChunk: currentPage.trim() });
+    pages.push({ bookId, pageNumber, textChunk: sanitizeExtractedText(currentPage.trim()) });
   }
 
   const BATCH_SIZE = 10;

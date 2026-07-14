@@ -44,7 +44,8 @@ export async function getResourceRequests() {
                 department: true,
                 course: true,
             },
-            orderBy: [desc(resourceRequests.createdAt)]
+            orderBy: [desc(resourceRequests.createdAt)],
+            limit: 200,
         });
 
         if (requests.length > 0) {
@@ -123,9 +124,14 @@ export async function fulfillResourceRequest(requestId: string, url: string) {
             targetId: request.id,
         }).returning();
 
-        // Real-time notification
-        await pusherServer.trigger(`user-${request.userId}`, "new-notification", notif);
-        await pusherServer.trigger(`user-${request.userId}`, "resource-fulfilled", { requestId, url });
+        // Real-time notification (fire-and-forget so a Pusher hiccup doesn't
+        // make an already-fulfilled request report back as failed)
+        pusherServer
+            .trigger(`user-${request.userId}`, "new-notification", notif)
+            .catch((err) => console.error("Pusher trigger failed (new-notification):", err));
+        pusherServer
+            .trigger(`user-${request.userId}`, "resource-fulfilled", { requestId, url })
+            .catch((err) => console.error("Pusher trigger failed (resource-fulfilled):", err));
 
         revalidatePath("/dashboard/manage");
         return { success: true };
@@ -229,7 +235,9 @@ export async function broadcastAnnouncement(content: string, targetType: "DEPART
             });
             
             // Trigger pusher for community refresh if needed
-            await pusherServer.trigger(`community-${community.id}`, "new-announcement", { content });
+            pusherServer
+                .trigger(`community-${community.id}`, "new-announcement", { content })
+                .catch((err) => console.error("Pusher trigger failed (new-announcement):", err));
         }
 
         return { success: true, message: `Announcement broadcasted to ${communities.length} communities.` };

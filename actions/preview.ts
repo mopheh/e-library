@@ -45,29 +45,34 @@ export async function getDepartmentsOfFaculty(facultyId: string) {
       .where(eq(departments.facultyId, facultyId))
       .orderBy(departments.name);
 
-    const deptsWithStats = await Promise.all(
-      depts.map(async (dept) => {
-        const booksCountResult = await db
-          .select({ count: sql<number>`count(*)` })
-          .from(books)
-          .where(eq(books.departmentId, dept.id));
+    // Single grouped query per stat instead of two round trips per department.
+    const deptIds = depts.map((d) => d.id);
+    const [booksCounts, studentsCounts] = deptIds.length > 0
+      ? await Promise.all([
+          db
+            .select({ departmentId: books.departmentId, count: sql<number>`count(*)` })
+            .from(books)
+            .where(inArray(books.departmentId, deptIds))
+            .groupBy(books.departmentId),
+          db
+            .select({ departmentId: users.departmentId, count: sql<number>`count(*)` })
+            .from(users)
+            .where(sql`${users.departmentId} IN ${deptIds} AND ${users.role} = 'STUDENT'`)
+            .groupBy(users.departmentId),
+        ])
+      : [[], []];
+    const booksCountByDept = new Map(booksCounts.map((r) => [r.departmentId, Number(r.count)]));
+    const studentsCountByDept = new Map(studentsCounts.map((r) => [r.departmentId, Number(r.count)]));
 
-        const studentsCountResult = await db
-          .select({ count: sql<number>`count(*)` })
-          .from(users)
-          .where(sql`${users.departmentId} = ${dept.id} AND ${users.role} = 'STUDENT'`);
-
-        return {
-          id: dept.id,
-          name: dept.name,
-          facultyId: dept.facultyId,
-          stats: {
-            booksCount: Number(booksCountResult[0]?.count || 0),
-            studentsCount: Number(studentsCountResult[0]?.count || 0),
-          },
-        };
-      })
-    );
+    const deptsWithStats = depts.map((dept) => ({
+      id: dept.id,
+      name: dept.name,
+      facultyId: dept.facultyId,
+      stats: {
+        booksCount: booksCountByDept.get(dept.id) || 0,
+        studentsCount: studentsCountByDept.get(dept.id) || 0,
+      },
+    }));
 
     return {
       success: true,

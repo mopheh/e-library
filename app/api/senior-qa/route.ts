@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/database/drizzle";
 import { seniorQa, users } from "@/database/schema";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, and, or } from "drizzle-orm";
 import { getCurrentUser } from "@/lib/auth";
 import { z } from "zod";
 
@@ -21,7 +21,8 @@ export async function GET(req: Request) {
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const { searchParams } = new URL(req.url);
-    const targetLevel = searchParams.get("targetLevel") || "ALL";
+    const targetLevel = (searchParams.get("targetLevel") ||
+      "ALL") as (typeof seniorQa.$inferSelect)["targetLevel"];
 
     const rawData = await db
       .select({
@@ -38,21 +39,22 @@ export async function GET(req: Request) {
       })
       .from(seniorQa)
       .leftJoin(users, eq(seniorQa.authorId, users.id))
-      .where(eq(seniorQa.departmentId, user.departmentId!))
-      .orderBy(desc(seniorQa.createdAt));
-
-    const data = rawData
-      .filter(
-        (q) =>
-          targetLevel === "ALL" ||
-          q.targetLevel === targetLevel ||
-          q.targetLevel === "ALL",
+      .where(
+        and(
+          eq(seniorQa.departmentId, user.departmentId!),
+          targetLevel === "ALL"
+            ? undefined
+            : or(eq(seniorQa.targetLevel, targetLevel), eq(seniorQa.targetLevel, "ALL")),
+        ),
       )
-      .map((q) =>
-        q.isAnonymous
-          ? { ...q, authorName: "Anonymous Student", authorRole: "STUDENT", authorLevel: "---" }
-          : q,
-      );
+      .orderBy(desc(seniorQa.createdAt))
+      .limit(200);
+
+    const data = rawData.map((q) =>
+      q.isAnonymous
+        ? { ...q, authorName: "Anonymous Student", authorRole: "STUDENT", authorLevel: "---" }
+        : q,
+    );
 
     return NextResponse.json(data);
   } catch (error) {

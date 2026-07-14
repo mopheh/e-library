@@ -107,9 +107,12 @@ function useGenerateQuestions() {
       const res = await fetch(`/api/books/${book.id}/question`, { method: "POST" });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Generation failed");
-      toast.success("Questions generated!", {
+      // Generation now runs in the background job queue, not inline - the
+      // "AI Ready" status badge (polled automatically) is the real completion
+      // signal, so we only confirm that the job was dispatched here.
+      toast.success("Generation started", {
         id: toastId,
-        description: `MCQs are now live for "${book.title}".`,
+        description: `MCQs for "${book.title}" are being generated in the background.`,
       });
       await queryClient.invalidateQueries({ queryKey: ["books"] });
     } catch (err: any) {

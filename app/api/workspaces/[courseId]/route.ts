@@ -8,7 +8,7 @@ import {
   questions,
   bookPages,
 } from "@/database/schema";
-import { eq, sql } from "drizzle-orm";
+import { eq, sql, inArray } from "drizzle-orm";
 import { auth } from "@clerk/nextjs/server";
 
 export async function GET(
@@ -53,22 +53,16 @@ export async function GET(
       .where(eq(bookCourses.courseId, courseId))
       .orderBy(books.createdAt);
 
-    // 3. Count AI-indexed pages across all books in this workspace
+    // 3. Count AI-indexed pages across all books in this workspace (single
+    // grouped query instead of one round-trip per book).
     const bookIds = linkedBooks.map((b) => b.id);
     let indexedPagesCount = 0;
     if (bookIds.length > 0) {
-      const pageCounts = await Promise.all(
-        bookIds.map((bid) =>
-          db
-            .select({ count: sql<number>`count(*)` })
-            .from(bookPages)
-            .where(eq(bookPages.bookId, bid))
-        )
-      );
-      indexedPagesCount = pageCounts.reduce(
-        (sum, r) => sum + Number(r[0]?.count ?? 0),
-        0
-      );
+      const [pageCountRow] = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(bookPages)
+        .where(inArray(bookPages.bookId, bookIds));
+      indexedPagesCount = Number(pageCountRow?.count ?? 0);
     }
 
     // 4. Count MCQ questions for this course

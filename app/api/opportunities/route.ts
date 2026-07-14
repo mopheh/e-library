@@ -23,12 +23,12 @@ export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const typeFilter = searchParams.get("type");
 
-    const rawData = await db
+    const data = await db
       .select()
       .from(opportunities)
-      .orderBy(desc(opportunities.createdAt));
-
-    const data = typeFilter ? rawData.filter((opt) => opt.type === typeFilter) : rawData;
+      .where(typeFilter ? eq(opportunities.type, typeFilter as typeof opportunities.$inferSelect.type) : undefined)
+      .orderBy(desc(opportunities.createdAt))
+      .limit(200);
 
     return NextResponse.json(data);
   } catch (error) {

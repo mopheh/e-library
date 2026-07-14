@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/database/drizzle";
 import { studyRooms, studyRoomMembers, users } from "@/database/schema";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, inArray } from "drizzle-orm";
 import { getCurrentUser } from "@/lib/auth";
 import { z } from "zod";
 
@@ -33,19 +33,30 @@ export async function GET(
       .where(eq(studyRooms.courseId, courseId))
       .orderBy(desc(studyRooms.createdAt));
 
-    const enrichedRooms = await Promise.all(
-      rooms.map(async (room) => {
-        const members = await db
-          .select({ userId: studyRoomMembers.userId })
+    // Single batched query for all rooms' members instead of one query per room.
+    const roomIds = rooms.map((r) => r.id);
+    const allMembers = roomIds.length > 0
+      ? await db
+          .select({ roomId: studyRoomMembers.roomId, userId: studyRoomMembers.userId })
           .from(studyRoomMembers)
-          .where(eq(studyRoomMembers.roomId, room.id));
-        return {
-          ...room,
-          memberCount: members.length,
-          isMember: members.some((m) => m.userId === user.id),
-        };
-      }),
-    );
+          .where(inArray(studyRoomMembers.roomId, roomIds))
+      : [];
+
+    const membersByRoom = new Map<string, string[]>();
+    for (const m of allMembers) {
+      const list = membersByRoom.get(m.roomId) ?? [];
+      list.push(m.userId);
+      membersByRoom.set(m.roomId, list);
+    }
+
+    const enrichedRooms = rooms.map((room) => {
+      const memberIds = membersByRoom.get(room.id) ?? [];
+      return {
+        ...room,
+        memberCount: memberIds.length,
+        isMember: memberIds.includes(user.id),
+      };
+    });
 
     return NextResponse.json(enrichedRooms);
   } catch (error) {

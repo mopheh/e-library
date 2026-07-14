@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/database/drizzle";
 import { questions, questionTopics, examInsights } from "@/database/schema";
-import { eq } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 import { generateContent } from "@/lib/ai";
 import { getCurrentUser } from "@/lib/auth";
 
@@ -28,11 +28,13 @@ export async function POST(
       return NextResponse.json({ message: "No questions to analyze", insights: [] });
     }
 
-    // 2. See which questions already have topics
+    // 2. See which of THIS course's questions already have topics
+    const courseQuestionIds = courseQuestions.map(q => q.id);
     const existingTopics = await db
       .select({ questionId: questionTopics.questionId })
-      .from(questionTopics);
-      
+      .from(questionTopics)
+      .where(inArray(questionTopics.questionId, courseQuestionIds));
+
     const existingTopicIds = new Set(existingTopics.map(t => t.questionId));
     const questionsToAnalyze = courseQuestions.filter(q => !existingTopicIds.has(q.id));
 
@@ -45,19 +47,18 @@ export async function POST(
 
       for (const chunk of chunks) {
         const prompt = `Analyze the following exam questions and assign exactly ONE core academic topic to each question (e.g., "Thevenin's Theorem", "Calculus", "Thermodynamics"). Return only a valid JSON array of objects, where each object has "id" and "topic" fields. Do not include markdown formatting.\n\nQuestions:\n${JSON.stringify(chunk.map(q => ({ id: q.id, text: q.questionText })))}`
-        
+
         try {
           const rawText = await generateContent(prompt, "gemini-3-flash-preview");
           const _jsonString = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
           const parsed = JSON.parse(_jsonString);
 
-          for (const item of parsed) {
-             if (item.id && item.topic) {
-                await db.insert(questionTopics).values({
-                   questionId: item.id,
-                   topicName: item.topic.trim(),
-                });
-             }
+          const validItems = (Array.isArray(parsed) ? parsed : [])
+            .filter((item: any) => item.id && item.topic)
+            .map((item: any) => ({ questionId: item.id, topicName: String(item.topic).trim() }));
+
+          if (validItems.length > 0) {
+            await db.insert(questionTopics).values(validItems);
           }
         } catch (e) {
           console.error("AI Topic parsing failed for chunk", e);
@@ -81,16 +82,15 @@ export async function POST(
     // Clear old insights for this course
     await db.delete(examInsights).where(eq(examInsights.courseId, courseId));
 
-    const newInsights = [];
-    for (const [topic, count] of Object.entries(frequencyMap)) {
-      const percentage = Math.round((count / totalCount) * 100);
-      const [inserted] = await db.insert(examInsights).values({
-        courseId,
-        topicName: topic,
-        frequencyPercentage: percentage
-      }).returning();
-      newInsights.push(inserted);
-    }
+    const insightsToInsert = Object.entries(frequencyMap).map(([topic, count]) => ({
+      courseId,
+      topicName: topic,
+      frequencyPercentage: Math.round((count / totalCount) * 100),
+    }));
+
+    const newInsights = insightsToInsert.length > 0
+      ? await db.insert(examInsights).values(insightsToInsert).returning()
+      : [];
 
     // Sort descending by frequency
     newInsights.sort((a, b) => b.frequencyPercentage - a.frequencyPercentage);

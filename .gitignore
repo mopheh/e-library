@@ -79,3 +79,7 @@ update-b2-cors.js
 
 # --- Audit reports ---
 library_audit_report.md
+
+# --- Load testing (contains live Clerk session tokens + result dumps) ---
+loadtest/tokens.json
+loadtest/results/

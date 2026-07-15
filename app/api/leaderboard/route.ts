@@ -30,24 +30,30 @@ export async function GET(req: NextRequest) {
         conditions.push(eq(users.departmentId, user.departmentId));
       }
 
-      // Calculate Leaderboard Points
+      // Calculate Leaderboard Points. Aliased via .as("points") so drizzle
+      // actually emits `AS "points"` in the generated SQL - without it,
+      // `ORDER BY points` fails with "column points does not exist" since
+      // the raw sql`points` in orderBy has nothing to bind to. (Found via
+      // load testing: this endpoint 500'd on every request.)
+      const pointsExpr = sql<number>`
+        COALESCE(SUM(${readingSessions.duration} / 5.0), 0) +
+        COALESCE(SUM(${readingSessions.pagesRead} * 2), 0) +
+        COALESCE((SELECT SUM(score) FROM ${sessions} WHERE ${sessions.userId} = ${users.id}), 0)
+      `.as("points");
+
       const leaderboardData = await db
         .select({
           id: users.id,
           name: users.fullName,
           department: departments.name,
-          points: sql<number>`
-            COALESCE(SUM(${readingSessions.duration} / 5.0), 0) +
-            COALESCE(SUM(${readingSessions.pagesRead} * 2), 0) +
-            COALESCE((SELECT SUM(score) FROM ${sessions} WHERE ${sessions.userId} = ${users.id}), 0)
-          `,
+          points: pointsExpr,
         })
         .from(users)
         .leftJoin(departments, eq(users.departmentId, departments.id))
         .leftJoin(readingSessions, eq(users.id, readingSessions.userId))
         .where(conditions.length > 0 ? and(...conditions) : undefined)
         .groupBy(users.id, users.fullName, departments.name)
-        .orderBy(desc(sql`points`))
+        .orderBy(desc(pointsExpr))
         .limit(20);
 
       // Compute streak for these top 20 users

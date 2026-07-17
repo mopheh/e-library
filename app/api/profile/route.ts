@@ -5,11 +5,13 @@ import { db } from "@/database/drizzle";
 import {
   departments,
   faculty,
+  systemSettings,
   users,
   userBooks,
   readingSessions,
   activities,
 } from "@/database/schema";
+import { validateMatricNo } from "@/lib/facultyCodes";
 
 export async function GET() {
   try {
@@ -127,7 +129,7 @@ export async function PUT(req: Request) {
       firstName,
       lastName,
       phoneNumber,
-      faculty,
+      faculty: facultyIdInput,
       department,
       year,
       matricNumber,
@@ -135,6 +137,35 @@ export async function PUT(req: Request) {
       address,
       dob,
     } = body;
+
+    // Matric number format is faculty-dependent, so validate against
+    // whichever faculty applies after this update (the submitted one, or
+    // the user's current one if faculty isn't being changed). ASPIRANTs
+    // reuse this column for a JAMB reg number, so they're exempt.
+    if (matricNumber) {
+      const [currentUser] = await db
+        .select({ role: users.role, facultyId: users.facultyId })
+        .from(users)
+        .where(eq(users.clerkId, userId))
+        .limit(1);
+
+      const effectiveFacultyId = facultyIdInput || currentUser?.facultyId;
+      if (currentUser?.role === "STUDENT" && effectiveFacultyId) {
+        const [fac] = await db
+          .select({ name: faculty.name })
+          .from(faculty)
+          .where(eq(faculty.id, effectiveFacultyId))
+          .limit(1);
+
+        if (fac) {
+          const [settings] = await db.select().from(systemSettings).limit(1);
+          const result = validateMatricNo(matricNumber, fac.name, settings?.matricFacultyCheckEnabled ?? false);
+          if (!result.valid) {
+            return NextResponse.json({ error: result.reason }, { status: 400 });
+          }
+        }
+      }
+    }
 
     // Update clerk details
     if (firstName || lastName) {
@@ -157,7 +188,7 @@ export async function PUT(req: Request) {
       updateData.fullName = `${firstName || ""} ${lastName || ""}`.trim();
     }
     if (phoneNumber !== undefined) updateData.phoneNumber = phoneNumber;
-    if (faculty) updateData.facultyId = faculty;
+    if (facultyIdInput) updateData.facultyId = facultyIdInput;
     if (department) updateData.departmentId = department;
     if (year) updateData.year = year;
     if (matricNumber) updateData.matricNo = matricNumber;

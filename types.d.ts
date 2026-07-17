@@ -22,6 +22,7 @@ export interface User {
   lastActivityDate?: string | Date | null;
   imageUrl?: string | null;
   onboarded?: boolean;
+  aiEnabled?: boolean;
 }
 
 export interface Faculty {

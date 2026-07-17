@@ -8,6 +8,7 @@ import {
   User,
   Users2,
   Layers,
+  Menu,
 } from "lucide-react";
 import { motion, useScroll, useMotionValueEvent } from "framer-motion";
 import { useKeyboardOpen } from "@/hooks/useKeyboardOpen";
@@ -158,6 +159,21 @@ export default function BottomNav({
             </button>
           );
         })}
+
+        <button
+          onClick={toggleSidebar}
+          className="flex flex-col items-center gap-1 min-w-[52px] py-1 px-1 relative group"
+          aria-label="Menu"
+        >
+          <div className="relative z-10 flex flex-col items-center gap-0.5">
+            <div className="w-9 h-9 flex items-center justify-center rounded-xl text-zinc-400 dark:text-zinc-500 group-active:scale-90 transition-all duration-200">
+              <Menu className="w-[20px] h-[20px]" strokeWidth={1.8} />
+            </div>
+            <span className="text-[9.5px] font-bold tracking-wide text-zinc-400 dark:text-zinc-500 font-cabin leading-none">
+              Menu
+            </span>
+          </div>
+        </button>
       </div>
     </motion.nav>
   );

@@ -60,13 +60,17 @@ export async function PUT(req: NextRequest) {
       return NextResponse.json({ error: authCheck.error }, { status: authCheck.status })
 
     const body = await req.json()
-    const { id, name } = body
-    if (!id || !name)
-      return NextResponse.json({ error: "id and name are required" }, { status: 400 })
+    const { id, name, facultyId } = body
+    if (!id || (!name && !facultyId))
+      return NextResponse.json({ error: "id and at least one of name or facultyId are required" }, { status: 400 })
+
+    const updateData: { name?: string; facultyId?: string } = {}
+    if (name) updateData.name = name
+    if (facultyId) updateData.facultyId = facultyId
 
     const [updated] = await db
       .update(departments)
-      .set({ name })
+      .set(updateData)
       .where(eq(departments.id, id))
       .returning()
     return NextResponse.json(updated)

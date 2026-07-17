@@ -15,6 +15,7 @@ export async function GET(
     if (!authCheck.authorized) {
       return NextResponse.json({ error: authCheck.error }, { status: authCheck.status });
     }
+    const user = authCheck.user!;
 
     const { id: bookId } = await context.params;
     const [book] = await db
@@ -24,6 +25,17 @@ export async function GET(
       .limit(1);
 
     if (!book || !book.fileUrl) {
+      return NextResponse.json({ error: "Book not found" }, { status: 404 });
+    }
+
+    // A pending/rejected upload is only viewable by its uploader or an
+    // admin/faculty-rep, not by students browsing before it's approved.
+    if (
+      book.reviewStatus !== "APPROVED" &&
+      user.id !== book.postedBy &&
+      user.role !== "ADMIN" &&
+      user.role !== "FACULTY REP"
+    ) {
       return NextResponse.json({ error: "Book not found" }, { status: 404 });
     }
 

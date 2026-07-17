@@ -84,32 +84,32 @@ export default function AIChatAssistant({
     try {
       const res = await fetch("/api/ask", {
         method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ messages: currentMessages, bookId }),
       });
 
-      const data = await res.json();
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || "AI request failed");
+      }
 
-      // Add empty assistant message for typing effect
+      // /api/ask streams plain text chunks; append them as they arrive.
       setMessages((prev) => [...prev, { role: "assistant", content: "" }]);
 
-      // Simulate typing effect
-      let index = 0;
-      const fullResponse = data.response;
+      const reader = res.body!.getReader();
+      const decoder = new TextDecoder();
+      let accumulated = "";
 
-      const typeInterval = setInterval(() => {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        accumulated += decoder.decode(value, { stream: true });
         setMessages((prev) => {
           const last = prev.at(-1);
           if (!last) return prev;
-          const updated = [
-            ...prev.slice(0, -1),
-            { ...last, content: fullResponse.slice(0, index) },
-          ];
-          return updated;
+          return [...prev.slice(0, -1), { ...last, content: accumulated }];
         });
-
-        index += 5; // Speed up typing slightly
-        if (index > fullResponse.length) clearInterval(typeInterval);
-      }, 10);
+      }
     } catch (error) {
       console.error("Error sending message", error);
     }

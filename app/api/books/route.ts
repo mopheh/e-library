@@ -10,7 +10,7 @@ import {
 import { db } from "@/database/drizzle";
 import { and, eq, sql, desc, ilike, or } from "drizzle-orm";
 import { z } from "zod";
-import { requireRole } from "@/lib/auth";
+import { requireRole, getCurrentUser } from "@/lib/auth";
 
 const bookSchema = z.object({
   title: z.string().min(1, "Title is required").max(255),
@@ -44,8 +44,19 @@ export async function GET(req: NextRequest) {
       );
     }
 
+    // Pending/rejected Faculty Rep uploads are only visible to admins and
+    // faculty reps explicitly asking for them (the review queue) — everyone
+    // else only ever sees approved material, regardless of what they pass in.
+    const requestedStatus = searchParams.get("reviewStatus");
+    const currentUser = await getCurrentUser();
+    const canSeeUnapproved = currentUser?.role === "ADMIN" || currentUser?.role === "FACULTY REP";
+    const reviewStatusFilter =
+      canSeeUnapproved && requestedStatus && ["PENDING", "APPROVED", "REJECTED"].includes(requestedStatus)
+        ? requestedStatus
+        : "APPROVED";
+
     // Build WHERE conditions on books itself (no JOIN-multiplied columns here)
-    const bookConditions = [];
+    const bookConditions = [eq(books.reviewStatus, reviewStatusFilter as any)];
     if (departmentId) bookConditions.push(eq(books.departmentId, departmentId));
     if (type) bookConditions.push(eq(books.type, type));
     if (search && search.trim().length >= 2) {
@@ -85,6 +96,9 @@ export async function GET(req: NextRequest) {
         fileUrl: books.fileUrl,
         fileSize: books.fileSize,
         parseStatus: books.parseStatus,
+        reviewStatus: books.reviewStatus,
+        rejectionReason: books.rejectionReason,
+        postedBy: books.postedBy,
         createdAt: books.createdAt,
         // Aggregate all linked course codes into one comma-separated string
         course: sql<string>`string_agg(distinct ${courses.courseCode}, ', ' order by ${courses.courseCode})`,
@@ -111,6 +125,9 @@ export async function GET(req: NextRequest) {
         books.fileUrl,
         books.fileSize,
         books.parseStatus,
+        books.reviewStatus,
+        books.rejectionReason,
+        books.postedBy,
         books.createdAt,
       )
       .orderBy(desc(books.createdAt))
@@ -152,6 +169,10 @@ export async function POST(req: Request) {
     }
     const { title, description, departmentId, type, courseIds, fileUrl, fileSize } = result.data;
 
+    // Admin uploads publish immediately; Faculty Rep uploads need admin
+    // approval before students can see them.
+    const isAdmin = user.role === "ADMIN";
+
     const [createdBook] = await db
       .insert(books)
       .values({
@@ -163,6 +184,9 @@ export async function POST(req: Request) {
         fileSize,
         postedBy: user.id,
         parseStatus: "processing",
+        reviewStatus: isAdmin ? "APPROVED" : "PENDING",
+        reviewedBy: isAdmin ? user.id : null,
+        reviewedAt: isAdmin ? new Date() : null,
       })
       .returning();
 

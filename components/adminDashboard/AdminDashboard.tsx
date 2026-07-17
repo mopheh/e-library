@@ -19,6 +19,7 @@ import {
   ChevronRight,
   Search,
   Plus,
+  Settings as SettingsIcon,
 } from "lucide-react";
 import FormModal from "@/components/FormDialogBody";
 import AddFacultyForm from "@/components/adminDashboard/department/AddFacultyForm";
@@ -30,6 +31,7 @@ import { SkeletonRow } from "@/components/adminDashboard/SkeletonRow";
 import { useAdminStats } from "@/hooks/useAdminStats";
 import CourseManagement from "@/components/adminDashboard/CourseManagement";
 import CbtQuestionManager from "@/components/adminDashboard/CbtQuestionManager";
+import SystemSettings from "@/components/adminDashboard/SystemSettings";
 
 // ─── Stat card ────────────────────────────────────────────
 interface StatCardProps {
@@ -86,7 +88,7 @@ const AdminDashboard = () => {
   const [deptSearch, setDeptSearch] = useState("");
   const [open, setOpen] = useState(false);
   const [type, setType] = useState("");
-  const [activeSection, setActiveSection] = useState<"overview" | "courses" | "cbt">("overview");
+  const [activeSection, setActiveSection] = useState<"overview" | "courses" | "cbt" | "settings">("overview");
 
   const { data: faculties, isLoading: facultiesLoading, isError: facultiesError, error: facultiesErr } =
     useFaculties(facultyPage);
@@ -176,6 +178,7 @@ const AdminDashboard = () => {
           { id: "overview", label: "Structure" },
           { id: "courses", label: "Courses", icon: GraduationCap },
           { id: "cbt", label: "CBT Questions", icon: BarChart3 },
+          { id: "settings", label: "Settings", icon: SettingsIcon },
         ].map((s) => (
           <button
             key={s.id}
@@ -193,6 +196,7 @@ const AdminDashboard = () => {
 
       {activeSection === "courses" && <CourseManagement />}
       {activeSection === "cbt" && <CbtQuestionManager />}
+      {activeSection === "settings" && <SystemSettings />}
 
       {activeSection === "overview" && (
         <>
@@ -358,6 +362,7 @@ const AdminDashboard = () => {
                         key={dept.id}
                         departmentId={dept.id}
                         name={dept.name ?? dept.departmentName ?? "Unknown"}
+                        facultyId={dept.facultyId}
                       />
                     ))
                 }

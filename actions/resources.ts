@@ -15,9 +15,76 @@ import { auth, clerkClient } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import { pusherServer } from "@/lib/pusher";
 
+/** Faculty Reps operate faculty-wide (all departments in their faculty), not just their own department. */
+async function departmentIdsForFacultyRep(currentUser: { facultyId: string | null }): Promise<string[]> {
+    if (!currentUser.facultyId) return [];
+    const depts = await db.select({ id: departments.id }).from(departments).where(eq(departments.facultyId, currentUser.facultyId));
+    return depts.map((d) => d.id);
+}
+
+/**
+ * Creates a resource request for the current user's own department.
+ * Notifies the Faculty Reps covering that department's faculty (and admins,
+ * via their own view).
+ */
+export async function createResourceRequest(courseId: string, description: string) {
+    try {
+        const { userId: clerkId } = await auth();
+        if (!clerkId) throw new Error("Unauthorized");
+
+        const currentUser = await db.query.users.findFirst({
+            where: eq(users.clerkId, clerkId),
+        });
+        if (!currentUser) throw new Error("User not found");
+        if (!currentUser.departmentId) throw new Error("Your account has no assigned department.");
+
+        if (!courseId) throw new Error("Please select a course.");
+        const trimmedDescription = description.trim();
+        if (trimmedDescription.length < 10) throw new Error("Please describe what you need in a bit more detail.");
+
+        const course = await db.query.courses.findFirst({ where: (c, { eq }) => eq(c.id, courseId) });
+        if (!course) throw new Error("Course not found");
+
+        const [request] = await db.insert(resourceRequests).values({
+            userId: currentUser.id,
+            departmentId: currentUser.departmentId,
+            courseId,
+            description: trimmedDescription,
+        }).returning();
+
+        // Notify the Faculty Reps covering this department's faculty (a rep's
+        // own departmentId is just where they were onboarded -- their actual
+        // scope is faculty-wide).
+        const reps = currentUser.facultyId
+            ? await db.query.users.findMany({
+                where: and(eq(users.facultyId, currentUser.facultyId), eq(users.role, "FACULTY REP")),
+            })
+            : [];
+
+        for (const rep of reps) {
+            const [notif] = await db.insert(notifications).values({
+                userId: rep.id,
+                type: "GENERAL",
+                message: `${currentUser.fullName} requested material for ${course.courseCode}.`,
+                targetId: request.id,
+            }).returning();
+
+            pusherServer
+                .trigger(`user-${rep.id}`, "new-notification", notif)
+                .catch((err) => console.error("Pusher trigger failed (new-notification):", err));
+        }
+
+        revalidatePath("/dashboard/requests");
+        return { success: true, data: request };
+    } catch (error) {
+        console.error("Error creating resource request:", error);
+        return { success: false, error: error instanceof Error ? error.message : "Failed to submit request" };
+    }
+}
+
 /**
  * Fetches resource requests.
- * Admins see all. Faculty Reps see only their department's.
+ * Admins see all. Faculty Reps see every department in their own faculty.
  */
 export async function getResourceRequests() {
     try {
@@ -33,8 +100,9 @@ export async function getResourceRequests() {
         }
 
         const conditions = [];
-        if (currentUser.role === "FACULTY REP" && currentUser.departmentId) {
-            conditions.push(eq(resourceRequests.departmentId, currentUser.departmentId));
+        if (currentUser.role === "FACULTY REP") {
+            const deptIds = await departmentIdsForFacultyRep(currentUser);
+            conditions.push(inArray(resourceRequests.departmentId, deptIds.length ? deptIds : ["00000000-0000-0000-0000-000000000000"]));
         }
 
         const requests = await db.query.resourceRequests.findMany({
@@ -103,9 +171,12 @@ export async function fulfillResourceRequest(requestId: string, url: string) {
 
         if (!request) throw new Error("Request not found");
 
-        // Faculty Rep check: must be their department
-        if (currentUser.role === "FACULTY REP" && request.departmentId !== currentUser.departmentId) {
-            throw new Error("You can only fulfill requests for your own department.");
+        // Faculty Rep check: must be a department in their faculty
+        if (currentUser.role === "FACULTY REP") {
+            const deptIds = await departmentIdsForFacultyRep(currentUser);
+            if (!deptIds.includes(request.departmentId)) {
+                throw new Error("You can only fulfill requests for departments in your own faculty.");
+            }
         }
 
         await db.update(resourceRequests)
@@ -157,6 +228,20 @@ export async function rejectResourceRequest(requestId: string, reason: string) {
             throw new Error("Forbidden");
         }
 
+        const request = await db.query.resourceRequests.findFirst({
+            where: eq(resourceRequests.id, requestId),
+            with: { course: true }
+        });
+        if (!request) throw new Error("Request not found");
+
+        // Faculty Rep check: must be a department in their faculty
+        if (currentUser.role === "FACULTY REP") {
+            const deptIds = await departmentIdsForFacultyRep(currentUser);
+            if (!deptIds.includes(request.departmentId)) {
+                throw new Error("You can only reject requests for departments in your own faculty.");
+            }
+        }
+
         await db.update(resourceRequests)
             .set({
                 status: "REJECTED",
@@ -165,11 +250,7 @@ export async function rejectResourceRequest(requestId: string, reason: string) {
             .where(eq(resourceRequests.id, requestId));
 
         // Notify user
-        const request = await db.query.resourceRequests.findFirst({ 
-            where: eq(resourceRequests.id, requestId),
-            with: { course: true } 
-        });
-        if (request) {
+        {
             await db.insert(notifications).values({
                 userId: request.userId,
                 type: "GENERAL",

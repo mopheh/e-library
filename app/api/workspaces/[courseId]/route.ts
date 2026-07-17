@@ -8,7 +8,7 @@ import {
   questions,
   bookPages,
 } from "@/database/schema";
-import { eq, sql, inArray } from "drizzle-orm";
+import { and, eq, sql, inArray } from "drizzle-orm";
 import { auth } from "@clerk/nextjs/server";
 
 export async function GET(
@@ -50,7 +50,7 @@ export async function GET(
       })
       .from(books)
       .innerJoin(bookCourses, eq(books.id, bookCourses.bookId))
-      .where(eq(bookCourses.courseId, courseId))
+      .where(and(eq(bookCourses.courseId, courseId), eq(books.reviewStatus, "APPROVED")))
       .orderBy(books.createdAt);
 
     // 3. Count AI-indexed pages across all books in this workspace (single

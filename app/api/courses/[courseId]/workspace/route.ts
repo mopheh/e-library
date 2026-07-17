@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/database/drizzle";
 import { books, bookCourses, courses, threads, users, questions } from "@/database/schema";
-import { eq, desc, sql } from "drizzle-orm";
+import { and, eq, desc, sql } from "drizzle-orm";
 import { requireRole } from "@/lib/auth";
 
 export async function GET(
@@ -44,7 +44,7 @@ export async function GET(
       .from(books)
       .innerJoin(bookCourses, eq(books.id, bookCourses.bookId))
       .leftJoin(users, eq(books.postedBy, users.id))
-      .where(eq(bookCourses.courseId, courseId))
+      .where(and(eq(bookCourses.courseId, courseId), eq(books.reviewStatus, "APPROVED")))
       .orderBy(desc(books.createdAt))
       .limit(50);
 

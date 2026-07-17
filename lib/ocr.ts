@@ -11,7 +11,10 @@ interface CanvasModule {
   ImageData: new (width: number, height: number) => any;
 }
 
-export async function extractTextWithOCR(pdf: pdfjsLib.PDFDocumentProxy, pageNumber: number) {
+export async function extractTextWithOCR(
+  pdf: pdfjsLib.PDFDocumentProxy,
+  pageNumber: number
+): Promise<{ text: string; confidence: number }> {
   let canvasModule: CanvasModule | undefined;
   try {
     canvasModule = eval('require("pdfjs-dist/node_modules/canvas")') as CanvasModule;
@@ -99,7 +102,7 @@ export async function extractTextWithOCR(pdf: pdfjsLib.PDFDocumentProxy, pageNum
 
   try {
     const {
-      data: { text },
+      data: { text, confidence },
     } = await Tesseract.recognize(tmpPath, "eng", {
       logger: (m) => {
         if (m.status === "recognizing text") {
@@ -112,7 +115,11 @@ export async function extractTextWithOCR(pdf: pdfjsLib.PDFDocumentProxy, pageNum
       },
     });
 
-    return text.trim();
+    // Tesseract is a printed-text engine; it performs poorly on handwriting
+    // and returns a low mean confidence (0-100) for pages it can't really
+    // read, rather than failing outright. Callers use this to avoid feeding
+    // garbage transcriptions into RAG.
+    return { text: text.trim(), confidence };
   } finally {
     if (fs.existsSync(tmpPath)) {
       fs.unlinkSync(tmpPath);

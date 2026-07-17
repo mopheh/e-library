@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { useUserData } from "@/hooks/useUsers";
 import ResourceRequestsTable from "@/components/adminDashboard/ResourceRequestsTable";
+import PendingBooksTable from "@/components/adminDashboard/PendingBooksTable";
 import AnnouncementTool from "@/components/adminDashboard/AnnouncementTool";
 import AdminDashboard from "@/components/adminDashboard/AdminDashboard";
 import CourseManagement from "@/components/adminDashboard/CourseManagement";
@@ -25,7 +26,7 @@ import Link from "next/link";
 
 export default function FacultyManagementPage() {
     const { data: userData } = useUserData();
-    const [activeTab, setActiveTab] = useState<"overview" | "requests" | "announcements" | "courses" | "aspirants" | "schedule" | "data">("overview");
+    const [activeTab, setActiveTab] = useState<"overview" | "requests" | "uploads" | "announcements" | "courses" | "aspirants" | "schedule" | "data">("overview");
 
     if (!userData || (userData.role !== "ADMIN" && userData.role !== "FACULTY REP")) {
         return (
@@ -66,6 +67,7 @@ export default function FacultyManagementPage() {
                     id: "overview", label: "Overview", icon: LayoutDashboard
                 },
                 { id: "requests", label: "Resources", icon: Search },
+                { id: "uploads", label: "Uploads", icon: BookOpen },
                 { id: "announcements", label: "Broadcast", icon: LinkIcon },
                 { id: "courses", label: "Courses", icon: GraduationCap },
                 { id: "schedule", label: "Schedule", icon: Calendar },
@@ -112,18 +114,23 @@ export default function FacultyManagementPage() {
                                     </div>
                                 </Link>
 
-                                <div className="p-8 bg-white dark:bg-zinc-950 border-none shadow-sm rounded-[2.5rem] relative overflow-hidden group">
+                                <button
+                                    onClick={() => setActiveTab("uploads")}
+                                    className="text-left group p-8 bg-white dark:bg-zinc-950 border-none shadow-sm rounded-[2.5rem] hover:ring-2 ring-blue-500/20 transition-all duration-300 relative overflow-hidden"
+                                >
                                     <div className="relative z-10">
-                                        <div className="w-14 h-14 rounded-2xl bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center text-indigo-600 dark:text-indigo-400 mb-6">
+                                        <div className="w-14 h-14 rounded-2xl bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center text-indigo-600 dark:text-indigo-400 mb-6 group-hover:rotate-6 transition-transform">
                                             <BookOpen className="w-7 h-7" />
                                         </div>
-                                        <h3 className="text-xl font-bold text-zinc-900 dark:text-zinc-50 mb-2 font-cabin uppercase tracking-tighter">Library Mgmt</h3>
-                                        <p className="text-xs text-zinc-500 font-poppins font-light leading-relaxed">Maintain the platform library by updating or removing resources.</p>
+                                        <h3 className="text-xl font-medium text-zinc-900 dark:text-zinc-50 mb-2 font-cabin uppercase tracking-tighter flex items-center gap-2">
+                                            Library Mgmt <ChevronRight className="w-5 h-5 text-zinc-300 group-hover:translate-x-1 transition-transform" />
+                                        </h3>
+                                        <p className="text-xs text-zinc-500 font-poppins font-light leading-relaxed">Review pending Faculty Rep uploads before they go live.</p>
                                     </div>
                                     <div className="absolute top-0 right-0 -translate-y-4 translate-x-4 opacity-5 group-hover:scale-125 transition-transform">
                                         <Database className="w-32 h-32" />
                                     </div>
-                                </div>
+                                </button>
                             </div>
 
                             <ResourceRequestsTable />
@@ -166,6 +173,12 @@ export default function FacultyManagementPage() {
                 {activeTab === "requests" && (
                     <div className="lg:col-span-7">
                         <ResourceRequestsTable />
+                    </div>
+                )}
+
+                {activeTab === "uploads" && (
+                    <div className="lg:col-span-7">
+                        <PendingBooksTable />
                     </div>
                 )}
 

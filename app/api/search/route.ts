@@ -1,6 +1,6 @@
 import { db } from "@/database/drizzle";
 import { books, courses } from "@/database/schema";
-import { ilike, or, sql } from "drizzle-orm";
+import { and, eq, ilike, or, sql } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 
@@ -32,9 +32,12 @@ export async function GET(req: Request) {
         })
         .from(books)
         .where(
-          or(
-            ilike(books.title, searchPattern),
-            ilike(books.description, searchPattern)
+          and(
+            eq(books.reviewStatus, "APPROVED"),
+            or(
+              ilike(books.title, searchPattern),
+              ilike(books.description, searchPattern)
+            )
           )
         )
         .limit(5),

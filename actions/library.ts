@@ -33,7 +33,7 @@ export async function getRecentBooks() {
       .innerJoin(books, eq(userBooks.bookId, books.id))
       .leftJoin(bookCourses, eq(books.id, bookCourses.bookId))
       .leftJoin(courses, eq(bookCourses.courseId, courses.id))
-      .where(eq(userBooks.userId, dbUser.id))
+      .where(and(eq(userBooks.userId, dbUser.id), eq(books.reviewStatus, "APPROVED")))
       .orderBy(desc(userBooks.lastReadAt))
       .limit(6);
 
@@ -67,7 +67,7 @@ export async function getRecommendedBooks() {
          createdAt: books.createdAt,
       })
       .from(books)
-      .where(eq(books.departmentId, dbUser.departmentId))
+      .where(and(eq(books.departmentId, dbUser.departmentId), eq(books.reviewStatus, "APPROVED")))
       .orderBy(desc(books.createdAt))
       .limit(6);
 

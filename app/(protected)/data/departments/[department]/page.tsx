@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 
 import { getDepartmentWithFaculty } from "@/actions/department";
-import { useDepartmentUsers } from "@/hooks/useUsers";
+import { useDepartmentUsers, useUserData } from "@/hooks/useUsers";
 import { useUsers } from "@/hooks/useUsers";
 import { User } from "@/types";
 
@@ -47,9 +47,46 @@ const Page = () => {
     }
   }, [departmentId]);
 
+  const { data: userData } = useUserData();
   const { data: students = [] } = useDepartmentUsers(departmentId);
   const { data: facultyUsers = [] } = useUsers(departmentInfo?.facultyId);
   const facultyReps = (facultyUsers as User[]).filter((u) => u.role === "FACULTY REP");
+
+  if (!userData || (userData.role !== "ADMIN" && userData.role !== "FACULTY REP")) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] font-poppins text-center p-10">
+        <div className="w-20 h-20 bg-rose-50 dark:bg-rose-900/20 rounded-full flex items-center justify-center mb-6 text-rose-500">
+          <ShieldCheck className="w-10 h-10" />
+        </div>
+        <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50 mb-2 font-cabin uppercase tracking-tighter">Access Denied</h1>
+        <p className="text-zinc-500 max-w-sm font-light font-poppins text-xs">You do not have the necessary permissions to view this page.</p>
+      </div>
+    );
+  }
+
+  // Faculty Reps cover every department in their own faculty, but not other
+  // faculties'. Wait for departmentInfo before deciding, so a legitimate rep
+  // doesn't briefly see "Access Denied" while it's still loading.
+  if (userData.role === "FACULTY REP") {
+    if (!departmentInfo) {
+      return (
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="w-8 h-8 border-2 border-zinc-200 dark:border-zinc-800 border-t-blue-600 rounded-full animate-spin" />
+        </div>
+      );
+    }
+    if (userData.facultyId !== departmentInfo.facultyId) {
+      return (
+        <div className="flex flex-col items-center justify-center min-h-[60vh] font-poppins text-center p-10">
+          <div className="w-20 h-20 bg-rose-50 dark:bg-rose-900/20 rounded-full flex items-center justify-center mb-6 text-rose-500">
+            <ShieldCheck className="w-10 h-10" />
+          </div>
+          <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50 mb-2 font-cabin uppercase tracking-tighter">Access Denied</h1>
+          <p className="text-zinc-500 max-w-sm font-light font-poppins text-xs">This department isn&apos;t in your faculty.</p>
+        </div>
+      );
+    }
+  }
 
   const deptAsType = departmentInfo
     ? {

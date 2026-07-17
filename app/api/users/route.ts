@@ -1,9 +1,11 @@
 ///api/users
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/database/drizzle";
-import { departments, users } from "@/database/schema";
+import { departments, faculty, systemSettings, users } from "@/database/schema";
 import { eq } from "drizzle-orm";
 import { auth } from "@clerk/nextjs/server";
+import { requireRole } from "@/lib/auth";
+import { validateMatricNo } from "@/lib/facultyCodes";
 
 import { clerkClient } from "@clerk/nextjs/server";
 
@@ -121,6 +123,24 @@ export async function POST(req: Request) {
       );
     }
 
+    // JAMB reg numbers (ASPIRANT signup) reuse the matricNo column and don't
+    // follow the faculty-code format, so only students are gated here.
+    if (params.role === "STUDENT" && params.facultyId && params.matricNo) {
+      const [fac] = await db
+        .select({ name: faculty.name })
+        .from(faculty)
+        .where(eq(faculty.id, params.facultyId))
+        .limit(1);
+
+      if (fac) {
+        const [settings] = await db.select().from(systemSettings).limit(1);
+        const result = validateMatricNo(params.matricNo, fac.name, settings?.matricFacultyCheckEnabled ?? false);
+        if (!result.valid) {
+          return NextResponse.json({ message: result.reason }, { status: 400 });
+        }
+      }
+    }
+
     const existingUser = await db
       .select()
       .from(users)
@@ -171,5 +191,48 @@ export async function POST(req: Request) {
       { error: "Failed to Create User" },
       { status: 500 },
     );
+  }
+}
+
+/**
+ * Admin-only: reassign a user (student) to a different department.
+ * Keeps facultyId in sync with the target department's own faculty, since
+ * both are stored independently on the users row.
+ */
+export async function PUT(req: NextRequest) {
+  try {
+    const authCheck = await requireRole(["ADMIN"]);
+    if (!authCheck.authorized) {
+      return NextResponse.json({ error: authCheck.error }, { status: authCheck.status });
+    }
+
+    const body = await req.json();
+    const { userId, departmentId } = body;
+    if (!userId || !departmentId) {
+      return NextResponse.json({ error: "userId and departmentId are required" }, { status: 400 });
+    }
+
+    const [targetDept] = await db
+      .select({ id: departments.id, facultyId: departments.facultyId })
+      .from(departments)
+      .where(eq(departments.id, departmentId))
+      .limit(1);
+    if (!targetDept) {
+      return NextResponse.json({ error: "Department not found" }, { status: 404 });
+    }
+
+    const [updated] = await db
+      .update(users)
+      .set({ departmentId: targetDept.id, facultyId: targetDept.facultyId })
+      .where(eq(users.id, userId))
+      .returning();
+    if (!updated) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
+    return NextResponse.json(updated);
+  } catch (err: any) {
+    console.error("[PUT /api/users]", err);
+    return NextResponse.json({ error: err.message || "Failed to update user" }, { status: 500 });
   }
 }

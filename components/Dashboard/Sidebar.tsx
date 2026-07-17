@@ -26,6 +26,7 @@ import {
   CalendarDays,
   Mic,
   Grid3X3,
+  LogOut,
 } from "lucide-react";
 import { useAuth, useUser } from "@clerk/nextjs";
 import { useUserData } from "@/hooks/useUsers";
@@ -250,6 +251,21 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggle }) => {
                   <span>Management Hub</span>
                 </div>
               )}
+
+              {/* Logout — the top Nav bar (with its own logout) is hidden on
+                  mobile, so this is the only logout entry point there. */}
+              <div
+                onClick={() => {
+                  signOut();
+                  localStorage.setItem(STORAGE_KEY, "[]");
+                }}
+                className="flex gap-3 font-poppins text-xs items-center cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-800 p-2 rounded-xl transition-colors text-zinc-500 dark:text-zinc-400 font-light"
+              >
+                <div className="h-8 w-8 flex items-center justify-center rounded-lg bg-zinc-100 dark:bg-zinc-800">
+                  <LogOut className="w-4 h-4" />
+                </div>
+                <span>Logout</span>
+              </div>
           </div>
           </div>
         </div>

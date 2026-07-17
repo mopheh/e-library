@@ -13,6 +13,7 @@ import { useCourses } from "@/hooks/useCourses";
 import { useCreateBook } from "@/hooks/useCreateBook";
 import { Department } from "@/types";
 import { FileUploadDropzone } from "@/components/shared/FileUploadDropzone";
+import { useUserData } from "@/hooks/useUsers";
 
 // schema
 export const bookSchema = z
@@ -53,6 +54,11 @@ export function UploadBookForm({
 }) {
   const [loading, setLoading] = useState(false);
   const { createBook } = useCreateBook();
+  const { data: userData } = useUserData();
+  const isAdmin = userData?.role === "ADMIN";
+  const uploadSuccessMessage = isAdmin
+    ? "Book uploaded!"
+    : "Submitted for review — an admin will approve it before it goes live.";
   const { data: courses } = useCourses(
     departmentId
       ? { departmentId, limit: 2000, includeBorrowed: true }
@@ -100,7 +106,7 @@ export function UploadBookForm({
           fileSize: data.fileSize,
         });
 
-        toast.success("Book uploaded!");
+        toast.success(uploadSuccessMessage);
         reset();
         setOpen(false);
         return;
@@ -116,7 +122,7 @@ export function UploadBookForm({
             departmentId: data.departmentId,
             type: data.type,
             courseIds: data.courseIds,
-            link: data.link,
+            fileUrl: data.link,
           }),
         });
 
@@ -125,7 +131,7 @@ export function UploadBookForm({
           throw new Error(err.error || "Failed to upload book");
         }
 
-        toast.success("Book uploaded!");
+        toast.success(uploadSuccessMessage);
 
         reset();
         setOpen(false);

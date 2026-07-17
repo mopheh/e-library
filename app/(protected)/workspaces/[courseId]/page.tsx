@@ -82,13 +82,29 @@ export default function CourseWorkspacePage({
           courseId,
         }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "AI request failed");
 
-      setMessages((prev) => [
-        ...prev,
-        { role: "assistant", content: data.response },
-      ]);
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || "AI request failed");
+      }
+
+      // /api/ask streams plain text chunks; append them as they arrive.
+      setMessages((prev) => [...prev, { role: "assistant", content: "" }]);
+
+      const reader = res.body!.getReader();
+      const decoder = new TextDecoder();
+      let accumulated = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        accumulated += decoder.decode(value, { stream: true });
+        setMessages((prev) => {
+          const last = prev.at(-1);
+          if (!last) return prev;
+          return [...prev.slice(0, -1), { ...last, content: accumulated }];
+        });
+      }
     } catch (err: any) {
       setAiError(err.message || "Failed to get AI response");
     } finally {

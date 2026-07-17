@@ -41,6 +41,14 @@ export const jobTypeEnum = pgEnum("job_type", [
   "parse_book",
   "generate_questions",
 ]);
+// Separate from parseStatus (which tracks the text-extraction/RAG pipeline):
+// this tracks whether a Faculty Rep's upload has been approved by an admin
+// before it's visible to students. Admin uploads are auto-approved.
+export const reviewStatusEnum = pgEnum("review_status", [
+  "PENDING",
+  "APPROVED",
+  "REJECTED",
+]);
 export const users = pgTable(
   "users",
   {
@@ -63,6 +71,7 @@ export const users = pgTable(
     gender: GENDER_ENUM("gender").notNull(),
     address: varchar("address", { length: 255 }).notNull(),
     interests: text("interests"),
+    aiEnabled: boolean("ai_enabled").default(true).notNull(),
 
     lastActivityDate: date("last_activity_date").defaultNow(),
     createdAt: timestamp("created_at", {
@@ -77,6 +86,17 @@ export const users = pgTable(
     departmentIdx: index("users_department_idx").on(table.departmentId),
   }),
 );
+
+// Singleton table: exactly one row holds platform-wide toggles. Read/write
+// always operate on the first (and only) row; created lazily if missing.
+export const systemSettings = pgTable("system_settings", {
+  id: uuid("id").primaryKey().notNull().defaultRandom(),
+  aiEnabled: boolean("ai_enabled").default(true).notNull(),
+  // Off by default: the faculty-code prefix map (lib/facultyCodes.ts) hasn't
+  // been validated against a large enough sample of real signups yet.
+  matricFacultyCheckEnabled: boolean("matric_faculty_check_enabled").default(false).notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
+});
 
 export const faculty = pgTable("faculty", {
   id: uuid("id").primaryKey().notNull().defaultRandom(),
@@ -213,6 +233,18 @@ export const books = pgTable(
     fileSize: integer("file_size"),
 
     pageCount: integer("page_count"),
+    // Set when at least one page's text came from low-confidence OCR (likely
+    // handwritten/unreadable) -- that page's embedding is dropped from RAG
+    // rather than polluting search with garbage, and this flags the book for
+    // manual review since some of its content may be missing from AI answers.
+    needsReview: boolean("needs_review").default(false).notNull(),
+    // Faculty Rep uploads start PENDING until an admin approves them; admin
+    // uploads are auto-approved. Existing rows default to APPROVED so this
+    // migration doesn't hide previously-published material.
+    reviewStatus: reviewStatusEnum("review_status").default("APPROVED").notNull(),
+    reviewedBy: uuid("reviewed_by").references(() => users.id, { onDelete: "set null" }),
+    reviewedAt: timestamp("reviewed_at", { withTimezone: true }),
+    rejectionReason: text("rejection_reason"),
     postedBy: uuid("user_id")
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
@@ -221,6 +253,7 @@ export const books = pgTable(
   (table) => ({
     departmentIdx: index("books_department_idx").on(table.departmentId),
     createdAtIdx: index("books_created_at_idx").on(table.createdAt),
+    reviewStatusIdx: index("books_review_status_idx").on(table.reviewStatus),
   })
 );
 export const bookCourses = pgTable(
@@ -316,6 +349,10 @@ export const bookPages = pgTable(
     pageNumber: integer("page_number").notNull(),
     textChunk: text("text_chunk"),
     embedding: vector("embedding", { dimensions: 768 }),
+    // True when textChunk came from low-confidence OCR (likely handwritten/
+    // unreadable). embedding is left null for these so they can never surface
+    // in RAG search -- the text is kept only for manual review/reference.
+    needsReview: boolean("needs_review").default(false).notNull(),
 
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
@@ -839,6 +876,21 @@ export const readingSessionsRelations = relations(readingSessions, ({ one }) => 
   book: one(books, {
     fields: [readingSessions.bookId],
     references: [books.id],
+  }),
+}));
+
+export const booksRelations = relations(books, ({ one }) => ({
+  department: one(departments, {
+    fields: [books.departmentId],
+    references: [departments.id],
+  }),
+  postedByUser: one(users, {
+    fields: [books.postedBy],
+    references: [users.id],
+  }),
+  reviewedByUser: one(users, {
+    fields: [books.reviewedBy],
+    references: [users.id],
   }),
 }));
 

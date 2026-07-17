@@ -83,10 +83,15 @@ export async function processJob(job: {
       }
 
       let pageCount = 0;
+      let needsReview = false;
       if (isDocx) {
-        pageCount = await parseDocxPages(tmpPath, bookId);
+        ({ numPages: pageCount, needsReview } = await parseDocxPages(tmpPath, bookId));
       } else {
-        pageCount = await parsePdfPages(tmpPath, bookId);
+        ({ numPages: pageCount, needsReview } = await parsePdfPages(tmpPath, bookId));
+      }
+
+      if (needsReview) {
+        console.log(`⚠️ Book ${bookId} has low-confidence OCR page(s) - flagging for manual review.`);
       }
 
       const skipGenerationTypes = ["past question", "past_question", "handwritten", "note"];
@@ -96,12 +101,12 @@ export async function processJob(job: {
         console.log(`⏭️ Skipping question generation for book ${bookId} (Type: ${book.type})`);
         await db
           .update(books)
-          .set({ parseStatus: "completed", pageCount })
+          .set({ parseStatus: "completed", pageCount, needsReview })
           .where(eq(books.id, bookId));
       } else {
         await db
           .update(books)
-          .set({ parseStatus: "parsed", pageCount })
+          .set({ parseStatus: "parsed", pageCount, needsReview })
           .where(eq(books.id, bookId));
       }
     } finally {

@@ -3,7 +3,7 @@ import { eq, inArray } from "drizzle-orm";
 import { db } from "@/database/drizzle";
 import { books, bookCourses, userBooks, readingSessions, bookPages, annotations } from "@/database/schema";
 import { authorizeB2, b2 } from "@/lib/utils";
-import { requireRole } from "@/lib/auth";
+import { requireRole, getCurrentUser } from "@/lib/auth";
 
 export async function GET(
   req: Request,
@@ -23,6 +23,19 @@ export async function GET(
       return NextResponse.json({ error: "Book not found" }, { status: 404 });
     }
     let book = result[0];
+
+    // A pending/rejected Faculty Rep upload is only visible to its uploader
+    // or an admin/faculty-rep (the review queue) -- not to students who
+    // happen to know or guess the book ID before it's approved.
+    if (book.reviewStatus !== "APPROVED") {
+      const currentUser = await getCurrentUser();
+      const canView =
+        currentUser &&
+        (currentUser.id === book.postedBy || currentUser.role === "ADMIN" || currentUser.role === "FACULTY REP");
+      if (!canView) {
+        return NextResponse.json({ error: "Book not found" }, { status: 404 });
+      }
+    }
     const fileUrl = book.fileUrl;
     const bucketName = process.env.B2_BUCKET || "univault-books";
 

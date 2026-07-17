@@ -2,9 +2,10 @@ import React from "react";
 import { db } from "@/database/drizzle";
 import { eq, desc } from "drizzle-orm";
 import { resourceRequests, users } from "@/database/schema";
-import { Search, Plus, BookOpen, Clock, CheckCircle } from "lucide-react";
+import { Search, BookOpen, Clock, CheckCircle } from "lucide-react";
 import { currentUser } from "@clerk/nextjs/server";
 import { User } from "@/types";
+import RequestMaterialModal from "@/components/Dashboard/RequestMaterialModal";
 
 export default async function ResourceRequestsPage() {
   const clerkUser = await currentUser();
@@ -35,9 +36,7 @@ export default async function ResourceRequestsPage() {
             Ask for specific past questions or textbooks. Faculty reps will fulfill them.
           </p>
         </div>
-        <button className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-full font-semibold transition-colors flex items-center gap-2 shadow-sm">
-          <Plus className="w-5 h-5" /> Request Material
-        </button>
+        <RequestMaterialModal departmentId={dbUser.departmentId} />
       </div>
 
       {/* Stats/Filters */}

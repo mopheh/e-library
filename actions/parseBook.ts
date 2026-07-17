@@ -95,14 +95,24 @@ export async function parsePdfPages(filePath: string, bookId: string) {
     }
   }
 
+  // Tesseract's mean confidence (0-100) for a page it genuinely can't read
+  // (handwriting, heavy noise) comes back low rather than erroring out. Below
+  // this, we keep the transcription for reference but don't trust it enough
+  // to embed into RAG. Starting point based on Tesseract's typical spread
+  // between clean printed scans (usually 80+) and unreadable pages (often
+  // under 40); tune if real-world flagging looks too aggressive/lax.
+  const OCR_CONFIDENCE_THRESHOLD = 50;
+
   const pages: {
     bookId: string;
     pageNumber: number;
     textChunk: string;
+    needsReview: boolean;
   }[] = [];
 
   for (let i = 1; i <= numPages; i++) {
     let text: string;
+    let needsReview = false;
 
     if (mdPages) {
       text = mdPages[i - 1];
@@ -126,11 +136,15 @@ export async function parsePdfPages(filePath: string, bookId: string) {
       const reason = !text ? "no text" : `suspiciously short or watermark-only (${text.length} chars)`;
       console.log(`📷 Page ${i} has ${reason}. Running OCR...`);
 
-      const ocrText = await extractTextWithOCR(pdf, i);
+      const ocrResult = await extractTextWithOCR(pdf, i);
 
       // If OCR extracted more meaningful content than the initial parse, use it
-      if (ocrText.trim().length > text.trim().length || !text) {
-        text = ocrText;
+      if (ocrResult.text.length > text.trim().length || !text) {
+        text = ocrResult.text;
+        if (text && ocrResult.confidence < OCR_CONFIDENCE_THRESHOLD) {
+          console.log(`⚠️ Page ${i} OCR confidence ${ocrResult.confidence.toFixed(1)} is below threshold (likely handwritten/unreadable) - flagging for review, excluding from RAG.`);
+          needsReview = true;
+        }
       }
     }
 
@@ -138,6 +152,7 @@ export async function parsePdfPages(filePath: string, bookId: string) {
       bookId,
       pageNumber: i,
       textChunk: sanitizeExtractedText(text),
+      needsReview,
     });
   }
 
@@ -154,11 +169,17 @@ export async function parsePdfPages(filePath: string, bookId: string) {
 
     const batchWithEmbeddings = await Promise.all(
       batch.map(async (page) => {
+        // Low-confidence OCR pages are kept for reference but never embedded,
+        // so they can't surface as a RAG match.
+        if (page.needsReview) {
+          return { ...page, embedding: null };
+        }
+
         const embedding = await getEmbedding(page.textChunk);
-        
+
         // pgvector requires exactly 768 dimensions. If it's different, we save null to avoid a crash.
         const isValidEmbedding = embedding.length === 768;
-        
+
         if (embedding.length > 0 && !isValidEmbedding) {
           console.warn(`⚠️ Page ${page.pageNumber}: Embedding dimension mismatch (${embedding.length} vs 768). Saving text only.`);
         }
@@ -179,6 +200,7 @@ export async function parsePdfPages(filePath: string, bookId: string) {
           set: {
             textChunk: sql`excluded.text_chunk`,
             embedding: sql`excluded.embedding`,
+            needsReview: sql`excluded.needs_review`,
           },
         });
     } catch (dbErr: any) {
@@ -187,7 +209,8 @@ export async function parsePdfPages(filePath: string, bookId: string) {
     }
   }
 
-  return numPages;
+  const needsReview = pages.some((p) => p.needsReview);
+  return { numPages, needsReview };
 }
 
 export async function parseDocxPages(filePath: string, bookId: string) {
@@ -263,5 +286,5 @@ export async function parseDocxPages(filePath: string, bookId: string) {
     }
   }
 
-  return pages.length;
+  return { numPages: pages.length, needsReview: false };
 }

@@ -3,9 +3,10 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { motion } from "framer-motion";
-import { Loader2Icon } from "lucide-react";
-import { UserProfile } from "@clerk/nextjs";
+import { Loader2Icon, LogOut } from "lucide-react";
+import { UserProfile, useAuth } from "@clerk/nextjs";
 import { useUserData } from "@/hooks/useUsers";
+import { STORAGE_KEY } from "@/lib/utils";
 
 import {
   Tabs,
@@ -22,8 +23,14 @@ import AspirantProfile from "@/components/aspirant/AspirantProfile";
 
 export default function ProfilePage() {
   const { data: userData, isLoading: userLoading } = useUserData();
+  const { signOut } = useAuth();
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+
+  const handleSignOut = () => {
+    signOut();
+    localStorage.setItem(STORAGE_KEY, "[]");
+  };
 
   const role = userData?.role?.toLowerCase() || "";
   const isAspirant = role === "aspirant";
@@ -122,7 +129,23 @@ export default function ProfilePage() {
             </div>
           </TabsContent>
 
-          <TabsContent value="security">
+          <TabsContent value="security" className="space-y-6">
+             <div className="max-w-3xl rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-5 flex items-center justify-between gap-4">
+                <div>
+                  <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">Sign out</h3>
+                  <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+                    End your session on this device.
+                  </p>
+                </div>
+                <button
+                  onClick={handleSignOut}
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl border border-rose-200 dark:border-rose-900/50 text-rose-600 dark:text-rose-400 text-xs font-semibold hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors shrink-0"
+                >
+                  <LogOut className="w-3.5 h-3.5" />
+                  Sign out
+                </button>
+             </div>
+
              <div className="flex justify-start w-full">
                 <UserProfile routing="hash" />
              </div>

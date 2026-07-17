@@ -1,0 +1,1 @@
+ALTER TABLE "system_settings" ADD COLUMN "matric_faculty_check_enabled" boolean DEFAULT false NOT NULL;

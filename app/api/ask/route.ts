@@ -11,8 +11,8 @@
 import { NextRequest } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { db } from "@/database/drizzle";
-import { userBooks, bookPages, bookCourses, courses, books } from "@/database/schema";
-import { sql, eq, inArray } from "drizzle-orm";
+import { userBooks, bookPages, bookCourses, courses, books, systemSettings } from "@/database/schema";
+import { sql, eq, inArray, and, isNotNull } from "drizzle-orm";
 import { getEmbedding } from "@/lib/embeddings";
 
 // ── OpenRouter streaming helper ──────────────────────────────────────────────
@@ -105,6 +105,21 @@ export async function POST(req: NextRequest) {
       });
     }
 
+    if (!user.aiEnabled) {
+      return new Response(JSON.stringify({ error: "AI access has been disabled for your account." }), {
+        status: 403,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    const [settings] = await db.select().from(systemSettings).limit(1);
+    if (settings && !settings.aiEnabled) {
+      return new Response(JSON.stringify({ error: "AI features are currently disabled." }), {
+        status: 403,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
     const { messages, bookId, courseId } = await req.json();
 
     if (!messages || !Array.isArray(messages) || messages.length > 50) {
@@ -139,7 +154,7 @@ export async function POST(req: NextRequest) {
           .select({ bookId: bookCourses.bookId, title: books.title })
           .from(bookCourses)
           .innerJoin(books, eq(bookCourses.bookId, books.id))
-          .where(eq(bookCourses.courseId, courseId));
+          .where(and(eq(bookCourses.courseId, courseId), eq(books.reviewStatus, "APPROVED")));
 
         targetBookIds      = linkedBookRows.map(r => r.bookId);
         workspaceBookTitles = linkedBookRows.map(r => r.title);
@@ -147,7 +162,20 @@ export async function POST(req: NextRequest) {
         console.warn("Failed resolving course workspace books:", err);
       }
     } else if (bookId) {
-      targetBookIds = [bookId];
+      // Only feed this book's content to the AI if it's approved, or the
+      // asker is the uploader/an admin/faculty-rep (same rule as viewing it).
+      const [targetBook] = await db
+        .select({ reviewStatus: books.reviewStatus, postedBy: books.postedBy })
+        .from(books)
+        .where(eq(books.id, bookId))
+        .limit(1);
+      const canUseBook =
+        targetBook &&
+        (targetBook.reviewStatus === "APPROVED" ||
+          user.id === targetBook.postedBy ||
+          user.role === "ADMIN" ||
+          user.role === "FACULTY REP");
+      if (canUseBook) targetBookIds = [bookId];
     }
 
     // ── 2. BATCHED vector search — single query across ALL books ─────────────
@@ -163,7 +191,7 @@ export async function POST(req: NextRequest) {
           const retrievedPages = await db
             .select({ textChunk: bookPages.textChunk })
             .from(bookPages)
-            .where(inArray(bookPages.bookId, targetBookIds))
+            .where(and(inArray(bookPages.bookId, targetBookIds), isNotNull(bookPages.embedding)))
             .orderBy(sql`${bookPages.embedding} <=> ${queryEmbeddingStr}::vector`)
             .limit(limitTotal);
 

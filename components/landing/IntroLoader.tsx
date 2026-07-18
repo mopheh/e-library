@@ -243,7 +243,12 @@ export const IntroLoader = () => {
     const reduceMotion = window.matchMedia(
       "(prefers-reduced-motion: reduce)"
     ).matches;
-    const alreadySeen = localStorage.getItem(STORAGE_KEY) === "1";
+
+    // In standalone PWA mode, always show the splash on each session
+    const isPWA = window.matchMedia("(display-mode: standalone)").matches
+      || (navigator as Navigator & { standalone?: boolean }).standalone === true;
+
+    const alreadySeen = !isPWA && sessionStorage.getItem(STORAGE_KEY) === "1";
 
     if (reduceMotion || alreadySeen) {
       setVisible(false);
@@ -262,7 +267,7 @@ export const IntroLoader = () => {
 
     // Close
     const closeTimer = setTimeout(() => {
-      localStorage.setItem(STORAGE_KEY, "1");
+      sessionStorage.setItem(STORAGE_KEY, "1");
       setVisible(false);
     }, 7500);
     timersRef.current.push(closeTimer);
@@ -286,6 +291,7 @@ export const IntroLoader = () => {
           style={{ background: "#111113" }}
           onClick={() => {
             localStorage.setItem(STORAGE_KEY, "1");
+            sessionStorage.setItem(STORAGE_KEY, "1");
             setVisible(false);
           }}
           initial={{ opacity: 1 }}

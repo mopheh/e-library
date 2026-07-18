@@ -183,6 +183,7 @@ const Onboarding = () => {
           const result = await syncUserMetadata();
           if (result.success) {
             toast.success("Profile found! Syncing and redirecting...");
+            await user?.reload();
             window.location.href = "/dashboard";
           }
         }
@@ -259,7 +260,10 @@ const Onboarding = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ type: "ONBOARDING", meta: { action: "Onboarding Completed" } }),
       });
-      router.push("/dashboard");
+      
+      // CRITICAL: Reload the user to refresh the Clerk session JWT so middleware sees the new metadata
+      await user?.reload();
+      window.location.href = "/dashboard";
     } catch (e) {
       console.error(e);
       setIsSubmitting(false);

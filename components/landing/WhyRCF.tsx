@@ -8,13 +8,13 @@ const reasons = [
   {
     icon: <LayoutTemplate className="w-6 h-6" />,
     title: "Structured Environment",
-    desc: "No more chaotic folders. Every resource is organized by university, faculty, department, and course — exactly how institutions operate.",
+    desc: "No more chaotic folders. Every resource is organized by university, faculty, department, and course, exactly how institutions operate.",
     iconBg: "bg-blue-500/15 border-blue-500/25 text-blue-400",
   },
   {
     icon: <GraduationCap className="w-6 h-6" />,
     title: "Built for Universities",
-    desc: "Designed around how universities actually work — with built-in support for faculties, departments, course registration, and course representatives.",
+    desc: "Designed around how universities actually work, with built-in support for faculties, departments, course registration, and course representatives.",
     iconBg: "bg-violet-500/15 border-violet-500/25 text-violet-400",
   },
   {
@@ -32,13 +32,13 @@ const reasons = [
   {
     icon: <Zap className="w-6 h-6" />,
     title: "AI-Powered Learning",
-    desc: "Every textbook page comes with a smart tutor that explains concepts, solves problems step by step, and helps you actually understand — not just memorize.",
+    desc: "Every textbook page comes with a smart tutor that explains concepts, solves problems step by step, and helps you actually understand, not just memorize.",
     iconBg: "bg-yellow-500/15 border-yellow-500/25 text-yellow-400",
   },
   {
     icon: <Users className="w-6 h-6" />,
     title: "Community-Driven",
-    desc: "Message classmates, ask seniors, join study rooms, discuss courses, compete on leaderboards, and discover opportunities — together.",
+    desc: "Message classmates, ask seniors, join study rooms, discuss courses, compete on leaderboards, and discover opportunities together.",
     iconBg: "bg-pink-500/15 border-pink-500/25 text-pink-400",
   },
 ];

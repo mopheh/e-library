@@ -8,7 +8,7 @@ const personas = [
   {
     icon: <Map className="w-5 h-5" />,
     title: "Aspirants",
-    desc: "Prepare for university with practice tests, department previews, senior connections, and guided roadmaps — before you even get in.",
+    desc: "Prepare for university with practice tests, department previews, senior connections, and guided roadmaps, before you even get in.",
     iconBg: "bg-blue-500/15 border-blue-500/25 text-blue-400",
     gradient: "from-blue-500/10 to-blue-600/5",
     count: "Start today",

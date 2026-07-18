@@ -7,7 +7,7 @@ const steps = [
   {
     num: "01",
     title: "Create Your Account",
-    desc: "Sign up in seconds. Tell us your university, faculty, department, and academic level — we'll personalize everything from there.",
+    desc: "Sign up in seconds. Tell us your university, faculty, department, and academic level, and we'll personalize everything from there.",
     color: "text-blue-400",
     glow: "bg-blue-500/20",
   },
@@ -21,7 +21,7 @@ const steps = [
   {
     num: "03",
     title: "Study with AI Support",
-    desc: "Read textbooks inside the platform. Stuck on any concept? Ask the AI tutor and get a clear explanation in seconds — right on the page.",
+    desc: "Read textbooks inside the platform. Stuck on any concept? Ask the AI tutor and get a clear explanation in seconds, right on the page.",
     color: "text-emerald-400",
     glow: "bg-emerald-500/20",
   },
@@ -35,7 +35,7 @@ const steps = [
   {
     num: "05",
     title: "Study with Others",
-    desc: "Join study rooms, chat with classmates, discuss course topics, and ask seniors — all inside a single, unified platform.",
+    desc: "Join study rooms, chat with classmates, discuss course topics, and ask seniors, all inside a single, unified platform.",
     color: "text-pink-400",
     glow: "bg-pink-500/20",
   },
@@ -76,7 +76,7 @@ export const HowItWorks = () => {
             </span>
           </h2>
           <p className="font-inter text-[#636e8a] max-w-xl mx-auto text-lg">
-            A seamless academic workflow — no juggling between apps, no friction, no wasted time.
+            A seamless academic workflow: no juggling between apps, no friction, no wasted time.
           </p>
         </motion.div>
 

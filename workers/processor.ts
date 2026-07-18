@@ -57,7 +57,18 @@ export async function processJob(job: {
           validDurationInSeconds: 60 * 60,
         });
 
-        downloadUrl = `${downloadUrl}?Authorization=${auth.authorizationToken}`;
+        // B2 400s on reserved characters (e.g. "[", "]", raw spaces) left
+        // unencoded in the path - filenames containing them are real uploads,
+        // not edge cases. Decode-then-encode is idempotent whether the stored
+        // fileUrl was already percent-encoded or not.
+        let encodedPath = urlObj.pathname;
+        try {
+          encodedPath = decodeURIComponent(urlObj.pathname).split("/").map(encodeURIComponent).join("/");
+        } catch {
+          // malformed escape sequence in the stored URL - fall back to the original path
+        }
+
+        downloadUrl = `${urlObj.origin}${encodedPath}?Authorization=${auth.authorizationToken}`;
       }
 
       const controller = new AbortController();

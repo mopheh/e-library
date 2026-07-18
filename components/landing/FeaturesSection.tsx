@@ -11,7 +11,7 @@ import {
 const features = [
   {
     title: "AI Study Tutor",
-    desc: "Ask anything while reading any textbook page — get clear, step-by-step explanations like having a private tutor on call 24/7.",
+    desc: "Ask anything while reading any textbook page and get clear, step-by-step explanations like having a private tutor on call 24/7.",
     icon: <BrainCircuit className="w-6 h-6" />,
     gradient: "from-violet-500/15 to-violet-600/5",
     iconBg: "bg-violet-500/15 border-violet-500/25 text-violet-400",
@@ -74,7 +74,7 @@ const features = [
   },
   {
     title: "Leaderboard",
-    desc: "Earn points by reading and staying active. Top students get featured on the department leaderboard — healthy competition fuels growth.",
+    desc: "Earn points by reading and staying active. Top students get featured on the department leaderboard, where healthy competition fuels growth.",
     icon: <Trophy className="w-6 h-6" />,
     gradient: "from-yellow-500/15 to-yellow-600/5",
     iconBg: "bg-yellow-500/15 border-yellow-500/25 text-yellow-400",
@@ -83,7 +83,7 @@ const features = [
   },
   {
     title: "Opportunities Board",
-    desc: "Internships, scholarships, hackathons, and job postings — curated by your community so you never miss a career-defining moment.",
+    desc: "Internships, scholarships, hackathons, and job postings, curated by your community so you never miss a career-defining moment.",
     icon: <Briefcase className="w-6 h-6" />,
     gradient: "from-teal-500/15 to-teal-600/5",
     iconBg: "bg-teal-500/15 border-teal-500/25 text-teal-400",
@@ -110,7 +110,7 @@ const features = [
   },
   {
     title: "Mini Academic Tools",
-    desc: "GPA calculator, Pomodoro timer, unit converter — powerful productivity tools built right into your study dashboard.",
+    desc: "GPA calculator, Pomodoro timer, unit converter: powerful productivity tools built right into your study dashboard.",
     icon: <Activity className="w-6 h-6" />,
     gradient: "from-orange-500/15 to-orange-600/5",
     iconBg: "bg-orange-500/15 border-orange-500/25 text-orange-400",
@@ -146,7 +146,7 @@ export const FeaturesSection = () => {
             </span>
           </h2>
           <p className="font-inter text-[#636e8a] max-w-2xl mx-auto text-lg leading-relaxed">
-            From AI-powered studying to real-time collaboration — every tool a university student needs, woven into one seamless platform.
+            From AI-powered studying to real-time collaboration, every tool a university student needs, woven into one seamless platform.
           </p>
         </motion.div>
 

@@ -1,5 +1,5 @@
 import "./bootstrap";
-import { eq, sql, and, isNull, lt, SQL, desc, or } from "drizzle-orm";
+import { eq, sql, and, isNull, lt, gte, SQL, desc, or } from "drizzle-orm";
 import { processJob } from "./processor";
 import { jobs, books } from "@/database/schema";
 import { db } from "./db";
@@ -9,8 +9,58 @@ export type JobType = (typeof JOB_TYPES)[number];
 
 const POLL_INTERVAL = 3000;
 
+// pg's Pool only attaches an error listener to idle clients - a client that's
+// mid-query when the socket drops can emit 'error' after its query promise
+// already rejected, with no listener left to catch it. Node's default for an
+// unhandled 'error' event is to crash the process, which otherwise takes down
+// this entire worker on a transient network blip with nothing to restart it.
+process.on("uncaughtException", (err) => {
+  console.error("⚠️ Uncaught exception (worker staying alive):", err.message);
+});
+process.on("unhandledRejection", (reason: any) => {
+  console.error("⚠️ Unhandled rejection (worker staying alive):", reason?.message ?? reason);
+});
+
 async function sleep(ms: number) {
   return new Promise((res) => setTimeout(res, ms));
+}
+
+// fetchNextJob increments attempts before the job runs, so if the process
+// dies mid-job (crash, OOM, redeploy) instead of throwing a catchable error,
+// the row is left with attempts === maxAttempts but never reaches "failed" -
+// and since dequeueing requires attempts < maxAttempts, it becomes invisible
+// to the worker forever while its book stays stuck "parsing" in the UI. This
+// sweep reclaims those orphans on startup and marks them (and their book) failed.
+async function reapOrphanedJobs() {
+  return db.transaction(async (tx) => {
+    const orphans = await tx
+      .select()
+      .from(jobs)
+      .where(
+        and(or(eq(jobs.status, "pending"), eq(jobs.status, "processing")), gte(jobs.attempts, jobs.maxAttempts))
+      )
+      .for("update", { skipLocked: true });
+
+    for (const job of orphans) {
+      await tx
+        .update(jobs)
+        .set({
+          status: "failed",
+          lastError: job.lastError ?? "Job exhausted attempts without reaching a terminal status (worker crash recovery)",
+          updatedAt: new Date(),
+        })
+        .where(eq(jobs.id, job.id));
+
+      const bookId = (job.payload as JobPayload)?.bookId;
+      if (bookId) {
+        await tx.update(books).set({ parseStatus: "failed" }).where(eq(books.id, bookId));
+      }
+    }
+
+    if (orphans.length > 0) {
+      console.error(`💀 Reaped ${orphans.length} orphaned job(s) stuck past max attempts.`);
+    }
+  });
 }
 
 async function fetchNextJob() {
@@ -63,6 +113,19 @@ async function fetchNextJob() {
 async function run() {
   console.log("🟢 Worker started");
 
+  try {
+    await reapOrphanedJobs();
+  } catch (err: any) {
+    console.error("⚠️ Failed to reap orphaned jobs on startup:", err.message);
+  }
+
+  // Also sweep periodically, not just on startup - if a *different* worker
+  // instance crashes, this one may stay up for a long time without a restart
+  // of its own to trigger the startup sweep above.
+  setInterval(() => {
+    reapOrphanedJobs().catch((err) => console.error("⚠️ Failed to reap orphaned jobs:", err.message));
+  }, 10 * 60 * 1000);
+
   while (true) {
     let job;
     try {
@@ -99,7 +162,12 @@ async function run() {
 
       console.log(`✅ Job ${job.id} completed`);
     } catch (err: any) {
-      console.error(`❌ Job ${job.id} encountered an error:`, err.message);
+      // Drizzle's node-postgres driver wraps the real pg error in `.cause` and
+      // sets `.message` to a generic "Failed query: <sql>\nparams: <params>"
+      // dump - for inserts with large params (e.g. book_pages embeddings) that
+      // dump is hundreds of KB and the actual error reason never gets logged.
+      const message = String(err?.cause?.message ?? err?.message ?? err).slice(0, 500);
+      console.error(`❌ Job ${job.id} encountered an error:`, message);
 
       try {
         const failed = (job.attempts + 1) >= job.maxAttempts;
@@ -108,7 +176,7 @@ async function run() {
           .update(jobs)
           .set({
             status: failed ? "failed" : "pending",
-            lastError: err.message,
+            lastError: message,
             updatedAt: new Date(),
           })
           .where(eq(jobs.id, job.id));

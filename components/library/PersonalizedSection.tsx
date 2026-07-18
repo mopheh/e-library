@@ -56,7 +56,7 @@ export const PersonalizedSection = () => {
              return (
               <div
                 key={book.id}
-                onClick={() => router.push(`/student/book/${book.id}`)}
+                onClick={() => router.push(`/book/${book.id}`)}
                 className="group relative w-72 md:w-80 flex flex-col bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden shrink-0"
               >
                 <div className="absolute top-0 left-0 w-full h-1 bg-zinc-100 dark:bg-zinc-800 overflow-hidden">

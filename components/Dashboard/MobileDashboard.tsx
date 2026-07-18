@@ -8,6 +8,7 @@ import QuickActions from "./QuickActions";
 import StreakTracker from "./StreakTracker";
 import ContinueReading from "./Analytics/ContinueReading";
 import { useAnalytics } from "@/hooks/useAnalytics";
+import { OnboardingTour } from "./OnboardingTour";
 import { motion } from "framer-motion";
 import { BookOpen, Clock, Flame, Brain } from "lucide-react";
 
@@ -91,6 +92,9 @@ export default function MobileDashboard() {
     <div className="flex flex-col min-h-screen bg-zinc-50 dark:bg-zinc-950 font-poppins"
          style={{ paddingBottom: "calc(80px + env(safe-area-inset-bottom))" }}>
 
+      {/* Onboarding tour — fires once for new mobile users */}
+      <OnboardingTour isMobile />
+
       {/* 0. Sticky header */}
       <div className="sticky top-0 z-30 bg-zinc-50/90 dark:bg-zinc-950/90 backdrop-blur-xl border-b border-transparent">
         <MobileHeader />
@@ -100,18 +104,18 @@ export default function MobileDashboard() {
       <div className="flex flex-col gap-7 pt-2">
 
         {/* 1. Carousel Section */}
-        <section className="px-5">
+        <section className="px-5" data-tour="mobile-carousel">
           <MobileStudyCarousel />
         </section>
 
         {/* 2. KPI Stats */}
-        <section>
+        <section data-tour="mobile-kpi">
           <SectionLabel>Your Stats</SectionLabel>
           <MobileKPIStrip />
         </section>
 
         {/* 3. Quick Actions */}
-        <section className="px-5">
+        <section className="px-5" data-tour="mobile-quick-actions">
           <SectionLabel>Quick Access</SectionLabel>
           <QuickActions hideSectionLabel />
         </section>
@@ -123,7 +127,7 @@ export default function MobileDashboard() {
         </section>
 
         {/* 5. Streak Tracker — DO NOT TOUCH */}
-        <section className="px-5">
+        <section className="px-5" data-tour="mobile-streak">
           <SectionLabel>Study Streak</SectionLabel>
           <StreakTracker />
         </section>

@@ -32,7 +32,7 @@ const ViewedBook = ({ book }: { book: any }) => {
         <div
           className="cursor-pointer p-2 rounded-full bg-zinc-100 dark:bg-zinc-950"
           onClick={() => {
-            router.push(`/dashboard/book/${book.id}`);
+            router.push(`/book/${book.id}`);
           }}
         >
           <FaArrowRight />

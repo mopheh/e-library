@@ -15,6 +15,7 @@ import AddedMaterials from "./AddedMaterials";
 import StudyCarousel from "./StudyCarousel";
 import QuickActions from "./QuickActions";
 import StreakTracker from "./StreakTracker";
+import { OnboardingTour } from "./OnboardingTour";
 import { Sparkles, Bell } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -34,6 +35,8 @@ const HomeDashboard = () => {
 
   return (
     <div className="flex-1 p-5 md:p-8 pt-3 space-y-8 min-h-screen font-poppins bg-zinc-50/50 dark:bg-zinc-950">
+      {/* Onboarding tour — fires once for new users */}
+      <OnboardingTour />
       <CourseRegistrationModal departmentId={data?.user?.departmentId} />
 
       {/* ── Desktop Greeting header ─────────────────── */}
@@ -78,22 +81,24 @@ const HomeDashboard = () => {
       </div>
 
       {/* ── KPI strip ─────────────────────────────────── */}
-      <KPICards
-        booksRead={analyticsData?.kpis?.booksRead || 0}
-        minutesRead={analyticsData?.kpis?.minutesRead || 0}
-        streak={analyticsData?.kpis?.streak || 0}
-        daysToExam={analyticsData?.kpis?.daysToExam}
-        totalAiRequests={analyticsData?.kpis?.totalAiRequests}
-        loading={analyticsLoading}
-      />
+      <div data-tour="kpi-cards">
+        <KPICards
+          booksRead={analyticsData?.kpis?.booksRead || 0}
+          minutesRead={analyticsData?.kpis?.minutesRead || 0}
+          streak={analyticsData?.kpis?.streak || 0}
+          daysToExam={analyticsData?.kpis?.daysToExam}
+          totalAiRequests={analyticsData?.kpis?.totalAiRequests}
+          loading={analyticsLoading}
+        />
+      </div>
 
       {/* ── Carousel + Streak + Goals ─────────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
-        <div className="lg:col-span-8">
+        <div className="lg:col-span-8" data-tour="study-carousel">
           <StudyCarousel />
         </div>
         <div className="lg:col-span-4 flex flex-col gap-5">
-          <div className="flex-1">
+          <div className="flex-1" data-tour="streak-tracker">
             <StreakTracker />
           </div>
           <div className="flex-1 bg-white dark:bg-zinc-900 rounded-[2rem] overflow-hidden shadow-sm hover:shadow-md transition-all border border-zinc-50 dark:border-zinc-800/60">
@@ -103,7 +108,10 @@ const HomeDashboard = () => {
       </div>
 
       {/* ── Quick Actions ─────────────────────────────── */}
-      <div className="bg-white dark:bg-zinc-900 rounded-[2rem] p-6 shadow-sm border border-zinc-50 dark:border-zinc-800/60">
+      <div
+        data-tour="quick-actions"
+        className="bg-white dark:bg-zinc-900 rounded-[2rem] p-6 shadow-sm border border-zinc-50 dark:border-zinc-800/60"
+      >
         <QuickActions />
       </div>
 
@@ -112,7 +120,10 @@ const HomeDashboard = () => {
         {/* Left */}
         <div className="lg:col-span-8 space-y-6">
           {/* Learning Activity Chart */}
-          <div className="bg-white dark:bg-zinc-900 rounded-[2rem] p-6 h-[450px] relative overflow-hidden shadow-sm hover:shadow-md transition-all border border-zinc-50 dark:border-zinc-800/60">
+          <div
+            data-tour="learning-chart"
+            className="bg-white dark:bg-zinc-900 rounded-[2rem] p-6 h-[450px] relative overflow-hidden shadow-sm hover:shadow-md transition-all border border-zinc-50 dark:border-zinc-800/60"
+          >
             <div className="flex items-center justify-between mb-6">
               <div>
                 <p className="text-[10px] font-black uppercase tracking-[0.18em] text-zinc-400 font-cabin mb-0.5">

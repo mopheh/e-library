@@ -85,7 +85,7 @@ export const HeroSection = () => {
       </div>
 
       <div className="max-w-7xl mx-auto w-full flex flex-col lg:flex-row items-center gap-20">
-        {/* Left — Text Content */}
+        {/* Left: Text Content */}
         <div className="flex-1 flex flex-col items-start">
           {/* Badge */}
           <motion.div
@@ -123,7 +123,7 @@ export const HeroSection = () => {
             transition={{ duration: 0.6, delay: 0.2 }}
             className="font-inter text-lg md:text-xl text-[#8892b0] leading-relaxed mb-10 max-w-lg"
           >
-            Your complete academic platform — AI-powered study tools, a structured digital library, real-time collaboration, and career opportunities. All in one place, built for university students.
+            Your complete academic platform: AI-powered study tools, a structured digital library, real-time collaboration, and career opportunities. All in one place, built for university students.
           </motion.p>
 
           {/* CTA Buttons */}
@@ -181,7 +181,7 @@ export const HeroSection = () => {
           </motion.div>
         </div>
 
-        {/* Right — Feature Cards Grid */}
+        {/* Right: Feature Cards Grid */}
         <div className="flex-1 w-full max-w-lg">
           <div className="grid grid-cols-2 gap-3 relative">
             {/* Central glow */}

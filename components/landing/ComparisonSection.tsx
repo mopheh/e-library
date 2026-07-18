@@ -42,7 +42,7 @@ export const ComparisonSection = () => {
             </span>
           </h2>
           <p className="font-inter text-[#636e8a] max-w-xl mx-auto text-lg">
-            See why scattered PDF readers fall short — and what a real academic platform actually gives you.
+            See why scattered PDF readers fall short, and what a real academic platform actually gives you.
           </p>
         </motion.div>
 

@@ -17,7 +17,7 @@ const cards = [
   {
     icon: <BookOpen className="w-5 h-5" />,
     title: "Explore Departments",
-    desc: "Browse real course materials, outlines, and textbooks from your intended faculty — before you even apply.",
+    desc: "Browse real course materials, outlines, and textbooks from your intended faculty, before you even apply.",
     iconBg: "bg-violet-500/15 border-violet-500/25 text-violet-400",
     tag: "Open Access",
   },
@@ -74,7 +74,7 @@ export const PreAdmissionHub = () => {
             </span>
           </h2>
           <p className="font-inter text-[#636e8a] max-w-xl mx-auto text-lg leading-relaxed">
-            Whether you&apos;re awaiting admission or just curious — explore your dream department, practice real exam questions, and connect with students who&apos;ve already walked the path.
+            Whether you&apos;re awaiting admission or just curious, explore your dream department, practice real exam questions, and connect with students who&apos;ve already walked the path.
           </p>
         </motion.div>
 
@@ -120,7 +120,7 @@ export const PreAdmissionHub = () => {
               Not a student yet? That&apos;s okay.
             </h3>
             <p className="font-inter text-[#636e8a] mb-8 max-w-md mx-auto">
-              Start exploring now — browse departments, take practice tests, and connect with the community before you even receive your admission letter.
+              Start exploring now: browse departments, take practice tests, and connect with the community before you even receive your admission letter.
             </p>
             <SignedOut>
               <SignInButton mode="modal">

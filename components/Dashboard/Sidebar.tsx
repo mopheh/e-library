@@ -167,6 +167,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggle }) => {
       </div>
 
       <aside
+        data-tour="sidebar-nav"
         className={`fixed top-0 left-0 bg-zinc-50 dark:bg-zinc-950 h-screen z-40 transition-all duration-300
         ${isOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0 
         ${isDesktopClosed ? "md:w-0 md:border-r-0" : "w-80"}

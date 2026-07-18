@@ -12,8 +12,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { format } from "date-fns";
 
-export default function StudyRoomPage({ params }: { params: Promise<{ roomId: string, role: string }> }) {
-  const { roomId, role } = use(params);
+export default function StudyRoomPage({ params }: { params: Promise<{ roomId: string }> }) {
+  const { roomId } = use(params);
   const { user } = useUser();
   const [messages, setMessages] = useState<any[]>([]);
   const [newMessage, setNewMessage] = useState("");
@@ -87,7 +87,7 @@ export default function StudyRoomPage({ params }: { params: Promise<{ roomId: st
     return (
       <div className="p-8 text-center mt-20">
         <h2 className="text-2xl font-bold font-poppins">Room Not Found</h2>
-        <Link href={`/${role}/dashboard`} className="text-indigo-600 hover:underline mt-4 inline-block font-open-sans">
+        <Link href="/dashboard" className="text-indigo-600 hover:underline mt-4 inline-block font-open-sans">
           Return to Dashboard
         </Link>
       </div>
@@ -101,7 +101,7 @@ export default function StudyRoomPage({ params }: { params: Promise<{ roomId: st
       {/* Header */}
       <div className="shrink-0 bg-white dark:bg-zinc-900 border-b border-gray-200 dark:border-zinc-800 px-6 py-4 flex items-center justify-between shadow-sm z-10">
         <div className="flex items-center gap-4">
-          <Link href={`/${role}/dashboard/workspaces/${room.courseId}?tab=study-rooms`} className="p-2 hover:bg-gray-100 dark:hover:bg-zinc-800 rounded-full transition-colors">
+          <Link href={`/dashboard/workspaces/${room.courseId}?tab=study-rooms`} className="p-2 hover:bg-gray-100 dark:hover:bg-zinc-800 rounded-full transition-colors">
             <ArrowLeft className="w-5 h-5 text-gray-500 dark:text-gray-400" />
           </Link>
           <div>

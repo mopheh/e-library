@@ -28,12 +28,6 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  // @ts-ignore
-  sentry: {
-    widenClientFileUpload: true,
-    hideSourceMaps: true,
-    disableLogger: true,
-  }
 };
 
 const pwaConfig = withPWA({
@@ -95,6 +89,8 @@ export default withSentryConfig(pwaConfig, {
   // Only print logs for uploading source maps in CI or when debug is enabled
   silent: !process.env.CI,
 
-  // Forstands to not upload source maps in development or when SENTRY_AUTH_TOKEN is missing
-  disableLogger: true,
+  // Tree-shake Sentry's debug logging out of the client bundle in production.
+  webpack: {
+    treeshake: { removeDebugLogging: true },
+  },
 });

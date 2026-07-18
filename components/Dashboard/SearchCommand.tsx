@@ -105,7 +105,7 @@ export function SearchCommand({ open, setOpen }: SearchCommandProps) {
                             <CommandItem 
                                 key={book.id} 
                                 value={`book-${book.title}`} // unique value for accessibility
-                                onSelect={() => handleSelect(() => router.push(`/dashboard/books/${book.id}`))}
+                                onSelect={() => handleSelect(() => router.push(`/book/${book.id}`))}
                             >
                                 <BookOpen className="mr-2 h-4 w-4 text-muted-foreground" />
                                 <div className="flex flex-col">
@@ -125,7 +125,7 @@ export function SearchCommand({ open, setOpen }: SearchCommandProps) {
                             <CommandItem 
                                 key={course.id} 
                                 value={`course-${course.title}`}
-                                onSelect={() => handleSelect(() => router.push(`/dashboard/workspaces`))}
+                                onSelect={() => handleSelect(() => router.push(`/dashboard/workspaces/${course.id}`))}
                             >
                                 <FileText className="mr-2 h-4 w-4 text-muted-foreground" />
                                 <span>{course.code} - {course.title}</span>

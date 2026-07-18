@@ -72,7 +72,7 @@ export const Footer = () => {
                     <button className="group relative px-8 py-4 rounded-xl font-inter font-semibold text-white overflow-hidden transition-all hover:scale-[1.02] active:scale-[0.98]">
                       <div className="absolute inset-0 bg-gradient-to-r from-[#0057e7] to-[#0099ff]" />
                       <span className="relative flex items-center gap-2">
-                        Get Started — It&apos;s Free
+                        Get Started for Free
                         <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                       </span>
                     </button>
@@ -112,7 +112,7 @@ export const Footer = () => {
                 <img src="/rcf-logo-full.png" alt="RCF E-Library" className="h-9 w-auto" />
               </Link>
               <p className="font-inter text-sm text-[#4a5568] max-w-xs leading-relaxed">
-                The premier digital academic platform for university students — from aspirants to graduates.
+                The premier digital academic platform for university students, from aspirants to graduates.
               </p>
             </div>
 

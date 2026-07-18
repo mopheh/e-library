@@ -64,13 +64,6 @@ export default function NotFound() {
             </Link>
           </Button>
         </div>
-        
-        {/* Footer help link */}
-        <div className="pt-8">
-            <Link href="/support" className="text-xs text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors font-poppins">
-                Need help finding something?
-            </Link>
-        </div>
       </motion.div>
     </div>
   );

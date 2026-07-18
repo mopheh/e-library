@@ -8,7 +8,7 @@ const problems = [
   {
     icon: <Files className="w-5 h-5" />,
     title: "Scattered Materials",
-    desc: "Course PDFs scattered across WhatsApp groups, emails, and random folders — impossible to find when you need them.",
+    desc: "Course PDFs scattered across WhatsApp groups, emails, and random folders, impossible to find when you need them.",
     gradient: "from-red-500/10 to-red-600/5",
     iconColor: "text-red-400",
     iconBg: "bg-red-500/10 border-red-500/20",

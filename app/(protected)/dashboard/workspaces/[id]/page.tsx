@@ -133,7 +133,7 @@ export default function CourseWorkspace({ params }: { params: Promise<{ id: stri
                       <span className="truncate flex-1">{doc.postedBy?.fullName || "Unknown"}</span>
                       <span className="whitespace-nowrap">• {formatDistanceToNow(new Date(doc.createdAt), { addSuffix: true })}</span>
                     </div>
-                    <Link href={`/dashboard/pdf/${doc.id}`} passHref className="w-full">
+                    <Link href={`/book/${doc.id}`} passHref className="w-full">
                        <div className="w-full text-center bg-blue-600 text-white hover:bg-blue-700 py-2.5 rounded-lg text-xs font-semibold transition-all shadow-md shadow-blue-500/10">
                          Open Reader
                        </div>

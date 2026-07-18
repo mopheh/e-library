@@ -132,7 +132,7 @@ export const BooksRow = ({ book }: { book: Book }) => {
           <DropdownMenuContent align="end">
             <DropdownMenuItem
               onClick={() => {
-                router.push(`/dashboard/book/${book.id}`);
+                router.push(`/book/${book.id}`);
                 addRecentlyViewedBook({ ...book, progress: 0 });
               }}
             >

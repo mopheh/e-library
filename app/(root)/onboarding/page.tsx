@@ -22,7 +22,7 @@ export default function OnboardingPage() {
         <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-emerald-500/60" />
 
         <div className="relative z-10 flex flex-col h-full p-12">
-          <img src="/rcf-logo-full.png" alt="RCF E-Library" className="h-9 w-auto" />
+          <img src="/rcf-logo-full.png" alt="RCF E-Library" className="h-9 w-auto object-contain self-start" />
 
           <div className="mt-auto mb-auto pt-20">
             <p className="text-emerald-400 text-xs font-inter font-semibold tracking-[0.2em] uppercase mb-5">
@@ -64,7 +64,7 @@ export default function OnboardingPage() {
       <div className="flex-1 flex flex-col items-center justify-center px-4 sm:px-8 py-16 relative">
         {/* Mobile logo */}
         <div className="lg:hidden absolute top-6 left-6">
-          <img src="/rcf-logo-full.png" alt="RCF E-Library" className="h-8 w-auto" />
+          <img src="/rcf-logo-full.png" alt="RCF E-Library" className="h-8 w-auto object-contain self-start" />
         </div>
 
         <div className="w-full max-w-xl">

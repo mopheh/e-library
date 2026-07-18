@@ -94,7 +94,7 @@ const STEPS = [
 
 const Onboarding = () => {
   const { data: faculties, isError, error } = useFaculties(1, 1000);
-  const { userId } = useAuth();
+  const { userId, getToken } = useAuth();
   const { user } = useUser();
   const router = useRouter();
 
@@ -184,6 +184,7 @@ const Onboarding = () => {
           if (result.success) {
             toast.success("Profile found! Syncing and redirecting...");
             await user?.reload();
+            await getToken({ skipCache: true });
             window.location.href = "/dashboard";
           }
         }
@@ -261,8 +262,9 @@ const Onboarding = () => {
         body: JSON.stringify({ type: "ONBOARDING", meta: { action: "Onboarding Completed" } }),
       });
       
-      // CRITICAL: Reload the user to refresh the Clerk session JWT so middleware sees the new metadata
+      // CRITICAL: Reload the user and force a token refresh so middleware sees the new metadata
       await user?.reload();
+      await getToken({ skipCache: true });
       window.location.href = "/dashboard";
     } catch (e) {
       console.error(e);

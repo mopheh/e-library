@@ -17,9 +17,9 @@ type Stage = 0 | 1 | 2 | 3;
 
 const STAGE_TIMES: Record<Stage, number> = {
   0: 0,
-  1: 1800,
-  2: 3200,
-  3: 6000,
+  1: 1400,
+  2: 2400,
+  3: 4500,
 };
 
 // Colour palette  ─ zinc / grey monochrome
@@ -269,7 +269,7 @@ export const IntroLoader = () => {
     const closeTimer = setTimeout(() => {
       sessionStorage.setItem(STORAGE_KEY, "1");
       setVisible(false);
-    }, 7500);
+    }, 5500);
     timersRef.current.push(closeTimer);
 
     return () => timersRef.current.forEach(clearTimeout);
@@ -288,7 +288,7 @@ export const IntroLoader = () => {
       {visible && (
         <motion.div
           className="fixed inset-0 z-[999] flex items-center justify-center overflow-hidden cursor-pointer select-none"
-          style={{ background: "#111113" }}
+          style={{ background: "#0a0a0f" }}
           onClick={() => {
             localStorage.setItem(STORAGE_KEY, "1");
             sessionStorage.setItem(STORAGE_KEY, "1");
@@ -366,7 +366,7 @@ export const IntroLoader = () => {
               <p
                 className="text-4xl md:text-5xl font-black font-cabin tracking-tighter leading-none"
                 style={{
-                  backgroundImage: "linear-gradient(to bottom, #ffffff 40%, rgba(255,255,255,0.45))",
+                  backgroundImage: "linear-gradient(to bottom, #ffffff 50%, rgba(255,255,255,0.85))",
                   WebkitBackgroundClip: "text",
                   backgroundClip: "text",
                   color: "transparent",
@@ -416,7 +416,7 @@ export const IntroLoader = () => {
             </AnimatePresence>
 
             {/* Progress bar */}
-            <ProgressBar duration={6.5} />
+            <ProgressBar duration={4.8} />
 
             {/* Skip hint */}
             <motion.p

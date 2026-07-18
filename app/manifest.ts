@@ -9,8 +9,8 @@ export default function manifest(): MetadataRoute.Manifest {
         start_url: "/?source=pwa",
         display: "standalone", // looks like a native app
         orientation: "portrait",
-        background_color: "#111113",
-        theme_color: "#111113",
+        background_color: "#0a0a0f",
+        theme_color: "#0a0a0f",
         icons: [
             {
                 src: "/icons/android-chrome-192x192.png",

@@ -17,11 +17,45 @@ const poppinsSans = LocalFont({
   ],
 });
 
+const SITE_URL = "https://rcfbethelacademy.com";
+const SITE_NAME = "RCF E-Library";
+const SITE_DESCRIPTION =
+  "RCF E-Library is the all-in-one academic platform for university students. AI-powered study tools, a structured digital library, real-time collaboration, exam practice, and career opportunities, all in one place.";
+
 export const metadata: Metadata = {
-  title: "RCF - E-Library",
-  description: "Online Study",
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: "RCF E-Library: Your Complete Academic Study Hub",
+    template: `%s | ${SITE_NAME}`,
+  },
+  description: SITE_DESCRIPTION,
+  keywords: [
+    "e-library",
+    "online study platform",
+    "digital library",
+    "AI study tools",
+    "exam practice",
+    "RCF Bethel Academy",
+  ],
   icons: {
-    icon: '/favicon.png',
+    icon: "/favicon.png",
+  },
+  openGraph: {
+    type: "website",
+    url: SITE_URL,
+    siteName: SITE_NAME,
+    title: "RCF E-Library: Your Complete Academic Study Hub",
+    description: SITE_DESCRIPTION,
+    locale: "en_US",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "RCF E-Library: Your Complete Academic Study Hub",
+    description: SITE_DESCRIPTION,
+  },
+  robots: {
+    index: true,
+    follow: true,
   },
 };
 

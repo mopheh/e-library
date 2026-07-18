@@ -15,11 +15,29 @@ export const metadata = {
   title: "RCF E-Library: Your Complete Academic Study Hub",
   description:
     "RCF E-Library is the all-in-one academic platform for university students. AI-powered study tools, a structured digital library, real-time collaboration, exam practice, and career opportunities, all in one place.",
+  alternates: {
+    canonical: "/",
+  },
+};
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "EducationalOrganization",
+  name: "RCF E-Library",
+  alternateName: "RCF Bethel Academy E-Library",
+  url: "https://rcfbethelacademy.com",
+  logo: "https://rcfbethelacademy.com/rcf-logo-full.png",
+  description:
+    "RCF E-Library is the all-in-one academic platform for university students. AI-powered study tools, a structured digital library, real-time collaboration, exam practice, and career opportunities, all in one place.",
 };
 
 export default function LandingPage() {
   return (
     <main className="dark bg-[#0a0a0f] text-[#e5e2e1] min-h-screen selection:bg-[#0057e7] selection:text-white font-sans overflow-x-hidden">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <IntroLoader />
       <Navbar />
       <HeroSection />

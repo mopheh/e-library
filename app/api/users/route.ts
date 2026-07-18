@@ -2,7 +2,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/database/drizzle";
 import { departments, faculty, systemSettings, users } from "@/database/schema";
-import { eq } from "drizzle-orm";
+import { eq, and, ne } from "drizzle-orm";
 import { auth } from "@clerk/nextjs/server";
 import { requireRole } from "@/lib/auth";
 import { validateMatricNo } from "@/lib/facultyCodes";
@@ -111,7 +111,12 @@ export async function POST(req: Request) {
     const existingMatNo = await db
       .select()
       .from(users)
-      .where(eq(users.matricNo, params.matricNo))
+      .where(
+        and(
+          eq(users.matricNo, params.matricNo),
+          ne(users.email, params.email)
+        )
+      )
       .limit(1);
 
     if (existingMatNo.length > 0) {

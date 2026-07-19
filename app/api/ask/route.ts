@@ -7,6 +7,7 @@ import { getEmbedding } from "@/lib/embeddings";
 import { streamText, convertToModelMessages, ModelMessage, UIMessage } from "ai";
 import { google } from "@ai-sdk/google";
 import { withCache } from "@/lib/redis";
+import { getStudentContextBlock } from "@/lib/studentContext";
 
 export async function POST(req: NextRequest) {
   try {
@@ -38,6 +39,13 @@ export async function POST(req: NextRequest) {
         headers: { "Content-Type": "application/json" },
       });
     }
+
+    // Kicked off now, awaited later — runs concurrently with message
+    // parsing/RAG below instead of adding pure sequential latency.
+    const studentContextPromise = getStudentContextBlock(user).catch((err) => {
+      console.warn("Failed building student context:", err);
+      return "";
+    });
 
     // ── Per-user daily request cap ──────────────────────────────────────────
     const limitEnabled = settings?.aiRequestLimitEnabled ?? true;
@@ -182,19 +190,28 @@ export async function POST(req: NextRequest) {
     }
 
     // ── 3. Build system prompt ────────────────────────────────────────────────
-    let systemPromptContent: string;
+    let taskPromptContent: string;
     if (courseContext) {
       const bookList = workspaceBookTitles.length > 0
         ? `\n\nMaterials in this workspace:\n${workspaceBookTitles.map((t, i) => `${i + 1}. ${t}`).join("\n")}`
         : "";
-      systemPromptContent = contextChunks.length > 0
+      taskPromptContent = contextChunks.length > 0
         ? `You are an expert academic study assistant for the course **${courseContext.courseCode} - ${courseContext.title}** (${courseContext.level} Level).\n\nYou have access to ALL study materials in this course workspace. Use the retrieved context below to give precise, exam-focused answers. If the answer is not in the provided context, clearly state that and offer general knowledge as supplement.${bookList}\n\nRetrieved Context:\n${contextChunks.join("\n\n---\n\n")}`
         : `You are an expert academic study assistant for the course **${courseContext.courseCode} - ${courseContext.title}** (${courseContext.level} Level). Answer questions comprehensively. Help the student understand concepts, solve problems, and prepare for exams.${bookList}`;
     } else if (contextChunks.length > 0) {
-      systemPromptContent = `You are a helpful study assistant. Answer the user's question using ONLY the context provided below. If you cannot find the answer in the context, say you don't know based on the provided material.\n\nContext:\n${contextChunks.join("\n\n---\n\n")}`;
+      taskPromptContent = `You are a helpful study assistant. Answer the user's question using ONLY the context provided below. If you cannot find the answer in the context, say you don't know based on the provided material.\n\nContext:\n${contextChunks.join("\n\n---\n\n")}`;
     } else {
-      systemPromptContent = "You are a helpful study assistant. Help the student understand academic concepts, solve problems, and prepare for exams.";
+      taskPromptContent = "You are a helpful study assistant. Help the student understand academic concepts, solve problems, and prepare for exams.";
     }
+
+    // Ambient "who am I talking to" context — department, level, registered
+    // courses and their materials — so the assistant can personalize answers
+    // and proactively point to relevant materials even outside a specific
+    // course/book workspace.
+    const studentContext = await studentContextPromise;
+    const systemPromptContent = studentContext
+      ? `${studentContext}\n\n${taskPromptContent}`
+      : taskPromptContent;
 
     let coreMessages: ModelMessage[];
 

@@ -306,7 +306,7 @@ const DepartmentRow = ({
 
       <motion.div
         layout
-        className="group relative flex items-center gap-4 px-5 py-4 rounded-2xl border border-zinc-100 dark:border-zinc-800/60 bg-zinc-50/50 dark:bg-zinc-900/30 hover:border-zinc-200 dark:hover:border-zinc-700 hover:bg-white dark:hover:bg-zinc-900/60 transition-all duration-200 overflow-hidden"
+        className="group relative flex flex-wrap sm:flex-nowrap items-center gap-3 sm:gap-4 pl-5 pr-4 sm:pr-5 py-4 rounded-2xl border border-zinc-100 dark:border-zinc-800/60 bg-zinc-50/50 dark:bg-zinc-900/30 hover:border-zinc-200 dark:hover:border-zinc-700 hover:bg-white dark:hover:bg-zinc-900/60 transition-all duration-200 overflow-hidden"
       >
         {/* Animated left accent bar */}
         <div className="absolute left-0 top-0 bottom-0 w-[3px] rounded-l-2xl bg-zinc-100 dark:bg-zinc-800 overflow-hidden">
@@ -382,13 +382,13 @@ const DepartmentRow = ({
           </div>
         </div>
 
-        {/* Action buttons – visible on hover */}
+        {/* Action buttons — always reachable on touch; hover-reveal only from sm: up */}
         {!isEditing && (
-          <div className="flex items-center gap-1.5 shrink-0 opacity-0 group-hover:opacity-100 transition-all">
+          <div className="flex items-center gap-1.5 w-full sm:w-auto justify-end shrink-0 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all">
             {/* Manage link */}
             <Link
               href={`/data/departments/${departmentId}`}
-              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 text-[10px] font-black uppercase tracking-widest font-cabin text-zinc-600 dark:text-zinc-300 hover:border-blue-300 dark:hover:border-blue-700 hover:text-blue-600 dark:hover:text-blue-400 transition-all shadow-sm"
+              className="flex items-center gap-1.5 px-3.5 py-2.5 sm:py-2 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 text-[10px] font-black uppercase tracking-widest font-cabin text-zinc-600 dark:text-zinc-300 hover:border-blue-300 dark:hover:border-blue-700 hover:text-blue-600 dark:hover:text-blue-400 transition-all shadow-sm"
             >
               Manage
               <ArrowRight className="w-3.5 h-3.5" />
@@ -397,7 +397,7 @@ const DepartmentRow = ({
             {/* Edit */}
             <button
               onClick={() => setIsEditing(true)}
-              className="w-8 h-8 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center text-zinc-400 hover:text-blue-600 hover:border-blue-300 dark:hover:border-blue-800 transition-all shadow-sm"
+              className="w-9 h-9 sm:w-8 sm:h-8 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center text-zinc-400 hover:text-blue-600 hover:border-blue-300 dark:hover:border-blue-800 transition-all shadow-sm"
               title="Rename department"
             >
               <Edit2 className="w-3.5 h-3.5" />
@@ -406,7 +406,7 @@ const DepartmentRow = ({
             {/* Move to faculty */}
             <button
               onClick={() => setShowMoveModal(true)}
-              className="w-8 h-8 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center text-zinc-400 hover:text-amber-600 hover:border-amber-300 dark:hover:border-amber-800 transition-all shadow-sm"
+              className="w-9 h-9 sm:w-8 sm:h-8 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center text-zinc-400 hover:text-amber-600 hover:border-amber-300 dark:hover:border-amber-800 transition-all shadow-sm"
               title="Move to a different faculty"
             >
               <ArrowRightLeft className="w-3.5 h-3.5" />
@@ -416,7 +416,7 @@ const DepartmentRow = ({
             <button
               onClick={() => setShowDeleteModal(true)}
               disabled={isDeleting}
-              className="w-8 h-8 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center text-zinc-400 hover:text-rose-600 hover:border-rose-300 dark:hover:border-rose-800 transition-all shadow-sm disabled:opacity-50"
+              className="w-9 h-9 sm:w-8 sm:h-8 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center text-zinc-400 hover:text-rose-600 hover:border-rose-300 dark:hover:border-rose-800 transition-all shadow-sm disabled:opacity-50"
               title="Delete department"
             >
               <Trash2 className="w-3.5 h-3.5" />
@@ -424,9 +424,9 @@ const DepartmentRow = ({
           </div>
         )}
 
-        {/* Static icon when no hover yet (non-edit mode fallback) */}
+        {/* Static icon fallback — desktop only; mobile always shows real actions instead */}
         {!isEditing && (
-          <div className="shrink-0 opacity-100 group-hover:opacity-0 transition-all pointer-events-none absolute right-5">
+          <div className="hidden sm:block shrink-0 opacity-100 group-hover:opacity-0 transition-all pointer-events-none absolute right-5">
             <Building2 className="w-4 h-4 text-zinc-200 dark:text-zinc-700" />
           </div>
         )}

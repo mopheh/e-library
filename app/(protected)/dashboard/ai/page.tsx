@@ -20,7 +20,6 @@ import {
   User,
 } from "lucide-react";
 import { useUserData } from "@/hooks/useUsers";
-import { useDashboard } from "@/hooks/useDashboard";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useUser } from "@clerk/nextjs";
 import { cn, convertToMarkdownMath } from "@/lib/utils";
@@ -192,7 +191,6 @@ function TypingIndicator() {
 /* ─── Main Page ───────────────────────────────────────────── */
 export default function AIDashboardPage() {
   const { data: userData } = useUserData();
-  const { data: dashData } = useDashboard();
   const { user } = useUser();
 
   const [messages, setMessages] = useState<Message[]>([]);
@@ -229,26 +227,11 @@ export default function AIDashboardPage() {
       setIsLoading(true);
 
       try {
-        // Build context about the student
-        const context = [
-          userData?.fullName ? `Student name: ${userData.fullName}` : "",
-          userData?.year ? `Level: ${userData.year}L` : "",
-          dashData?.enrolledCourses?.length
-            ? `Enrolled courses: ${dashData.enrolledCourses.map((c: any) => c.courseCode).join(", ")}`
-            : "",
-        ]
-          .filter(Boolean)
-          .join(". ");
-
-        const systemContent = `You are an expert academic AI assistant for university students at the University of Benin. 
-${context ? `Context about this student: ${context}.` : ""}
-You help students with study planning, exam preparation, concept explanations, and academic success strategies.
-Keep responses concise, practical, and encouraging. Use markdown formatting for better readability.
-Always be warm, supportive, and tailored to Nigerian university students.`;
-
-        // Build full messages array for the API
+        // The AI's system instructions (including student name, department,
+        // level, and registered courses) are built server-side in
+        // app/api/ask/route.ts from the DB — see lib/studentContext.ts.
+        // We only need to send the actual conversation turns here.
         const historyForAPI = [
-          { role: "system" as const, content: systemContent },
           ...messages.slice(-10).map((m) => ({ role: m.role, content: m.content })),
           { role: "user" as const, content },
         ];
@@ -305,7 +288,7 @@ Always be warm, supportive, and tailored to Nigerian university students.`;
         setTimeout(() => inputRef.current?.focus(), 100);
       }
     },
-    [input, isLoading, messages, userData, dashData]
+    [input, isLoading, messages]
   );
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {

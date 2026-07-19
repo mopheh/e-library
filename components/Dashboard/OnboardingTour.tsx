@@ -24,7 +24,7 @@ import {
 
 const TOUR_KEY = "rcf-dashboard-tour-done";
 const CARD_W = 340;
-const CARD_W_MOBILE = 300;
+const CARD_W_MOBILE_MAX = 300; // max width; actual width is fluid (100vw - 32px)
 const CARD_H_EST = 270; // conservative estimated card height
 const GAP = 14;         // gap between spotlight edge and card
 const SCREEN_MARGIN = 12;
@@ -330,21 +330,31 @@ const TooltipCard: React.FC<CardProps> = ({
   step, stepIndex, total, spotRect, isMobile,
   onNext, onBack, onSkip, isFirst, isLast,
 }) => {
-  const cardW = isMobile ? CARD_W_MOBILE : CARD_W;
-  const vw = typeof window !== "undefined" ? window.innerWidth : 1200;
-  const vh = typeof window !== "undefined" ? window.innerHeight : 800;
+  // Track viewport dimensions so position recalculates on resize
+  const [vw, setVw] = useState(() => (typeof window !== "undefined" ? window.innerWidth : 1200));
+  const [vh, setVh] = useState(() => (typeof window !== "undefined" ? window.innerHeight : 800));
+
+  useEffect(() => {
+    const onResize = () => { setVw(window.innerWidth); setVh(window.innerHeight); };
+    window.addEventListener("resize", onResize, { passive: true });
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+
+  // On mobile use fluid width: min(100vw - 32px, CARD_W_MOBILE_MAX)
+  const cardW = isMobile ? Math.min(vw - 32, CARD_W_MOBILE_MAX) : CARD_W;
 
   let posStyle: React.CSSProperties;
   let arrowSide: "top" | "bottom" | null = null;
 
   if (!spotRect) {
-    // Center modal for welcome/finish steps
+    // Center modal for welcome/finish steps — pure CSS so it adapts to any screen
     posStyle = {
       position: "fixed",
       top: "50%",
       left: "50%",
       transform: "translate(-50%, -50%)",
-      width: cardW,
+      width: isMobile ? `min(${CARD_W_MOBILE_MAX}px, calc(100vw - 32px))` : cardW,
+      maxWidth: `calc(100vw - ${SCREEN_MARGIN * 2}px)`,
     };
   } else {
     const { top, left, arrowSide: side } = computeCardPosition(spotRect, cardW, vw, vh);
@@ -352,8 +362,9 @@ const TooltipCard: React.FC<CardProps> = ({
     posStyle = {
       position: "fixed",
       top,
-      left,
+      left: Math.max(SCREEN_MARGIN, Math.min(left, vw - cardW - SCREEN_MARGIN)),
       width: cardW,
+      maxWidth: `calc(100vw - ${SCREEN_MARGIN * 2}px)`,
     };
   }
 
@@ -396,7 +407,7 @@ const TooltipCard: React.FC<CardProps> = ({
             </div>
 
             {/* Progress dots */}
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1.5 flex-wrap">
               {Array.from({ length: total }).map((_, i) => (
                 <div
                   key={i}
@@ -577,7 +588,8 @@ export const OnboardingTour: React.FC<OnboardingTourProps> = ({
             exit={{ opacity: 0 }}
             onClick={dismiss}
             aria-label="Close tour"
-            className="fixed top-4 right-4 z-[130] w-9 h-9 rounded-full bg-white/15 hover:bg-white/25 backdrop-blur-sm flex items-center justify-center text-white transition-colors border border-white/10"
+            className="fixed z-[130] w-9 h-9 rounded-full bg-white/15 hover:bg-white/25 backdrop-blur-sm flex items-center justify-center text-white transition-colors border border-white/10"
+            style={{ top: "max(1rem, env(safe-area-inset-top, 1rem))", right: "max(1rem, env(safe-area-inset-right, 1rem))" }}
           >
             <X className="w-4 h-4" />
           </motion.button>

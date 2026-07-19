@@ -351,7 +351,7 @@ const FacultyRow = ({
         className="group rounded-2xl border border-zinc-100 dark:border-zinc-800/60 bg-zinc-50/50 dark:bg-zinc-900/30 hover:border-zinc-200 dark:hover:border-zinc-700 hover:bg-white dark:hover:bg-zinc-900/60 transition-all duration-200 overflow-hidden"
       >
         {/* Main row */}
-        <div className="flex items-center gap-4 px-5 py-4">
+        <div className="flex flex-wrap sm:flex-nowrap items-center gap-3 sm:gap-4 px-5 py-4">
           {/* Avatar */}
           <div
             className={`w-10 h-10 rounded-xl bg-gradient-to-br ${gradient} flex items-center justify-center text-white font-black font-cabin text-sm shrink-0 shadow-md`}
@@ -430,12 +430,12 @@ const FacultyRow = ({
             </TooltipProvider>
           )}
 
-          {/* Action buttons */}
-          <div className="flex items-center gap-2 shrink-0">
+          {/* Action buttons — always reachable on touch; hover-reveal only from sm: up */}
+          <div className="flex items-center gap-2 w-full sm:w-auto justify-end shrink-0">
             {!maxRepsReached && (
               <button
                 onClick={() => setOpenRepModal(true)}
-                className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 text-[10px] font-black uppercase tracking-widest font-cabin text-zinc-600 dark:text-zinc-300 hover:border-indigo-300 dark:hover:border-indigo-700 hover:text-indigo-600 dark:hover:text-indigo-400 opacity-0 group-hover:opacity-100 transition-all shadow-sm"
+                className="flex items-center gap-1.5 px-3.5 py-2.5 sm:py-2 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 text-[10px] font-black uppercase tracking-widest font-cabin text-zinc-600 dark:text-zinc-300 hover:border-indigo-300 dark:hover:border-indigo-700 hover:text-indigo-600 dark:hover:text-indigo-400 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all shadow-sm"
               >
                 <UserPlus className="w-3.5 h-3.5" />
                 <span className="hidden sm:inline">Assign Rep</span>
@@ -443,10 +443,10 @@ const FacultyRow = ({
             )}
 
             {!isEditing && (
-              <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-all">
+              <div className="flex gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all">
                 <button
                   onClick={() => setIsEditing(true)}
-                  className="w-8 h-8 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center text-zinc-400 hover:text-blue-600 hover:border-blue-300 dark:hover:border-blue-800 transition-all shadow-sm"
+                  className="w-9 h-9 sm:w-8 sm:h-8 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center text-zinc-400 hover:text-blue-600 hover:border-blue-300 dark:hover:border-blue-800 transition-all shadow-sm"
                   title="Edit Faculty"
                 >
                   <Edit2 className="w-3.5 h-3.5" />
@@ -454,7 +454,7 @@ const FacultyRow = ({
                 <button
                   onClick={() => setDeleteFaculty(name)}
                   disabled={isDeleting}
-                  className="w-8 h-8 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center text-zinc-400 hover:text-rose-600 hover:border-rose-300 dark:hover:border-rose-800 transition-all shadow-sm"
+                  className="w-9 h-9 sm:w-8 sm:h-8 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center text-zinc-400 hover:text-rose-600 hover:border-rose-300 dark:hover:border-rose-800 transition-all shadow-sm"
                   title="Delete Faculty"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
@@ -462,10 +462,11 @@ const FacultyRow = ({
               </div>
             )}
 
-            {/* Expand toggle */}
+            {/* Expand toggle — always visible on mobile (no hover to gate on); back to
+                hover-reveal on desktop to keep the row spacious like before */}
             <button
               onClick={() => setExpanded((v) => !v)}
-              className="w-8 h-8 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 opacity-0 group-hover:opacity-100 transition-all shadow-sm"
+              className="w-9 h-9 sm:w-8 sm:h-8 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all shadow-sm"
             >
               {expanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
             </button>
@@ -579,7 +580,7 @@ const FacultyRow = ({
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: -6 }}
                             transition={{ delay: idx * 0.04 }}
-                            className="group/dept relative flex items-center gap-3 p-3.5 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 hover:border-indigo-200 dark:hover:border-indigo-800 hover:shadow-sm transition-all"
+                            className="group/dept relative flex flex-wrap sm:flex-nowrap items-center gap-3 p-3.5 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 hover:border-indigo-200 dark:hover:border-indigo-800 hover:shadow-sm transition-all"
                           >
                             {/* Color dot */}
                             <div className={`w-8 h-8 rounded-xl bg-gradient-to-br ${color} flex items-center justify-center text-white font-black font-cabin text-[10px] shrink-0 shadow-sm`}>
@@ -632,9 +633,9 @@ const FacultyRow = ({
                               )}
                             </div>
 
-                            {/* Hover Actions */}
+                            {/* Actions — always reachable on touch; hover-reveal only from sm: up */}
                             {!isEditingDept && (
-                              <div className="flex items-center gap-1.5 opacity-0 group-hover/dept:opacity-100 transition-all duration-200 shrink-0">
+                              <div className="flex items-center gap-1.5 w-full sm:w-auto justify-end opacity-100 sm:opacity-0 sm:group-hover/dept:opacity-100 transition-all duration-200 shrink-0">
                                 <Link
                                   href={`/data/departments/${dept.id}`}
                                   className="flex items-center gap-1 px-2.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 rounded-lg text-[9px] font-black uppercase tracking-widest font-cabin text-white transition-all shadow-sm shadow-indigo-500/20"
@@ -643,14 +644,14 @@ const FacultyRow = ({
                                 </Link>
                                 <button
                                   onClick={() => { setEditingDeptId(dept.id); setEditDeptName(dept.name); }}
-                                  className="w-7 h-7 bg-zinc-100 dark:bg-zinc-800 rounded-lg flex items-center justify-center text-zinc-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors"
+                                  className="w-8 h-8 sm:w-7 sm:h-7 bg-zinc-100 dark:bg-zinc-800 rounded-lg flex items-center justify-center text-zinc-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors"
                                   title="Rename"
                                 >
                                   <Edit2 className="w-3 h-3" />
                                 </button>
                                 <button
                                   onClick={() => setDeletingDept({ id: dept.id, name: dept.name })}
-                                  className="w-7 h-7 bg-zinc-100 dark:bg-zinc-800 rounded-lg flex items-center justify-center text-zinc-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/30 transition-colors"
+                                  className="w-8 h-8 sm:w-7 sm:h-7 bg-zinc-100 dark:bg-zinc-800 rounded-lg flex items-center justify-center text-zinc-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/30 transition-colors"
                                   title="Delete"
                                 >
                                   <Trash2 className="w-3 h-3" />

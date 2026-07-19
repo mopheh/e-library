@@ -5,17 +5,24 @@ import { bookPages, bookCourses, books, courses } from "@/database/schema";
 import { eq, and, inArray, sql, desc, gt, cosineDistance } from "drizzle-orm";
 import { getEmbedding } from "@/lib/embeddings";
 import { generateWithGemini, GeminiMessage } from "@/lib/gemini";
-import { auth } from "@clerk/nextjs/server";
+import { getCurrentUser } from "@/lib/auth";
+import { getStudentContextBlock } from "@/lib/studentContext";
 
 export async function askAiTutor(courseId: string, messages: GeminiMessage[]) {
     try {
-        const { userId: clerkId } = await auth();
-        if (!clerkId) throw new Error("Unauthorized");
+        const user = await getCurrentUser();
+        if (!user) throw new Error("Unauthorized");
 
         const lastMessage = messages[messages.length - 1].content;
 
-        // 1. Get relevant chunks
-        const chunks = await getRelevantChunks(courseId, lastMessage);
+        // 1. Get relevant chunks + student context in parallel
+        const [chunks, studentContext] = await Promise.all([
+            getRelevantChunks(courseId, lastMessage),
+            getStudentContextBlock(user).catch((err) => {
+                console.warn("Failed building student context:", err);
+                return "";
+            }),
+        ]);
 
         // 2. Build Context String
         const context = chunks.length > 0
@@ -28,7 +35,7 @@ export async function askAiTutor(courseId: string, messages: GeminiMessage[]) {
         });
 
         const systemInstruction = `
-You are the RCF AI Tutor for the course: ${course?.courseCode} - ${course?.title}.
+${studentContext ? `${studentContext}\n\n` : ""}You are the RCF AI Tutor for the course: ${course?.courseCode} - ${course?.title}.
 Your goal is to provide accurate, academic, and encouraging assistance to students.
 
 CRITICAL INSTRUCTIONS:

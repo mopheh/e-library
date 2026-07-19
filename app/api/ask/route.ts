@@ -4,37 +4,9 @@ import { db } from "@/database/drizzle";
 import { userBooks, bookPages, bookCourses, courses, books, systemSettings } from "@/database/schema";
 import { sql, eq, inArray, and, isNotNull, gte, sum } from "drizzle-orm";
 import { getEmbedding } from "@/lib/embeddings";
-import { streamText, convertToModelMessages, ModelMessage, UIMessage, LanguageModel } from "ai";
+import { streamText, convertToModelMessages, ModelMessage, UIMessage } from "ai";
 import { google } from "@ai-sdk/google";
-import { createOpenAI } from "@ai-sdk/openai";
 import { withCache } from "@/lib/redis";
-
-// OpenRouter fallback provider
-const openRouter = createOpenAI({
-  baseURL: "https://openrouter.ai/api/v1",
-  apiKey: process.env.OPENROUTER_API_KEY,
-});
-
-// `ai` v7 dropped the old `fallback()` model helper. This reimplements the
-// same intent: try the primary model, and if constructing/starting the
-// stream throws (bad/missing API key, model unavailable, provider outage
-// surfaced synchronously) retry with the next model in the list. It can't
-// recover from a failure that happens mid-stream after tokens have already
-// been sent to the client — only from failures at stream start.
-function streamTextWithFallback(
-  models: LanguageModel[],
-  options: { messages: ModelMessage[]; onFinish?: Parameters<typeof streamText>[0]["onFinish"] }
-) {
-  let lastError: unknown;
-  for (const model of models) {
-    try {
-      return streamText({ model, ...options });
-    } catch (err) {
-      lastError = err;
-    }
-  }
-  throw lastError;
-}
 
 export async function POST(req: NextRequest) {
   try {
@@ -90,8 +62,10 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    type LegacyMessage = { role: "system" | "user" | "assistant"; content: string };
+
     const { messages, bookId, courseId, pageImage }: {
-      messages: UIMessage[];
+      messages: (UIMessage | LegacyMessage)[];
       bookId?: string;
       courseId?: string;
       pageImage?: string;
@@ -104,22 +78,42 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // Truncate each text part rather than the old flat `content` string —
-    // UIMessages carry their text (and any other parts) inside `parts`.
-    const sanitizedMessages: UIMessage[] = messages.map((m) => ({
-      ...m,
-      parts: m.parts.map((p) =>
-        p.type === "text" ? { ...p, text: p.text.slice(0, 5000) } : p
-      ),
-    }));
+    // Two client generations call this endpoint: the current chat UI
+    // (components/Dashboard/Assistant.tsx) sends AI SDK v5+ UIMessages
+    // (role + parts[]) and expects the UI-message SSE stream back; two
+    // older pages (dashboard/ai, the course workspace tutor) still send
+    // plain {role, content} pairs and read the response as raw text.
+    // Both are live, so both are supported rather than picking one.
+    const isLegacyFormat = messages.length > 0 && typeof (messages[0] as LegacyMessage).content === "string";
 
-    const lastUserMsgIndex = sanitizedMessages.findLastIndex(m => m.role === "user");
-    const lastUserMessage = lastUserMsgIndex !== -1
-      ? sanitizedMessages[lastUserMsgIndex].parts
-          .filter((p): p is Extract<typeof p, { type: "text" }> => p.type === "text")
-          .map(p => p.text)
-          .join("")
-      : "";
+    const sanitizedUIMessages: UIMessage[] = isLegacyFormat
+      ? []
+      : (messages as UIMessage[]).map((m) => ({
+          ...m,
+          parts: m.parts.map((p) =>
+            p.type === "text" ? { ...p, text: p.text.slice(0, 5000) } : p
+          ),
+        }));
+
+    const sanitizedLegacyMessages: LegacyMessage[] = isLegacyFormat
+      ? (messages as LegacyMessage[]).map((m) => ({
+          ...m,
+          content: typeof m.content === "string" ? m.content.slice(0, 5000) : m.content,
+        }))
+      : [];
+
+    const lastUserMsgIndex = isLegacyFormat
+      ? sanitizedLegacyMessages.findLastIndex(m => m.role === "user")
+      : sanitizedUIMessages.findLastIndex(m => m.role === "user");
+
+    const lastUserMessage = lastUserMsgIndex === -1
+      ? ""
+      : isLegacyFormat
+        ? sanitizedLegacyMessages[lastUserMsgIndex].content
+        : sanitizedUIMessages[lastUserMsgIndex].parts
+            .filter((p): p is Extract<typeof p, { type: "text" }> => p.type === "text")
+            .map(p => p.text)
+            .join("");
 
     // ── 1. Resolve book IDs + course context ─────────────────────────────────
     let targetBookIds: string[] = [];
@@ -202,34 +196,63 @@ export async function POST(req: NextRequest) {
       systemPromptContent = "You are a helpful study assistant. Help the student understand academic concepts, solve problems, and prepare for exams.";
     }
 
-    // Attach the captured page screenshot to the last user message as a
-    // `file` part — convertToModelMessages() turns this into proper image
-    // content for the model, same as a user-attached image would be.
-    if (pageImage && typeof pageImage === "string" && lastUserMsgIndex !== -1) {
-      const match = pageImage.match(/^data:(image\/[a-zA-Z]+);base64,/);
-      if (match) {
-        const mimeType = match[1];
-        sanitizedMessages[lastUserMsgIndex] = {
-          ...sanitizedMessages[lastUserMsgIndex],
-          parts: [
-            ...sanitizedMessages[lastUserMsgIndex].parts,
-            { type: "file", mediaType: mimeType, url: pageImage },
-          ],
-        };
+    let coreMessages: ModelMessage[];
+
+    if (isLegacyFormat) {
+      // Legacy {role, content} callers build ModelMessage-shaped objects
+      // directly — same image-attachment approach the pre-v7 code used.
+      const legacyCore: ModelMessage[] = sanitizedLegacyMessages.map(m => ({ role: m.role, content: m.content }));
+
+      if (pageImage && typeof pageImage === "string" && lastUserMsgIndex !== -1) {
+        const match = pageImage.match(/^data:(image\/[a-zA-Z]+);base64,(.+)$/);
+        if (match) {
+          const mimeType = match[1];
+          const base64Data = match[2];
+          const lastMsg = legacyCore[lastUserMsgIndex];
+          legacyCore[lastUserMsgIndex] = {
+            role: "user",
+            content: [
+              { type: "text", text: typeof lastMsg.content === "string" ? lastMsg.content : "" },
+              { type: "image", image: base64Data, mediaType: mimeType },
+            ],
+          };
+        }
       }
+
+      // System-role entries (e.g. dashboard/ai builds its own client-side
+      // system message) can't go in `messages` in ai v7 — the model's
+      // instructions come solely from `instructions` below.
+      coreMessages = legacyCore.filter(m => m.role !== "system");
+    } else {
+      // Attach the captured page screenshot to the last user message as a
+      // `file` part — convertToModelMessages() turns this into proper image
+      // content for the model, same as a user-attached image would be.
+      if (pageImage && typeof pageImage === "string" && lastUserMsgIndex !== -1) {
+        const match = pageImage.match(/^data:(image\/[a-zA-Z]+);base64,/);
+        if (match) {
+          const mimeType = match[1];
+          sanitizedUIMessages[lastUserMsgIndex] = {
+            ...sanitizedUIMessages[lastUserMsgIndex],
+            parts: [
+              ...sanitizedUIMessages[lastUserMsgIndex].parts,
+              { type: "file", mediaType: mimeType, url: pageImage },
+            ],
+          };
+        }
+      }
+
+      coreMessages = (await convertToModelMessages(sanitizedUIMessages)).filter(m => m.role !== "system");
     }
 
-    const coreMessages: ModelMessage[] = [
-      { role: "system", content: systemPromptContent },
-      ...(await convertToModelMessages(sanitizedMessages)),
-    ];
-
     // ── 4. Stream response to client using Vercel AI SDK ─────────────────────
-    const result = streamTextWithFallback(
-      [google("gemini-2.5-flash"), openRouter("openrouter/free")],
-      {
-        messages: coreMessages,
-        onFinish: async () => {
+    const result = streamText({
+      // "-latest" alias rather than a dated version (e.g. gemini-2.5-flash)
+      // — Google restricts dated model IDs from new API keys/projects over
+      // time, which is exactly what broke this the first time.
+      model: google("gemini-flash-latest"),
+      instructions: systemPromptContent,
+      messages: coreMessages,
+      onFinish: async () => {
         // ── 5. Background usage tracking (after stream finishes) ───────────────
         const booksToTrack = bookId ? [bookId] : targetBookIds;
         if (booksToTrack.length > 0) {
@@ -257,7 +280,7 @@ export async function POST(req: NextRequest) {
       }
     });
 
-    return result.toUIMessageStreamResponse();
+    return isLegacyFormat ? result.toTextStreamResponse() : result.toUIMessageStreamResponse();
 
   } catch (error: any) {
     console.error("[POST /api/ask]", error);

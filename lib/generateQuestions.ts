@@ -21,7 +21,7 @@ async function generateWithGeminiFallback(
 ): Promise<string> {
   const ai = new GoogleGenAI({ apiKey });
   const result = await ai.models.generateContent({
-    model: "gemini-2.5-flash",
+    model: "gemini-flash-latest",
     contents: [{ parts: [{ text: prompt }] }],
   });
   return result.text || "";

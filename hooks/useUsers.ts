@@ -93,6 +93,49 @@ export const useUsers = (facultyId?: string) => {
   });
 };
 
+export interface UsersDirectoryFilters {
+  page?: number;
+  limit?: number;
+  search?: string;
+  role?: string;
+  facultyId?: string;
+  departmentId?: string;
+}
+
+export interface UsersDirectoryResult {
+  users: User[];
+  pagination: { page: number; limit: number; total: number; totalPages: number };
+}
+
+// Admin-only, paginated platform-wide user directory. Backed by the `all=true`
+// branch of /api/users, which is gated server-side by requireRole(["ADMIN"]).
+export const useUsersDirectory = (filters: UsersDirectoryFilters) => {
+  const { page = 1, limit = 25, search, role, facultyId, departmentId } = filters;
+  const queryKey = ["usersDirectory", page, limit, search, role, facultyId, departmentId];
+
+  return useQuery({
+    queryKey,
+    queryFn: async (): Promise<UsersDirectoryResult> => {
+      const params = new URLSearchParams({ all: "true", page: String(page), limit: String(limit) });
+      if (search) params.set("search", search);
+      if (role) params.set("role", role);
+      if (facultyId) params.set("facultyId", facultyId);
+      if (departmentId) params.set("departmentId", departmentId);
+
+      const res = await fetch(`/api/users?${params.toString()}`);
+      const data = await res.json();
+      if (!res.ok) {
+        const err = new Error(data.error || "Failed to fetch users") as any;
+        err.status = res.status;
+        throw err;
+      }
+      return data;
+    },
+    staleTime: 60 * 1000,
+    placeholderData: (prev) => prev,
+  });
+};
+
 export const useDepartmentUsers = (departmentId?: string) => {
   const queryKey = departmentId ? ["users", departmentId] : ["users"];
 

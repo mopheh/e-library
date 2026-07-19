@@ -1,6 +1,9 @@
 // middleware.ts
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
+import { db } from "@/database/drizzle";
+import { users } from "@/database/schema";
+import { eq } from "drizzle-orm";
 
 // We now strictly protect EVERYTHING under /dashboard, /courses, /library, /book, /data, /connect ...
 // Notice the unified matcher
@@ -82,21 +85,46 @@ export default clerkMiddleware(async (auth, req) => {
       return NextResponse.redirect(signInUrl);
     }
 
-    // 2. Optimized user data check (using session claims/JWT)
-    
-    // Extract metadata from session claims (must be configured in Clerk Dashboard)
-    const metadata = (sessionClaims?.metadata || {}) as any;
-    const role = (metadata.role || "STUDENT").toUpperCase();
-    const isOnboarded = metadata.onboarded === true;
+    // Extract role + onboarding from session claims.
+    // Clerk stores publicMetadata directly on sessionClaims — NOT nested under
+    // a "metadata" key. Some older JWT templates may still use "metadata", so
+    // we fall back to that as well.
+    const pub = (sessionClaims?.publicMetadata || sessionClaims?.metadata || {}) as any;
+    const rawRole = (pub.role || "STUDENT") as string;
+    // Normalise: "faculty-rep", "faculty rep", "FACULTY REP" -> "FACULTY REP"
+    const role = rawRole.toUpperCase().replace("-", " ");
+    const isOnboarded = pub.onboarded === true;
 
     // Redirect to onboarding page if metadata not complete (and not already on onboarding)
     if (!isOnboarded && path !== "/onboarding" && !path.startsWith("/api")) {
       return NextResponse.redirect(new URL("/onboarding", req.url));
     }
 
-    // 🔒 Strict protection for Admin Data - redirect non-admins back to dashboard
-    if ((path.startsWith("/data") || path.startsWith("/admin")) && role !== "ADMIN") {
-      return NextResponse.redirect(new URL("/dashboard", req.url));
+    // Protect /data and /admin pages: only ADMIN and FACULTY REP may enter.
+    // The individual pages do their own fine-grained faculty-scope check,
+    // so the middleware just needs to block students and aspirants here.
+    let canAccessData = role === "ADMIN" || role === "FACULTY REP";
+    
+    if ((path.startsWith("/data") || path.startsWith("/admin")) && !canAccessData) {
+      // Fallback: Check the DB directly if the JWT claim says they shouldn't have access.
+      // This catches recently promoted admins whose Clerk JWTs haven't refreshed yet.
+      try {
+        const [dbUser] = await db
+          .select({ role: users.role })
+          .from(users)
+          .where(eq(users.clerkId, userId))
+          .limit(1);
+          
+        if (dbUser && (dbUser.role === "ADMIN" || dbUser.role === "FACULTY REP")) {
+          canAccessData = true;
+        }
+      } catch (err) {
+        console.error("[middleware] DB fallback check failed:", err);
+      }
+      
+      if (!canAccessData) {
+        return NextResponse.redirect(new URL("/dashboard", req.url));
+      }
     }
   }
 

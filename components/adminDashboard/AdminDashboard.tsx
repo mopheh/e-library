@@ -32,6 +32,8 @@ import { useAdminStats } from "@/hooks/useAdminStats";
 import CourseManagement from "@/components/adminDashboard/CourseManagement";
 import CbtQuestionManager from "@/components/adminDashboard/CbtQuestionManager";
 import SystemSettings from "@/components/adminDashboard/SystemSettings";
+import UsersDirectory from "@/components/adminDashboard/UsersDirectory";
+import MaterialsOverview from "@/components/adminDashboard/MaterialsOverview";
 
 // ─── Stat card ────────────────────────────────────────────
 interface StatCardProps {
@@ -88,7 +90,7 @@ const AdminDashboard = () => {
   const [deptSearch, setDeptSearch] = useState("");
   const [open, setOpen] = useState(false);
   const [type, setType] = useState("");
-  const [activeSection, setActiveSection] = useState<"overview" | "courses" | "cbt" | "settings">("overview");
+  const [activeSection, setActiveSection] = useState<"overview" | "users" | "materials" | "courses" | "cbt" | "settings">("overview");
 
   const { data: faculties, isLoading: facultiesLoading, isError: facultiesError, error: facultiesErr } =
     useFaculties(facultyPage);
@@ -176,6 +178,8 @@ const AdminDashboard = () => {
       <div className="flex flex-wrap gap-3 mb-8">
         {[
           { id: "overview", label: "Structure" },
+          { id: "users", label: "Users", icon: Users },
+          { id: "materials", label: "Materials", icon: BookMarked },
           { id: "courses", label: "Courses", icon: GraduationCap },
           { id: "cbt", label: "CBT Questions", icon: BarChart3 },
           { id: "settings", label: "Settings", icon: SettingsIcon },
@@ -194,6 +198,8 @@ const AdminDashboard = () => {
         ))}
       </div>
 
+      {activeSection === "users" && <UsersDirectory />}
+      {activeSection === "materials" && <MaterialsOverview />}
       {activeSection === "courses" && <CourseManagement />}
       {activeSection === "cbt" && <CbtQuestionManager />}
       {activeSection === "settings" && <SystemSettings />}

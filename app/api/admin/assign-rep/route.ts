@@ -77,7 +77,7 @@ export async function POST(req: Request) {
     // Update Clerk metadata
     const client = await clerkClient();
     await client.users.updateUserMetadata(updatedUser.clerkId, {
-      publicMetadata: { role: "faculty-rep", repType },
+      publicMetadata: { role: "FACULTY REP", repType },
     });
 
     // Save notification

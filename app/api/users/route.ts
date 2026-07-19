@@ -2,12 +2,28 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/database/drizzle";
 import { departments, faculty, systemSettings, users } from "@/database/schema";
-import { eq, and, ne } from "drizzle-orm";
+import { eq, and, ne, or, ilike, desc, sql } from "drizzle-orm";
 import { auth } from "@clerk/nextjs/server";
 import { requireRole } from "@/lib/auth";
 import { validateMatricNo } from "@/lib/facultyCodes";
 
 import { clerkClient } from "@clerk/nextjs/server";
+
+const USER_ROLES = ["STUDENT", "ADMIN", "FACULTY REP", "ASPIRANT"] as const;
+
+async function enrichWithClerkAvatars<T extends { clerkId: string }>(rows: T[]) {
+  const clerkIds = rows.map((u) => u.clerkId);
+  if (clerkIds.length === 0) return rows;
+  try {
+    const client = await clerkClient();
+    const clerkUsersResp = await client.users.getUserList({ userId: clerkIds, limit: 500 });
+    const clerkUserMap = new Map(clerkUsersResp.data.map((u) => [u.id, u.imageUrl]));
+    return rows.map((u) => ({ ...u, imageUrl: clerkUserMap.get(u.clerkId) || null }));
+  } catch (err) {
+    console.error("Failed to fetch clerk users for imageUrls:", err);
+    return rows;
+  }
+}
 
 export async function GET(req: NextRequest) {
   try {
@@ -20,6 +36,69 @@ export async function GET(req: NextRequest) {
     const facultyId = searchParams.get("facultyId");
     const departmentId = searchParams.get("departmentId");
     const clerkId = searchParams.get("clerkId");
+
+    // ── Admin-only platform-wide directory: paginated, filtered, searched —
+    // deliberately NOT the same code path as the plain "no filter" case
+    // below, which stays a hard 400 to prevent any non-admin caller from
+    // pulling a full PII dump.
+    if (searchParams.get("all") === "true") {
+      const authCheck = await requireRole(["ADMIN"]);
+      if (!authCheck.authorized) {
+        return NextResponse.json({ error: authCheck.error }, { status: authCheck.status });
+      }
+
+      const roleParam = searchParams.get("role");
+      const roleFilter = roleParam && (USER_ROLES as readonly string[]).includes(roleParam)
+        ? (roleParam as typeof USER_ROLES[number])
+        : null;
+      const search = searchParams.get("search");
+      const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10));
+      const limit = Math.min(100, Math.max(1, parseInt(searchParams.get("limit") || "25", 10)));
+      const offset = (page - 1) * limit;
+
+      const conditions = [];
+      if (roleFilter) conditions.push(eq(users.role, roleFilter));
+      if (facultyId) conditions.push(eq(users.facultyId, facultyId));
+      if (departmentId) conditions.push(eq(users.departmentId, departmentId));
+      if (search) {
+        conditions.push(
+          or(
+            ilike(users.fullName, `%${search}%`),
+            ilike(users.email, `%${search}%`),
+            ilike(users.matricNo, `%${search}%`)
+          )
+        );
+      }
+      const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+
+      const [rows, [{ count }]] = await Promise.all([
+        db
+          .select()
+          .from(users)
+          .leftJoin(departments, eq(users.departmentId, departments.id))
+          .leftJoin(faculty, eq(users.facultyId, faculty.id))
+          .where(whereClause)
+          .orderBy(desc(users.createdAt))
+          .limit(limit)
+          .offset(offset),
+        db
+          .select({ count: sql<number>`count(*)::int` })
+          .from(users)
+          .where(whereClause),
+      ]);
+
+      const mapped = rows.map((r) => ({
+        ...r.users,
+        department: r.departments,
+        faculty: r.faculty,
+      }));
+      const enriched = await enrichWithClerkAvatars(mapped);
+
+      return NextResponse.json({
+        users: enriched,
+        pagination: { page, limit, total: count, totalPages: Math.ceil(count / limit) },
+      });
+    }
 
     let rawResults;
 
@@ -54,34 +133,7 @@ export async function GET(req: NextRequest) {
       department: r.departments,
     }));
 
-    const clerkIds = results.map((u) => u.clerkId);
-
-    if (clerkIds.length > 0) {
-      try {
-        const client = await clerkClient();
-        // Fetch up to 500 users
-        const clerkUsersResp = await client.users.getUserList({
-          userId: clerkIds,
-          limit: 500,
-        });
-
-        // Map clerkId to imageUrl
-        const clerkUserMap = new Map(
-          clerkUsersResp.data.map((u) => [u.id, u.imageUrl])
-        );
-
-        const mappedResults = results.map((u) => {
-          return { ...u, imageUrl: clerkUserMap.get(u.clerkId) || null };
-        });
-
-        return NextResponse.json(mappedResults);
-      } catch (err) {
-        console.error("Failed to fetch clerk users for imageUrls:", err);
-        return NextResponse.json(results);
-      }
-    }
-
-    return NextResponse.json(results);
+    return NextResponse.json(await enrichWithClerkAvatars(results));
   } catch (error) {
     console.error("[GET /api/users]", error);
     return NextResponse.json(

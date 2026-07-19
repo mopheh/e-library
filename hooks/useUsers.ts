@@ -9,7 +9,11 @@ export const useDepartmentId = () => {
     queryKey: ["departmentId"],
     queryFn: async (): Promise<string> => {
       const res = await fetch("/api/me");
-      if (!res.ok) throw new Error("Failed to fetch department");
+      if (!res.ok) {
+        const err = new Error("Failed to fetch department") as any;
+        err.status = res.status;
+        throw err;
+      }
       const { departmentId } = await res.json();
       return departmentId;
     },
@@ -21,7 +25,11 @@ export const useUserData = () => {
     queryKey: ["mydata"],
     queryFn: async (): Promise<User> => {
       const res = await fetch("/api/me");
-      if (!res.ok) throw new Error("Failed to fetch data");
+      if (!res.ok) {
+        const err = new Error("Failed to fetch data") as any;
+        err.status = res.status;
+        throw err;
+      }
       const data = await res.json();
       return data;
     },
@@ -33,6 +41,11 @@ export const useAllUsers = () => {
     queryKey: ["allUsers"],
     queryFn: async (): Promise<User[]> => {
       const res = await fetch("/api/users");
+      if (!res.ok) {
+        const err = new Error("Failed to fetch all users") as any;
+        err.status = res.status;
+        throw err;
+      }
       const data = await res.json();
       return data;
     },
@@ -45,7 +58,11 @@ export const useReadingSession = () => {
     queryKey,
     queryFn: async () => {
       const res = await fetch("/api/users/reading-session");
-      if (!res.ok) throw new Error("Failed to fetch Session, Try Again");
+      if (!res.ok) {
+        const err = new Error("Failed to fetch Session, Try Again") as any;
+        err.status = res.status;
+        throw err;
+      }
       const data = await res.json();
       return data;
     },
@@ -64,7 +81,11 @@ export const useUsers = (facultyId?: string) => {
         : `/api/users`;
       const res = await fetch(url);
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to fetch users");
+      if (!res.ok) {
+        const err = new Error(data.error || "Failed to fetch users") as any;
+        err.status = res.status;
+        throw err;
+      }
       return data;
     },
     staleTime: 5 * 60 * 1000,
@@ -83,8 +104,11 @@ export const useDepartmentUsers = (departmentId?: string) => {
         : `/api/users`;
       const res = await fetch(url);
       const data = await res.json();
-      console.log(data);
-      if (!res.ok) throw new Error(data.error || "Failed to fetch users");
+      if (!res.ok) {
+        const err = new Error(data.error || "Failed to fetch users") as any;
+        err.status = res.status;
+        throw err;
+      }
       return data;
     },
     staleTime: 5 * 60 * 1000,

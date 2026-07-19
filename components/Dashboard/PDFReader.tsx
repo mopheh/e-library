@@ -103,6 +103,15 @@ const PDFStudyView = ({ fileUrl, bookId }: PDFStudyViewProps) => {
     viewedPages.current.add(pageIndex);
   };
 
+  const getPageImage = (): string | null => {
+    if (isDocx) return null; // Only works for PDF Canvas currently
+    const canvas = document.querySelector(`[data-testid="core__page-layer-${currentPage}"] canvas`) as HTMLCanvasElement;
+    if (canvas) {
+        return canvas.toDataURL("image/jpeg", 0.5);
+    }
+    return null;
+  };
+
   const isDocx = fileUrl.toLowerCase().includes(".docx") || fileUrl.toLowerCase().includes(".doc");
 
   const { data: dbProgress, isLoading: loadingProgress } = useQuery({
@@ -543,6 +552,7 @@ const PDFStudyView = ({ fileUrl, bookId }: PDFStudyViewProps) => {
          {sidebarMode === "assistant" && (
            <AIChatAssistant 
              pageText={pageText} 
+             getPageImage={getPageImage}
              bookId={bookId} 
              inputValue={assistantInput}
              onInputChange={setAssistantInput}
@@ -626,6 +636,7 @@ const PDFStudyView = ({ fileUrl, bookId }: PDFStudyViewProps) => {
             >
               <AIChatAssistant 
                 pageText={pageText} 
+                getPageImage={getPageImage}
                 bookId={bookId} 
                 inputValue={assistantInput}
                 onInputChange={setAssistantInput}

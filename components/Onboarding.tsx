@@ -140,7 +140,6 @@ const Onboarding = () => {
       gender: undefined,
       address: "",
     },
-    mode: "onChange",
   });
 
   const { watch, trigger, handleSubmit, control } = form;
@@ -179,13 +178,23 @@ const Onboarding = () => {
         const res = await fetch(`/api/users?clerkId=${userId}`);
         const data = await res.json();
         if (data && data.length > 0) {
+          if (sessionStorage.getItem("syncAttempted")) {
+            toast.error("Sync failed: Check Clerk JWT template.", {
+              description: "The backend updated your status, but your browser token isn't receiving the metadata. Please ensure the Clerk JWT template is configured correctly.",
+            });
+            return;
+          }
+          sessionStorage.setItem("syncAttempted", "1");
+          
           const { syncUserMetadata } = await import("@/actions/sync");
           const result = await syncUserMetadata();
           if (result.success) {
             toast.success("Profile found! Syncing and redirecting...");
             await user?.reload();
             await getToken({ skipCache: true });
-            window.location.href = "/dashboard";
+            setTimeout(() => {
+              window.location.href = "/dashboard";
+            }, 500);
           }
         }
       } catch (err) {

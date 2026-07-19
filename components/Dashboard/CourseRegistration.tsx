@@ -63,6 +63,7 @@ export function CourseRegistrationModal({ departmentId, trigger }: { departmentI
       toast.success("Courses updated successfully!");
       queryClient.invalidateQueries({ queryKey: ["enrolled-courses"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard"] }); // refresh dashboard books
+      queryClient.invalidateQueries({ queryKey: ["cbt-courses"] }); // refresh CBT courses list
       setOpen(false);
     },
     onError: () => {

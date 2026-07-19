@@ -26,6 +26,7 @@ import {
   CheckCircle2,
   Clock,
   AlertCircle,
+  RefreshCw,
 } from "lucide-react";
 import { useBooks } from "@/hooks/useBooks";
 import { useCourses } from "@/hooks/useCourses";
@@ -123,6 +124,36 @@ function useGenerateQuestions() {
   }, [generating, queryClient]);
 
   return { generate, generating };
+}
+
+// ── Reparse Book hook ────────────────────────────────────────────────
+function useReparseBook() {
+  const queryClient = useQueryClient();
+  const [reparsing, setReparsing] = useState<Set<string>>(new Set());
+
+  const reparse = useCallback(async (book: Book) => {
+    if (reparsing.has(book.id)) return;
+    setReparsing((prev) => new Set(prev).add(book.id));
+    const toastId = toast.loading(`Reparsing "${book.title}"…`, {
+      description: "This may take a while. Previously parsed content will be cleared.",
+    });
+    try {
+      const res = await fetch(`/api/books/${book.id}/reparse`, { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Reparsing failed");
+      toast.success("Reparsing started", {
+        id: toastId,
+        description: `"${book.title}" is being reparsed in the background.`,
+      });
+      await queryClient.invalidateQueries({ queryKey: ["books"] });
+    } catch (err: any) {
+      toast.error("Reparsing failed", { id: toastId, description: err.message });
+    } finally {
+      setReparsing((prev) => { const s = new Set(prev); s.delete(book.id); return s; });
+    }
+  }, [reparsing, queryClient]);
+
+  return { reparse, reparsing };
 }
 
 // ──────────────────────────────────────────────────
@@ -351,6 +382,7 @@ const DepartmentBooksTable: React.FC<Props> = ({ departmentId, department }) => 
   const router = useRouter();
   const queryClient = useQueryClient();
   const { generate, generating } = useGenerateQuestions();
+  const { reparse, reparsing } = useReparseBook();
 
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState("ALL");
@@ -539,6 +571,18 @@ const DepartmentBooksTable: React.FC<Props> = ({ departmentId, department }) => 
 
                   {/* Actions — visible on hover */}
                   <div className="flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                    {/* Reparse button */}
+                    <button
+                      onClick={() => reparse(book)}
+                      disabled={reparsing.has(book.id) || book.parseStatus === "parsing" || book.parseStatus === "processing"}
+                      title="Reparse book and clear previously parsed pages"
+                      className="h-8 px-2.5 rounded-xl bg-amber-50 dark:bg-amber-900/20 text-amber-600 hover:bg-amber-100 dark:hover:bg-amber-900/40 flex items-center gap-1.5 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                    >
+                      <RefreshCw className={`w-3.5 h-3.5 ${reparsing.has(book.id) ? "animate-spin" : ""}`} />
+                      <span className="text-[9px] font-black font-cabin uppercase tracking-widest hidden xl:block">
+                        Reparse
+                      </span>
+                    </button>
                     {/* Generate Questions button — only for eligible book types */}
                     {QUESTION_ELIGIBLE_TYPES.has(book.type?.toLowerCase()) && (
                       <button

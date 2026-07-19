@@ -57,3 +57,45 @@ export async function generateWithGemini(
     return result.text || "";
   }, 3, 1000, 30000);
 }
+
+/**
+ * Generates an AsyncGenerator stream using Gemini universal SDK.
+ */
+export async function* generateStreamWithGemini(
+  input: string | GeminiMessage[],
+  model: string = "gemini-2.5-flash"
+) {
+  const ai = getAI();
+
+  if (typeof input === "string") {
+    const resultStream = await ai.models.generateContentStream({
+      model,
+      contents: [{ parts: [{ text: input }] }]
+    });
+    for await (const chunk of resultStream) {
+      if (chunk.text) yield chunk.text;
+    }
+    return;
+  }
+
+  // Convert message array to Gemini Universal format
+  const systemInstruction = input.find(m => m.role === "system")?.content;
+  const contents = input
+    .filter(m => m.role !== "system")
+    .map(m => ({
+      role: m.role === "assistant" || m.role === "model" ? ("model" as const) : ("user" as const),
+      parts: [{ text: m.content }],
+    }));
+
+  const resultStream = await ai.models.generateContentStream({
+    model,
+    contents,
+    config: {
+      systemInstruction: systemInstruction || undefined,
+    }
+  });
+
+  for await (const chunk of resultStream) {
+    if (chunk.text) yield chunk.text;
+  }
+}

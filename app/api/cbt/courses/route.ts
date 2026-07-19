@@ -1,10 +1,15 @@
 import { db } from "@/database/drizzle";
-import { courses, questions, options } from "@/database/schema";
+import { courses, questions, options, studentCourses } from "@/database/schema";
 import { eq, sql, inArray } from "drizzle-orm";
 import { NextResponse } from "next/server";
+import { getCurrentUser } from "@/lib/auth";
 
 export async function GET() {
     try {
+        const user = await getCurrentUser();
+        if (!user) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
 
         const coursesWithCounts = await db
             .select({
@@ -13,11 +18,18 @@ export async function GET() {
                 questionCount: sql<number>`count(${questions.id})`.as("question_count"),
             })
             .from(courses)
+            .innerJoin(studentCourses, eq(courses.id, studentCourses.courseId))
             .leftJoin(questions, eq(questions.courseId, courses.id))
+            .where(eq(studentCourses.userId, user.id))
             .groupBy(courses.id);
 
 
         const courseIds = coursesWithCounts.map((c) => c.id);
+        
+        if (courseIds.length === 0) {
+            return NextResponse.json([]);
+        }
+
         const courseQuestions = await db
             .select({
                 id: questions.id,

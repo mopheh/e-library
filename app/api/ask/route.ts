@@ -1,103 +1,51 @@
-// app/api/ask/route.ts
-//
-// Scalability fixes applied:
-//   1. STREAMING — chunks are streamed to the client as they arrive so the
-//      server doesn't hold a long-lived synchronous connection per user.
-//   2. BATCHED VECTOR SEARCH — a single SQL query covers all targetBookIds
-//      (using an `IN` clause) instead of one query per book.
-//   3. BACKGROUND USAGE TRACKING — the `userBooks` upsert runs after the
-//      stream is closed so it never delays the response.
-//
 import { NextRequest } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { db } from "@/database/drizzle";
 import { userBooks, bookPages, bookCourses, courses, books, systemSettings } from "@/database/schema";
-import { sql, eq, inArray, and, isNotNull } from "drizzle-orm";
+import { sql, eq, inArray, and, isNotNull, gte, sum } from "drizzle-orm";
 import { getEmbedding } from "@/lib/embeddings";
+import { streamText, convertToModelMessages, ModelMessage, UIMessage, LanguageModel } from "ai";
+import { google } from "@ai-sdk/google";
+import { createOpenAI } from "@ai-sdk/openai";
+import { withCache } from "@/lib/redis";
 
-// ── OpenRouter streaming helper ──────────────────────────────────────────────
+// OpenRouter fallback provider
+const openRouter = createOpenAI({
+  baseURL: "https://openrouter.ai/api/v1",
+  apiKey: process.env.OPENROUTER_API_KEY,
+});
 
-async function streamFromOpenRouter(
-  messages: { role: string; content: string }[],
-  onChunk: (text: string) => void,
-  signal?: AbortSignal,
-): Promise<string> {
-  const apiKey = process.env.OPENROUTER_API_KEY;
-  if (!apiKey) throw new Error("OPENROUTER_API_KEY is not defined.");
-
-  const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-    method: "POST",
-    signal,
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-      "HTTP-Referer": process.env.APP_BASE_URL || "http://localhost:3000",
-      "X-Title": "RCF",
-    },
-    body: JSON.stringify({
-      model: "openrouter/free",
-      messages,
-      stream: true,
-    }),
-  });
-
-  if (!response.ok) {
-    const err = await response.text();
-    throw new Error(`OpenRouter ${response.status}: ${err}`);
-  }
-
-  const reader = response.body!.getReader();
-  const decoder = new TextDecoder();
-  let fullText = "";
-
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    const chunk = decoder.decode(value, { stream: true });
-
-    for (const line of chunk.split("\n")) {
-      const trimmed = line.trim();
-      if (!trimmed.startsWith("data:")) continue;
-      const data = trimmed.slice(5).trim();
-      if (data === "[DONE]") continue;
-      try {
-        const parsed = JSON.parse(data);
-        const delta = parsed.choices?.[0]?.delta?.content;
-        if (delta) {
-          onChunk(delta);
-          fullText += delta;
-        }
-      } catch {
-        // Ignore malformed SSE lines.
-      }
+// `ai` v7 dropped the old `fallback()` model helper. This reimplements the
+// same intent: try the primary model, and if constructing/starting the
+// stream throws (bad/missing API key, model unavailable, provider outage
+// surfaced synchronously) retry with the next model in the list. It can't
+// recover from a failure that happens mid-stream after tokens have already
+// been sent to the client — only from failures at stream start.
+function streamTextWithFallback(
+  models: LanguageModel[],
+  options: { messages: ModelMessage[]; onFinish?: Parameters<typeof streamText>[0]["onFinish"] }
+) {
+  let lastError: unknown;
+  for (const model of models) {
+    try {
+      return streamText({ model, ...options });
+    } catch (err) {
+      lastError = err;
     }
   }
-
-  return fullText;
+  throw lastError;
 }
-
-// ── Gemini streaming fallback (non-streaming SDK, but kept async) ─────────────
-
-async function streamFromGemini(
-  messages: { role: string; content: string }[],
-  onChunk: (text: string) => void,
-): Promise<string> {
-  const { generateWithGemini } = await import("@/lib/gemini");
-  const geminiMessages = messages.map(m => ({
-    role: m.role === "assistant" ? "model" as const : m.role as "user" | "model" | "system",
-    content: m.content,
-  }));
-  const result = await generateWithGemini(geminiMessages);
-  const text = result ?? "";
-  if (text) onChunk(text);
-  return text;
-}
-
-// ── Route handler ─────────────────────────────────────────────────────────────
 
 export async function POST(req: NextRequest) {
   try {
-    const user = await getCurrentUser();
+    // Fetch user + system settings in parallel to cut cold-path latency
+    const [user, settings] = await Promise.all([
+      getCurrentUser(),
+      withCache("system:settings", 60, () =>
+        db.select().from(systemSettings).limit(1).then((r) => r[0] ?? null)
+      ),
+    ]);
+
     if (!user) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
@@ -112,7 +60,6 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    const [settings] = await db.select().from(systemSettings).limit(1);
     if (settings && !settings.aiEnabled) {
       return new Response(JSON.stringify({ error: "AI features are currently disabled." }), {
         status: 403,
@@ -120,7 +67,35 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    const { messages, bookId, courseId } = await req.json();
+    // ── Per-user daily request cap ──────────────────────────────────────────
+    const limitEnabled = settings?.aiRequestLimitEnabled ?? true;
+    const requestLimit = settings?.aiRequestLimit ?? 10;
+    if (limitEnabled) {
+      const todayStart = new Date();
+      todayStart.setHours(0, 0, 0, 0);
+
+      const [countRow] = await db
+        .select({ total: sum(userBooks.aiRequests) })
+        .from(userBooks)
+        .where(and(eq(userBooks.userId, user.id), gte(userBooks.lastAIInteractionAt, todayStart)));
+
+      const usedToday = Number(countRow?.total ?? 0);
+      if (usedToday >= requestLimit) {
+        return new Response(
+          JSON.stringify({
+            error: `You've reached your daily limit of ${requestLimit} AI request${requestLimit === 1 ? "" : "s"}. Please try again tomorrow.`,
+          }),
+          { status: 429, headers: { "Content-Type": "application/json" } }
+        );
+      }
+    }
+
+    const { messages, bookId, courseId, pageImage }: {
+      messages: UIMessage[];
+      bookId?: string;
+      courseId?: string;
+      pageImage?: string;
+    } = await req.json();
 
     if (!messages || !Array.isArray(messages) || messages.length > 50) {
       return new Response(JSON.stringify({ error: "Invalid messages array or too many messages" }), {
@@ -129,12 +104,22 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    const sanitizedMessages = messages.map((m: any) => ({
+    // Truncate each text part rather than the old flat `content` string —
+    // UIMessages carry their text (and any other parts) inside `parts`.
+    const sanitizedMessages: UIMessage[] = messages.map((m) => ({
       ...m,
-      content: typeof m.content === "string" ? m.content.substring(0, 5000) : m.content,
+      parts: m.parts.map((p) =>
+        p.type === "text" ? { ...p, text: p.text.slice(0, 5000) } : p
+      ),
     }));
 
-    const lastUserMessage = sanitizedMessages.filter((m: any) => m.role === "user").pop()?.content;
+    const lastUserMsgIndex = sanitizedMessages.findLastIndex(m => m.role === "user");
+    const lastUserMessage = lastUserMsgIndex !== -1
+      ? sanitizedMessages[lastUserMsgIndex].parts
+          .filter((p): p is Extract<typeof p, { type: "text" }> => p.type === "text")
+          .map(p => p.text)
+          .join("")
+      : "";
 
     // ── 1. Resolve book IDs + course context ─────────────────────────────────
     let targetBookIds: string[] = [];
@@ -162,8 +147,6 @@ export async function POST(req: NextRequest) {
         console.warn("Failed resolving course workspace books:", err);
       }
     } else if (bookId) {
-      // Only feed this book's content to the AI if it's approved, or the
-      // asker is the uploader/an admin/faculty-rep (same rule as viewing it).
       const [targetBook] = await db
         .select({ reviewStatus: books.reviewStatus, postedBy: books.postedBy })
         .from(books)
@@ -187,7 +170,6 @@ export async function POST(req: NextRequest) {
           const queryEmbeddingStr = JSON.stringify(queryEmbedding);
           const limitTotal        = courseId ? targetBookIds.length * 3 : 5;
 
-          // Single SQL trip instead of N trips in a loop.
           const retrievedPages = await db
             .select({ textChunk: bookPages.textChunk })
             .from(bookPages)
@@ -220,42 +202,35 @@ export async function POST(req: NextRequest) {
       systemPromptContent = "You are a helpful study assistant. Help the student understand academic concepts, solve problems, and prepare for exams.";
     }
 
-    const fullMessages = [
+    // Attach the captured page screenshot to the last user message as a
+    // `file` part — convertToModelMessages() turns this into proper image
+    // content for the model, same as a user-attached image would be.
+    if (pageImage && typeof pageImage === "string" && lastUserMsgIndex !== -1) {
+      const match = pageImage.match(/^data:(image\/[a-zA-Z]+);base64,/);
+      if (match) {
+        const mimeType = match[1];
+        sanitizedMessages[lastUserMsgIndex] = {
+          ...sanitizedMessages[lastUserMsgIndex],
+          parts: [
+            ...sanitizedMessages[lastUserMsgIndex].parts,
+            { type: "file", mediaType: mimeType, url: pageImage },
+          ],
+        };
+      }
+    }
+
+    const coreMessages: ModelMessage[] = [
       { role: "system", content: systemPromptContent },
-      ...sanitizedMessages,
+      ...(await convertToModelMessages(sanitizedMessages)),
     ];
 
-    // ── 4. Stream response to client ─────────────────────────────────────────
-    const encoder = new TextEncoder();
-    let fullResponseText = "";
-
-    const stream = new ReadableStream({
-      async start(controller) {
-        const enqueue = (text: string) => {
-          // Send each chunk as a Server-Sent Event so existing clients
-          // that read `response` as JSON will still work if they consume
-          // the full stream — but streaming-aware clients get instant chunks.
-          controller.enqueue(encoder.encode(text));
-        };
-
-        try {
-          fullResponseText = await streamFromOpenRouter(fullMessages, enqueue, req.signal);
-        } catch {
-          try {
-            fullResponseText = await streamFromGemini(fullMessages, enqueue);
-          } catch (fallbackErr) {
-            console.error("All AI streams failed:", fallbackErr);
-            enqueue("The AI assistant is currently unavailable. Please try again later.");
-          }
-        }
-
-        // Strip <think> tags from the accumulated full text (for clients
-        // that also consume the raw stream).
-        fullResponseText = fullResponseText.replace(/<think>[\s\S]*?<\/think>/, "").trim();
-
-        controller.close();
-
-        // ── 5. Background usage tracking (after stream closes) ───────────────
+    // ── 4. Stream response to client using Vercel AI SDK ─────────────────────
+    const result = streamTextWithFallback(
+      [google("gemini-2.5-flash"), openRouter("openrouter/free")],
+      {
+        messages: coreMessages,
+        onFinish: async () => {
+        // ── 5. Background usage tracking (after stream finishes) ───────────────
         const booksToTrack = bookId ? [bookId] : targetBookIds;
         if (booksToTrack.length > 0) {
           Promise.allSettled(
@@ -279,17 +254,10 @@ export async function POST(req: NextRequest) {
             )
           ).catch(err => console.error("Background AI tracking failed:", err));
         }
-      },
+      }
     });
 
-    return new Response(stream, {
-      headers: {
-        "Content-Type":  "text/plain; charset=utf-8",
-        "X-Content-Type-Options": "nosniff",
-        // Allow older non-streaming consumers to detect stream end.
-        "Transfer-Encoding": "chunked",
-      },
-    });
+    return result.toUIMessageStreamResponse();
 
   } catch (error: any) {
     console.error("[POST /api/ask]", error);

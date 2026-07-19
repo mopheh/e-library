@@ -1,10 +1,23 @@
 "use client";
 import React from "react";
+import dynamic from "next/dynamic";
 import { useParams } from "next/navigation";
-import PDFReader from "@/components/Dashboard/PDFReader";
 import { useBook } from "@/hooks/useBooks";
 import { Loader2, BookX } from "lucide-react";
 import { Book } from "@/types";
+
+// PDFReader pulls in pdfjs-dist/canvas, the react-pdf viewer, and the AI
+// chat panel (Assistant) — several hundred KB that only ever matter once a
+// book is actually open. Loading it on demand keeps that weight off every
+// other route's initial bundle.
+const PDFReader = dynamic(() => import("@/components/Dashboard/PDFReader"), {
+  ssr: false,
+  loading: () => (
+    <div className="flex justify-center items-center h-screen">
+      <Loader2 className="w-6 h-6 animate-spin text-green-500" />
+    </div>
+  ),
+});
 
 const Page = () => {
   const { id } = useParams<{ id: string }>();

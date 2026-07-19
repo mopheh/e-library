@@ -10,7 +10,12 @@ export function Providers({ children }: { children: ReactNode }) {
       queries: {
         staleTime: 5 * 60 * 1000, // 5 minutes
         gcTime: 10 * 60 * 1000,   // 10 minutes
-        retry: 1,
+        retry: (failureCount, error: any) => {
+          if (error?.status === 401 || error?.status === 403 || error?.status === 404) {
+            return false;
+          }
+          return failureCount < 1;
+        },
         refetchOnWindowFocus: false,
       },
     },

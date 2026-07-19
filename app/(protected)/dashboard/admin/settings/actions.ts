@@ -17,7 +17,12 @@ async function requireAdmin() {
 
 export async function getSystemSettings() {
   const [settings] = await db.select().from(systemSettings).limit(1);
-  return settings ?? { aiEnabled: true, matricFacultyCheckEnabled: false };
+  return settings ?? {
+    aiEnabled: true,
+    matricFacultyCheckEnabled: false,
+    aiRequestLimit: 10,
+    aiRequestLimitEnabled: true,
+  };
 }
 
 export async function setGlobalAiEnabled(enabled: boolean) {
@@ -59,4 +64,38 @@ export async function setMatricFacultyCheckEnabled(enabled: boolean) {
 
   revalidatePath("/dashboard/manage");
   revalidatePath("/onboarding");
+}
+
+export async function setAiRequestLimitEnabled(enabled: boolean) {
+  await requireAdmin();
+
+  const [existing] = await db.select().from(systemSettings).limit(1);
+  if (existing) {
+    await db
+      .update(systemSettings)
+      .set({ aiRequestLimitEnabled: enabled, updatedAt: new Date() })
+      .where(eq(systemSettings.id, existing.id));
+  } else {
+    await db.insert(systemSettings).values({ aiRequestLimitEnabled: enabled });
+  }
+
+  revalidatePath("/dashboard/manage");
+}
+
+export async function setAiRequestLimit(limit: number) {
+  await requireAdmin();
+
+  const clamped = Math.max(1, Math.min(1000, Math.round(limit)));
+
+  const [existing] = await db.select().from(systemSettings).limit(1);
+  if (existing) {
+    await db
+      .update(systemSettings)
+      .set({ aiRequestLimit: clamped, updatedAt: new Date() })
+      .where(eq(systemSettings.id, existing.id));
+  } else {
+    await db.insert(systemSettings).values({ aiRequestLimit: clamped });
+  }
+
+  revalidatePath("/dashboard/manage");
 }

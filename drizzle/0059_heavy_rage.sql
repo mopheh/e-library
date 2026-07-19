@@ -1,0 +1,2 @@
+ALTER TABLE "system_settings" ADD COLUMN "ai_request_limit" integer DEFAULT 10 NOT NULL;--> statement-breakpoint
+ALTER TABLE "system_settings" ADD COLUMN "ai_request_limit_enabled" boolean DEFAULT true NOT NULL;

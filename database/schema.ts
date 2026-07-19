@@ -95,6 +95,10 @@ export const systemSettings = pgTable("system_settings", {
   // Off by default: the faculty-code prefix map (lib/facultyCodes.ts) hasn't
   // been validated against a large enough sample of real signups yet.
   matricFacultyCheckEnabled: boolean("matric_faculty_check_enabled").default(false).notNull(),
+  // Per-user daily AI request cap (enforced at /api/ask).
+  // Set aiRequestLimitEnabled to false to lift the cap globally.
+  aiRequestLimit: integer("ai_request_limit").default(10).notNull(),
+  aiRequestLimitEnabled: boolean("ai_request_limit_enabled").default(true).notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
 });
 
@@ -128,6 +132,10 @@ export const courses = pgTable(
   },
   (table) => ({
     departmentIdx: index("courses_department_idx").on(table.departmentId),
+    // gin_trgm_ops lets ilike('%query%') use an index instead of a full
+    // table scan — see the matching books indexes below.
+    titleTrgmIdx: index("courses_title_trgm_idx").using("gin", table.title.op("gin_trgm_ops")),
+    courseCodeTrgmIdx: index("courses_code_trgm_idx").using("gin", table.courseCode.op("gin_trgm_ops")),
   })
 );
 // Junction table: departments that "borrow" / co-offer a course
@@ -254,6 +262,10 @@ export const books = pgTable(
     departmentIdx: index("books_department_idx").on(table.departmentId),
     createdAtIdx: index("books_created_at_idx").on(table.createdAt),
     reviewStatusIdx: index("books_review_status_idx").on(table.reviewStatus),
+    // gin_trgm_ops lets ilike('%query%') in /api/search use an index
+    // instead of a full table scan (pg_trgm extension, see migration).
+    titleTrgmIdx: index("books_title_trgm_idx").using("gin", table.title.op("gin_trgm_ops")),
+    descriptionTrgmIdx: index("books_description_trgm_idx").using("gin", table.description.op("gin_trgm_ops")),
   })
 );
 export const bookCourses = pgTable(
@@ -367,6 +379,7 @@ export const questions = pgTable("questions", {
   courseId: uuid("course_id").references(() => courses.id),
   questionText: varchar("question_text").notNull(),
   type: varchar("type").notNull().default("mcq"),
+  explanation: text("explanation"),
   createdAt: timestamp("created_at").defaultNow(),
 }, (table) => ({
   courseIdx: index("questions_course_idx").on(table.courseId),
@@ -388,7 +401,10 @@ export const sessions = pgTable("sessions", {
   startedAt: timestamp("started_at").defaultNow(),
   completedAt: timestamp("completed_at"),
   score: integer("score"),
-});
+}, (table) => ({
+  userIdx: index("sessions_user_idx").on(table.userId),
+  courseIdx: index("sessions_course_idx").on(table.courseId),
+}));
 
 export const answers = pgTable("answers", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -432,7 +448,9 @@ export const goals = pgTable("goals", {
   frequency: text("frequency").default("weekly").notNull(), // 'daily', 'weekly', 'monthly'
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
-});
+}, (table) => ({
+  userIdx: index("goals_user_idx").on(table.userId),
+}));
 
 export const auditLogs = pgTable("audit_logs", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -590,7 +608,9 @@ export const communityPosts = pgTable("community_posts", {
   isPinned: boolean("is_pinned").default(false).notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
-});
+}, (table) => ({
+  communityIdx: index("community_posts_community_idx").on(table.communityId, table.createdAt),
+}));
 
 export const studyRooms = pgTable("study_rooms", {
   id: uuid("id").primaryKey().defaultRandom(),

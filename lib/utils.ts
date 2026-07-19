@@ -2,6 +2,7 @@ import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { getDocument } from "pdfjs-dist";
 import B2 from "backblaze-b2";
+import { withCache } from "@/lib/redis";
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
@@ -122,10 +123,41 @@ export const b2 = new B2({
   applicationKey: process.env.B2_APP_KEY!, // from Backblaze
 });
 
+// The in-memory `b2` singleton doesn't survive across serverless
+// invocations, but re-authorizing (a full B2 account-level API call) on
+// every book/PDF request was adding a real round trip to every page view,
+// page turn, and download. Cache the auth context in Redis instead — B2
+// tokens last 24h, so a 23h TTL leaves margin. Falls back to calling
+// b2.authorize() directly (old behavior) if Redis is unavailable.
+// @types/backblaze-b2 doesn't declare these instance fields even though
+// the library sets them at runtime (lib/utils.js#saveAuthContext).
+type B2WithAuthContext = B2 & {
+  authorizationToken: string | null;
+  apiUrl: string | null;
+  downloadUrl: string | null;
+  accountId: string | null;
+};
+
 export async function authorizeB2() {
-  // Always re-authorize on every call — B2 tokens expire after 24h and the
-  // singleton's internal state is unreliable across serverless invocations.
-  await b2.authorize();
+  const b2WithAuth = b2 as B2WithAuthContext;
+  const auth = await withCache(
+    "b2:auth-context",
+    23 * 60 * 60,
+    async () => {
+      await b2.authorize();
+      return {
+        authorizationToken: b2WithAuth.authorizationToken,
+        apiUrl: b2WithAuth.apiUrl,
+        downloadUrl: b2WithAuth.downloadUrl,
+        accountId: b2WithAuth.accountId,
+      };
+    }
+  );
+
+  b2WithAuth.authorizationToken = auth.authorizationToken;
+  b2WithAuth.apiUrl = auth.apiUrl;
+  b2WithAuth.downloadUrl = auth.downloadUrl;
+  b2WithAuth.accountId = auth.accountId;
 }
 export const downloadFile = async (
   url: string,

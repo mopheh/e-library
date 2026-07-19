@@ -9,6 +9,7 @@ import AdminDashboard from "@/components/adminDashboard/AdminDashboard";
 import CourseManagement from "@/components/adminDashboard/CourseManagement";
 import AspirantManagement from "@/components/adminDashboard/AspirantManagement";
 import AcademicScheduleManager from "@/components/adminDashboard/AcademicScheduleManager";
+import CourseCbtQuestionManager from "@/components/adminDashboard/CourseCbtQuestionManager";
 import { 
     LayoutDashboard, 
     Link as LinkIcon, 
@@ -26,7 +27,7 @@ import Link from "next/link";
 
 export default function FacultyManagementPage() {
     const { data: userData } = useUserData();
-    const [activeTab, setActiveTab] = useState<"overview" | "requests" | "uploads" | "announcements" | "courses" | "aspirants" | "schedule" | "data">("overview");
+    const [activeTab, setActiveTab] = useState<"overview" | "requests" | "uploads" | "announcements" | "courses" | "aspirants" | "schedule" | "data" | "coursecbt">("overview");
 
     if (!userData || (userData.role !== "ADMIN" && userData.role !== "FACULTY REP")) {
         return (
@@ -71,6 +72,7 @@ export default function FacultyManagementPage() {
                 { id: "announcements", label: "Broadcast", icon: LinkIcon },
                 { id: "courses", label: "Courses", icon: GraduationCap },
                 { id: "schedule", label: "Schedule", icon: Calendar },
+                ...(isAdmin ? [{ id: "coursecbt", label: "Course CBT", icon: GraduationCap }] : []),
                 ...(isAdmin ? [{ id: "aspirants", label: "Aspirants", icon: Users }] : []),
                 ...(isAdmin ? [{ id: "data", label: "Platform Data", icon: Database }] : [])
                 ].map((tab) => (
@@ -209,6 +211,12 @@ export default function FacultyManagementPage() {
                 {activeTab === "data" && isAdmin && (
                     <div className="lg:col-span-7">
                         <AdminDashboard />
+                    </div>
+                )}
+
+                {activeTab === "coursecbt" && isAdmin && (
+                    <div className="lg:col-span-7">
+                        <CourseCbtQuestionManager />
                     </div>
                 )}
             </div>

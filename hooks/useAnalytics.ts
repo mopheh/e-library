@@ -17,7 +17,11 @@ export const useAnalytics = () => {
     queryKey: ["analytics"],
     queryFn: async () => {
       const res = await fetch("/api/analytics");
-      if (!res.ok) throw new Error("Failed to fetch analytics");
+      if (!res.ok) {
+        const err = new Error("Failed to fetch analytics") as any;
+        err.status = res.status;
+        throw err;
+      }
       return res.json();
     },
     staleTime: 1000 * 60 * 5, // 5 minutes
@@ -37,7 +41,11 @@ export const useGoals = () => {
     queryKey: ["goals"],
     queryFn: async () => {
       const res = await fetch("/api/goals");
-      if (!res.ok) throw new Error("Failed to fetch goals");
+      if (!res.ok) {
+        const err = new Error("Failed to fetch goals") as any;
+        err.status = res.status;
+        throw err;
+      }
       return res.json();
     },
     staleTime: 1000 * 60 * 5,
@@ -71,7 +79,11 @@ export const useAIInsights = () => {
     queryKey: ["ai-insights"],
     queryFn: async () => {
       const res = await fetch("/api/ai-insights");
-      if (!res.ok) throw new Error("Failed to fetch insights");
+      if (!res.ok) {
+        const err = new Error("Failed to fetch insights") as any;
+        err.status = res.status;
+        throw err;
+      }
       return res.json();
     },
     staleTime: 1000 * 60 * 60, // 1 hour

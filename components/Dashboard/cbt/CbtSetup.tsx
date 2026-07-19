@@ -10,6 +10,8 @@ import {
   SelectItem,
 } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
+import { CourseRegistrationModal } from "@/components/Dashboard/CourseRegistration";
+import { Plus } from "lucide-react";
 
 export interface CbtCourse {
   id: string;
@@ -60,7 +62,14 @@ export default function CbtSetup({ courses, onStart, loading }: CbtSetupProps) {
 
         <div className="space-y-4">
             <div className="space-y-2">
-            <label className="text-xs font-medium font-poppins text-zinc-700 dark:text-zinc-300">Select Course</label>
+            <div className="flex items-center justify-between">
+                <label className="text-xs font-medium font-poppins text-zinc-700 dark:text-zinc-300">Select Course</label>
+                <CourseRegistrationModal trigger={
+                    <button className="text-[10px] text-blue-500 hover:text-blue-600 dark:text-blue-400 flex items-center gap-1 font-semibold uppercase tracking-wider transition-colors">
+                        <Plus className="w-3 h-3"/> Manage Courses
+                    </button>
+                } />
+            </div>
             <Select
                 onValueChange={(val) => {
                 setCourseId(val);

@@ -11,8 +11,31 @@ import * as os from "os";
 import { execFile } from "child_process";
 import { promisify } from "util";
 import * as mammoth from "mammoth";
+import wordListPath from "word-list";
 
 const execFileAsync = promisify(execFile);
+
+// Some scanning apps (CamScanner, Adobe Scan, etc.) bake their own rough OCR
+// pass directly into a PDF's text layer. That text is neither empty nor
+// short, so it previously sailed past the "does this page need OCR" check
+// below untouched - garbage in, straight into RAG. Detect it by checking what
+// fraction of extracted "words" are real English words: genuine prose (even
+// dense technical writing) clears this easily, corrupted OCR output doesn't.
+const ENGLISH_WORDS = new Set(
+  fs.readFileSync(wordListPath, "utf-8").split("\n").map((w) => w.trim().toLowerCase()).filter(Boolean),
+);
+const GARBLED_TEXT_MIN_TOKENS = 20; // below this, there's not enough signal to judge
+const GARBLED_TEXT_VALID_RATIO_THRESHOLD = 0.55;
+
+function isGarbledText(text: string): boolean {
+  const tokens = text.match(/[a-zA-Z]{3,}/g);
+  if (!tokens || tokens.length < GARBLED_TEXT_MIN_TOKENS) return false;
+  let valid = 0;
+  for (const token of tokens) {
+    if (ENGLISH_WORDS.has(token.toLowerCase())) valid++;
+  }
+  return valid / tokens.length < GARBLED_TEXT_VALID_RATIO_THRESHOLD;
+}
 
 const PAGE_BREAK_RE = /<!--\s*PAGE_BREAK\s*-->/g;
 
@@ -131,20 +154,37 @@ export async function parsePdfPages(filePath: string, bookId: string) {
       lowerText.includes("camscanner") ||
       lowerText.includes("scanned with") ||
       (text.length > 0 && text.length < 50);
+    const isLikelyGarbled = !isLikelyScannedImage && text.length > 0 && isGarbledText(text);
 
-    if (!text || isLikelyScannedImage) {
-      const reason = !text ? "no text" : `suspiciously short or watermark-only (${text.length} chars)`;
+    if (!text || isLikelyScannedImage || isLikelyGarbled) {
+      const reason = !text
+        ? "no text"
+        : isLikelyScannedImage
+          ? `suspiciously short or watermark-only (${text.length} chars)`
+          : "pre-existing text layer looks garbled (low real-word ratio)";
       console.log(`📷 Page ${i} has ${reason}. Running OCR...`);
 
       const ocrResult = await extractTextWithOCR(pdf, i);
 
-      // If OCR extracted more meaningful content than the initial parse, use it
-      if (ocrResult.text.length > text.trim().length || !text) {
+      // If we already trusted the existing text, only replace it when OCR
+      // found something more substantial. If we distrusted it (garbled),
+      // prefer OCR's result outright - unless OCR came back with nothing, in
+      // which case fall back to the original rather than losing the page.
+      const shouldUseOcrText = isLikelyGarbled
+        ? ocrResult.text.trim().length > 0
+        : ocrResult.text.length > text.trim().length || !text;
+
+      if (shouldUseOcrText) {
         text = ocrResult.text;
         if (text && ocrResult.confidence < OCR_CONFIDENCE_THRESHOLD) {
           console.log(`⚠️ Page ${i} OCR confidence ${ocrResult.confidence.toFixed(1)} is below threshold (likely handwritten/unreadable) - flagging for review, excluding from RAG.`);
           needsReview = true;
         }
+      } else if (isLikelyGarbled) {
+        // We already know the kept (pre-existing) text is unreliable, and OCR
+        // didn't produce anything better - don't let it back into RAG.
+        console.log(`⚠️ Page ${i}'s pre-existing text is garbled and OCR found nothing better - flagging for review, excluding from RAG.`);
+        needsReview = true;
       }
     }
 
@@ -209,8 +249,9 @@ export async function parsePdfPages(filePath: string, bookId: string) {
     }
   }
 
-  const needsReview = pages.some((p) => p.needsReview);
-  return { numPages, needsReview };
+  const needsReviewCount = pages.filter((p) => p.needsReview).length;
+  const needsReview = needsReviewCount > 0;
+  return { numPages, needsReview, needsReviewCount };
 }
 
 export async function parseDocxPages(filePath: string, bookId: string) {
@@ -286,5 +327,5 @@ export async function parseDocxPages(filePath: string, bookId: string) {
     }
   }
 
-  return { numPages: pages.length, needsReview: false };
+  return { numPages: pages.length, needsReview: false, needsReviewCount: 0 };
 }

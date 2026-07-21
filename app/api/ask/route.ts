@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { db } from "@/database/drizzle";
 import { userBooks, bookPages, bookCourses, courses, books, systemSettings } from "@/database/schema";
-import { sql, eq, inArray, and, isNotNull, gte, sum } from "drizzle-orm";
+import { sql, eq, inArray, and, isNotNull, gte, lte, sum } from "drizzle-orm";
 import { getEmbedding } from "@/lib/embeddings";
 import { streamText, convertToModelMessages, ModelMessage, UIMessage } from "ai";
 import { google } from "@ai-sdk/google";
@@ -72,12 +72,47 @@ export async function POST(req: NextRequest) {
 
     type LegacyMessage = { role: "system" | "user" | "assistant"; content: string };
 
-    const { messages, bookId, courseId, pageImage }: {
+    const { messages, bookId, courseId, pageImage, pageNumber }: {
       messages: (UIMessage | LegacyMessage)[];
       bookId?: string;
       courseId?: string;
       pageImage?: string;
+      pageNumber?: number;
     } = await req.json();
+
+    // Ground the assistant on the exact page the student is viewing — the RAG
+    // search below ranks by similarity to the *question*, not by which page is
+    // on screen, so a vague question ("key concepts") can easily miss the
+    // current page entirely among hundreds of others in the book. A direct,
+    // indexed (bookId, pageNumber) lookup guarantees it's never missed. Pull a
+    // ±1 page window since a figure/table's caption or continuation can land on
+    // the adjacent page. This is a cheap primary-key-adjacent lookup, not a
+    // heavy operation - the actual per-page text is never round-tripped through
+    // the client.
+    let currentPageText = "";
+    if (bookId && typeof pageNumber === "number" && Number.isInteger(pageNumber) && pageNumber > 0) {
+      try {
+        const pageRows = await db
+          .select({ pageNumber: bookPages.pageNumber, textChunk: bookPages.textChunk })
+          .from(bookPages)
+          .where(
+            and(
+              eq(bookPages.bookId, bookId),
+              gte(bookPages.pageNumber, pageNumber - 1),
+              lte(bookPages.pageNumber, pageNumber + 1),
+            ),
+          )
+          .orderBy(bookPages.pageNumber);
+
+        currentPageText = pageRows
+          .map((p) => `[Page ${p.pageNumber}]\n${p.textChunk}`)
+          .join("\n\n")
+          .slice(0, 6000)
+          .trim();
+      } catch (err) {
+        console.warn("Failed fetching current page context:", err);
+      }
+    }
 
     if (!messages || !Array.isArray(messages) || messages.length > 50) {
       return new Response(JSON.stringify({ error: "Invalid messages array or too many messages" }), {
@@ -190,16 +225,20 @@ export async function POST(req: NextRequest) {
     }
 
     // ── 3. Build system prompt ────────────────────────────────────────────────
+    const currentPageBlock = currentPageText
+      ? `\n\nCurrent page the student is viewing, plus the page before/after for continuity (extracted text — may be incomplete for diagrams/tables/charts, in which case rely on the attached page image instead):\n${currentPageText}`
+      : "";
+
     let taskPromptContent: string;
     if (courseContext) {
       const bookList = workspaceBookTitles.length > 0
         ? `\n\nMaterials in this workspace:\n${workspaceBookTitles.map((t, i) => `${i + 1}. ${t}`).join("\n")}`
         : "";
-      taskPromptContent = contextChunks.length > 0
-        ? `You are an expert academic study assistant for the course **${courseContext.courseCode} - ${courseContext.title}** (${courseContext.level} Level).\n\nYou have access to ALL study materials in this course workspace. Use the retrieved context below to give precise, exam-focused answers. If the answer is not in the provided context, clearly state that and offer general knowledge as supplement.${bookList}\n\nRetrieved Context:\n${contextChunks.join("\n\n---\n\n")}`
+      taskPromptContent = contextChunks.length > 0 || currentPageText
+        ? `You are an expert academic study assistant for the course **${courseContext.courseCode} - ${courseContext.title}** (${courseContext.level} Level).\n\nYou have access to ALL study materials in this course workspace. Use the current page and/or retrieved context below (and the attached page image, if present) to give precise, exam-focused answers. If the answer is not in any of that, clearly state that and offer general knowledge as supplement.${bookList}${currentPageBlock}${contextChunks.length > 0 ? `\n\nRetrieved Context (from elsewhere in the workspace materials):\n${contextChunks.join("\n\n---\n\n")}` : ""}`
         : `You are an expert academic study assistant for the course **${courseContext.courseCode} - ${courseContext.title}** (${courseContext.level} Level). Answer questions comprehensively. Help the student understand concepts, solve problems, and prepare for exams.${bookList}`;
-    } else if (contextChunks.length > 0) {
-      taskPromptContent = `You are a helpful study assistant. Answer the user's question using ONLY the context provided below. If you cannot find the answer in the context, say you don't know based on the provided material.\n\nContext:\n${contextChunks.join("\n\n---\n\n")}`;
+    } else if (contextChunks.length > 0 || currentPageText) {
+      taskPromptContent = `You are a helpful study assistant. Answer the user's question using the context provided below and the attached page image, if present. If you cannot find the answer in any of that, say you don't know based on the provided material.${currentPageBlock}${contextChunks.length > 0 ? `\n\nAdditional related context (from elsewhere in the book):\n${contextChunks.join("\n\n---\n\n")}` : ""}`;
     } else {
       taskPromptContent = "You are a helpful study assistant. Help the student understand academic concepts, solve problems, and prepare for exams.";
     }

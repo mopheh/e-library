@@ -8,7 +8,7 @@ import { DefaultChatTransport } from "ai";
 import { ShieldOff, Clock } from "lucide-react";
 
 interface AIChatAssistantProps {
-  pageText?: string;
+  pageNumber?: number;
   getPageImage?: () => string | null;
   title?: string;
   bookId?: string;
@@ -83,7 +83,7 @@ function AIErrorBanner({ kind, message }: { kind: AIErrorKind; message: string }
 }
 
 export default function AIChatAssistant({
-  pageText,
+  pageNumber,
   getPageImage,
   title = "Study Assistant",
   bookId,
@@ -101,9 +101,10 @@ export default function AIChatAssistant({
     body: {
       bookId,
       courseId,
+      pageNumber,
       get pageImage() { return getPageImage ? getPageImage() : null; }
     }
-  }), [bookId, courseId, getPageImage]);
+  }), [bookId, courseId, getPageImage, pageNumber]);
 
   const { messages, status, error, sendMessage } = useChat({
     transport,
@@ -201,7 +202,14 @@ export default function AIChatAssistant({
         {messages
           .filter((m) => m.role !== "system")
           .map((msg) => {
-            const content = msg.parts?.filter((p: any) => p.type === "text").map((p: any) => p.text).join("\n") || "";
+            // A turn can arrive as more than one "text" part (e.g. split across
+            // stream segments); guard against a part being byte-identical to the
+            // one right before it so the same paragraph never renders twice.
+            const textParts = (msg.parts?.filter((p: any) => p.type === "text") ?? []) as { text: string }[];
+            const content = textParts
+              .filter((p, i) => i === 0 || p.text !== textParts[i - 1].text)
+              .map((p) => p.text)
+              .join("\n");
             return (
             <div
               key={msg.id}

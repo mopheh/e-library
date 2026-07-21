@@ -45,8 +45,14 @@ interface BookMaterialCardProps {
 export const BookMaterialCard = ({ book, courseId }: BookMaterialCardProps) => {
   const config = TYPE_CONFIG[book.type] || FALLBACK_CONFIG;
   const Icon = config.icon;
+  // RAG/AI-chat only needs parsing to have finished (pages + embeddings are
+  // written before parseStatus leaves "parsing") - question generation
+  // running afterward doesn't affect that, so treat every post-parse status
+  // as indexed rather than just the two terminal-looking ones.
   const isIndexed =
-    book.parseStatus === "completed" || book.parseStatus === "parsed";
+    book.parseStatus === "completed" ||
+    book.parseStatus === "parsed" ||
+    book.parseStatus === "generating_questions";
   const fileSizeMB = book.fileSize
     ? (book.fileSize / (1024 * 1024)).toFixed(1)
     : null;

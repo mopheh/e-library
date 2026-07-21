@@ -4,7 +4,7 @@ import { processJob } from "./processor";
 import { jobs, books } from "@/database/schema";
 import { db } from "./db";
 import { JobPayload } from "@/types";
-export const JOB_TYPES = ["parse_book", "generate_questions"] as const;
+export const JOB_TYPES = ["parse_book", "generate_questions", "send_scholarship_email"] as const;
 export type JobType = (typeof JOB_TYPES)[number];
 
 const POLL_INTERVAL = 3000;
@@ -51,7 +51,7 @@ async function reapOrphanedJobs() {
         })
         .where(eq(jobs.id, job.id));
 
-      const bookId = (job.payload as JobPayload)?.bookId;
+      const bookId = "bookId" in job.payload ? job.payload.bookId : undefined;
       if (bookId) {
         await tx.update(books).set({ parseStatus: "failed" }).where(eq(books.id, bookId));
       }
@@ -186,7 +186,7 @@ async function run() {
           // Otherwise the book stays stuck on "parsing"/"generating_questions"
           // forever - hooks/useBooks.ts polls indefinitely on those statuses,
           // so the admin UI would never surface the failure.
-          const bookId = (job.payload as JobPayload)?.bookId;
+          const bookId = "bookId" in job.payload ? job.payload.bookId : undefined;
           if (bookId) {
             await db
               .update(books)

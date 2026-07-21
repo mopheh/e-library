@@ -20,6 +20,7 @@ import {
   Search,
   Plus,
   Settings as SettingsIcon,
+  FileQuestion,
 } from "lucide-react";
 import FormModal from "@/components/FormDialogBody";
 import AddFacultyForm from "@/components/adminDashboard/department/AddFacultyForm";
@@ -31,6 +32,7 @@ import { SkeletonRow } from "@/components/adminDashboard/SkeletonRow";
 import { useAdminStats } from "@/hooks/useAdminStats";
 import CourseManagement from "@/components/adminDashboard/CourseManagement";
 import CbtQuestionManager from "@/components/adminDashboard/CbtQuestionManager";
+import CourseCbtQuestionManager from "@/components/adminDashboard/CourseCbtQuestionManager";
 import SystemSettings from "@/components/adminDashboard/SystemSettings";
 import UsersDirectory from "@/components/adminDashboard/UsersDirectory";
 import MaterialsOverview from "@/components/adminDashboard/MaterialsOverview";
@@ -90,7 +92,7 @@ const AdminDashboard = () => {
   const [deptSearch, setDeptSearch] = useState("");
   const [open, setOpen] = useState(false);
   const [type, setType] = useState("");
-  const [activeSection, setActiveSection] = useState<"overview" | "users" | "materials" | "courses" | "cbt" | "settings">("overview");
+  const [activeSection, setActiveSection] = useState<"overview" | "users" | "materials" | "courses" | "cbt" | "course-cbt" | "settings">("overview");
 
   const { data: faculties, isLoading: facultiesLoading, isError: facultiesError, error: facultiesErr } =
     useFaculties(facultyPage);
@@ -182,6 +184,7 @@ const AdminDashboard = () => {
           { id: "materials", label: "Materials", icon: BookMarked },
           { id: "courses", label: "Courses", icon: GraduationCap },
           { id: "cbt", label: "CBT Questions", icon: BarChart3 },
+          { id: "course-cbt", label: "Course CBT", icon: FileQuestion },
           { id: "settings", label: "Settings", icon: SettingsIcon },
         ].map((s) => (
           <button
@@ -202,6 +205,7 @@ const AdminDashboard = () => {
       {activeSection === "materials" && <MaterialsOverview />}
       {activeSection === "courses" && <CourseManagement />}
       {activeSection === "cbt" && <CbtQuestionManager />}
+      {activeSection === "course-cbt" && <CourseCbtQuestionManager />}
       {activeSection === "settings" && <SystemSettings />}
 
       {activeSection === "overview" && (

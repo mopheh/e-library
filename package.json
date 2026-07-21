@@ -94,6 +94,7 @@
     "rehype-raw": "^7.0.0",
     "remark-gfm": "^4.0.1",
     "remark-math": "^6.0.0",
+    "resend": "^6.17.2",
     "sonner": "^2.0.7",
     "tailwind-merge": "^3.3.1",
     "tailwindcss-animate": "^1.0.7",
@@ -101,6 +102,7 @@
     "together-ai": "^0.21.0",
     "ts-node": "^10.9.2",
     "uuid": "^11.1.0",
+    "word-list": "^4.1.0",
     "zod": "^3.25.76"
   },
   "devDependencies": {

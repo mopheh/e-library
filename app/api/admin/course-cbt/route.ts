@@ -91,6 +91,35 @@ export async function GET(req: Request) {
   }
 }
 
+// ── DELETE /api/admin/course-cbt?courseId=... ──────────────────────────
+// Bulk-delete every question for a course - for quality cleanup (e.g. a
+// course's questions came from a since-reparsed/garbled book and should be
+// wiped before the auto-chained generation job repopulates them).
+export async function DELETE(req: Request) {
+  const auth = await requireRole(["ADMIN"]);
+  if (!auth.authorized) {
+    return NextResponse.json({ error: auth.error }, { status: auth.status });
+  }
+
+  const { searchParams } = new URL(req.url);
+  const courseId = searchParams.get("courseId");
+  if (!courseId) {
+    return NextResponse.json({ error: "courseId is required" }, { status: 400 });
+  }
+
+  try {
+    const deleted = await db
+      .delete(questions)
+      .where(eq(questions.courseId, courseId))
+      .returning({ id: questions.id });
+
+    return NextResponse.json({ success: true, deletedCount: deleted.length });
+  } catch (error) {
+    console.error("[DELETE /api/admin/course-cbt]", error);
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+  }
+}
+
 // ── POST /api/admin/course-cbt ─────────────────────────────────────────
 export async function POST(req: Request) {
   const auth = await requireRole(["ADMIN"]);

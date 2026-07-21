@@ -551,7 +551,7 @@ const PDFStudyView = ({ fileUrl, bookId }: PDFStudyViewProps) => {
       }`}>
          {sidebarMode === "assistant" && (
            <AIChatAssistant 
-             pageText={pageText} 
+             pageNumber={pages?.[currentPage]?.pageNumber}
              getPageImage={getPageImage}
              bookId={bookId} 
              inputValue={assistantInput}
@@ -635,7 +635,7 @@ const PDFStudyView = ({ fileUrl, bookId }: PDFStudyViewProps) => {
               className="h-full data-[state=inactive]:hidden w-full overflow-y-auto"
             >
               <AIChatAssistant 
-                pageText={pageText} 
+                pageNumber={pages?.[currentPage]?.pageNumber}
                 getPageImage={getPageImage}
                 bookId={bookId} 
                 inputValue={assistantInput}

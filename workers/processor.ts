@@ -4,10 +4,32 @@ import { eq, sql } from "drizzle-orm";
 import { db } from "./db";
 import { parsePdfPages, parseDocxPages } from "@/actions/parseBook";
 import { generateQuestionsFromBook } from "@/lib/generateQuestions";
+import { sendScholarshipEmails } from "@/lib/email";
 import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
 import fetch from "node-fetch";
+
+// A book's `type` field is meant to distinguish past-question papers/
+// handwritten notes from real study material, but uploads are frequently
+// mistagged generically as "Material" regardless of actual content (58 such
+// mistagged past-question papers were found sitting in a question-generation
+// backlog). Title text is a much more reliable signal for this specific
+// pattern, so match on both.
+const SKIP_GENERATION_TYPES = ["past question", "past_question", "handwritten", "note"];
+const SKIP_GENERATION_TITLE_PATTERNS = [/\bPQs?\b/i, /past\s*questions?/i];
+
+function isSkipGenerationTypeOrTitle(book: { type: string; title: string }): boolean {
+  const type = (book.type || "").toLowerCase();
+  if (SKIP_GENERATION_TYPES.some((t) => type.includes(t))) return true;
+  return SKIP_GENERATION_TITLE_PATTERNS.some((p) => p.test(book.title || ""));
+}
+
+// If most of a book's pages needed OCR review (see actions/parseBook.ts),
+// it's effectively a handwritten/poor-scan document rather than one bad page
+// in an otherwise-fine textbook - generating quiz questions from mostly
+// unreadable/garbled source text just produces garbage output.
+const POOR_OCR_SKIP_RATIO = 0.5;
 
 export async function processJob(job: {
   id: string;
@@ -16,7 +38,13 @@ export async function processJob(job: {
   attempts: number;
   maxAttempts: number;
 }) {
-  const { bookId } = job.payload;
+  if (job.type === "send_scholarship_email") {
+    const { opportunityId } = job.payload as { opportunityId: string };
+    await sendScholarshipEmails(opportunityId, db);
+    return;
+  }
+
+  const { bookId } = job.payload as { bookId: string };
 
   if (job.type === "parse_book") {
     await db
@@ -95,29 +123,44 @@ export async function processJob(job: {
 
       let pageCount = 0;
       let needsReview = false;
+      let needsReviewCount = 0;
       if (isDocx) {
         ({ numPages: pageCount, needsReview } = await parseDocxPages(tmpPath, bookId));
       } else {
-        ({ numPages: pageCount, needsReview } = await parsePdfPages(tmpPath, bookId));
+        ({ numPages: pageCount, needsReview, needsReviewCount } = await parsePdfPages(tmpPath, bookId));
       }
 
       if (needsReview) {
         console.log(`⚠️ Book ${bookId} has low-confidence OCR page(s) - flagging for manual review.`);
       }
 
-      const skipGenerationTypes = ["past question", "past_question", "handwritten", "note"];
-      const shouldSkip = skipGenerationTypes.some(t => book.type.toLowerCase().includes(t));
+      const isPoorOcr = pageCount > 0 && needsReviewCount / pageCount >= POOR_OCR_SKIP_RATIO;
+      const shouldSkip = isSkipGenerationTypeOrTitle(book) || isPoorOcr;
 
       if (shouldSkip) {
-        console.log(`⏭️ Skipping question generation for book ${bookId} (Type: ${book.type})`);
+        const reason = isPoorOcr
+          ? `poor OCR quality - ${needsReviewCount}/${pageCount} pages needed review (likely handwritten)`
+          : `type/title match (Type: ${book.type}, Title: ${book.title})`;
+        console.log(`⏭️ Skipping question generation for book ${bookId} (${reason})`);
         await db
           .update(books)
           .set({ parseStatus: "completed", pageCount, needsReview })
           .where(eq(books.id, bookId));
       } else {
+        // Auto-chain straight into question generation instead of leaving the
+        // book parked at "parsed" waiting for an admin to click "Generate
+        // Questions" - from the uploader's point of view, parsing and
+        // generation are one pipeline. RAG/AI-chat is already usable as soon
+        // as parsing lands (pages/embeddings are written by parsePdfPages
+        // above), so this doesn't delay that.
+        await db.insert(jobs).values({
+          type: "generate_questions",
+          payload: { bookId },
+          status: "pending",
+        });
         await db
           .update(books)
-          .set({ parseStatus: "parsed", pageCount, needsReview })
+          .set({ parseStatus: "generating_questions", pageCount, needsReview })
           .where(eq(books.id, bookId));
       }
     } finally {

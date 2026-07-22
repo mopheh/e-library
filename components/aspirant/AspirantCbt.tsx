@@ -882,7 +882,6 @@ export default function AspirantCbt() {
     if (mode === "exam" && !isSubmitted && timeLeft === 0) {
       handleSubmit();
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [timeLeft]);
 
   // ── Handlers ──

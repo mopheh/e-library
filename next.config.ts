@@ -3,7 +3,10 @@ import withPWA from "next-pwa";
 import { withSentryConfig } from "@sentry/nextjs";
 
 const nextConfig: NextConfig = {
-  serverExternalPackages: ["canvas", "pdfjs-dist"],
+  // These are Node-only, never need client bundling, and are heavy enough
+  // (native binaries / WASM / worker scripts) that letting webpack trace and
+  // bundle them into the server build risks OOMing the build container.
+  serverExternalPackages: ["canvas", "pdfjs-dist", "tesseract.js", "mammoth"],
   webpack: (config, { isServer }) => {
     if (!isServer) {
       // Ignore native canvas for client/PWA builds

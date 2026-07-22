@@ -302,10 +302,11 @@ export async function POST(req: NextRequest) {
 
     // ── 4. Stream response to client using Vercel AI SDK ─────────────────────
     const result = streamText({
-      // "-latest" alias rather than a dated version (e.g. gemini-2.5-flash)
-      // — Google restricts dated model IDs from new API keys/projects over
-      // time, which is exactly what broke this the first time.
-      model: google("gemini-flash-latest"),
+      // Pinned to a stable named model (not a dated snapshot like -001/-002,
+      // which is what got new API keys locked out previously) - "-latest"
+      // itself isn't safe either: Google silently repointed it to
+      // gemini-3.6-flash, whose free tier is capped at 20 requests/day.
+      model: google("gemini-2.5-flash"),
       instructions: systemPromptContent,
       messages: coreMessages,
       onFinish: async () => {

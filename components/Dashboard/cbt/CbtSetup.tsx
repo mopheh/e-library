@@ -26,9 +26,10 @@ interface CbtSetupProps {
   courses?: CbtCourse[];
   onStart: (data: any) => void;
   loading?: boolean;
+  starting?: boolean;
 }
 
-export default function CbtSetup({ courses, onStart, loading }: CbtSetupProps) {
+export default function CbtSetup({ courses, onStart, loading, starting }: CbtSetupProps) {
   const [courseId, setCourseId] = useState("");
   const [numQuestions, setNumQuestions] = useState(20);
   const [duration, setDuration] = useState(30);
@@ -126,7 +127,7 @@ export default function CbtSetup({ courses, onStart, loading }: CbtSetupProps) {
         <Button
           className="w-full font-medium"
           size="lg"
-          disabled={!courseId || numQuestions < 1 || numQuestions > maxQuestions}
+          disabled={!courseId || numQuestions < 1 || numQuestions > maxQuestions || starting}
           onClick={() =>
             selectedCourse &&
             onStart({
@@ -136,7 +137,7 @@ export default function CbtSetup({ courses, onStart, loading }: CbtSetupProps) {
             })
           }
         >
-          Start Test
+          {starting ? "Loading questions…" : "Start Test"}
         </Button>
       </CardContent>
     </Card>

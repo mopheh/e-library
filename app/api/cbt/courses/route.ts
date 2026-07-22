@@ -1,9 +1,13 @@
 import { db } from "@/database/drizzle";
-import { courses, questions, options, studentCourses } from "@/database/schema";
-import { eq, sql, inArray } from "drizzle-orm";
+import { courses, questions, studentCourses } from "@/database/schema";
+import { eq, sql } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 
+// Only the course list + counts are needed for the setup screen - the
+// question bank itself (which can run into the hundreds per course) is
+// fetched on demand, pre-shuffled, from /api/cbt/courses/[courseId]/questions
+// once the student actually starts a test.
 export async function GET() {
     try {
         const user = await getCurrentUser();
@@ -23,49 +27,9 @@ export async function GET() {
             .where(eq(studentCourses.userId, user.id))
             .groupBy(courses.id);
 
-
-        const courseIds = coursesWithCounts.map((c) => c.id);
-        
-        if (courseIds.length === 0) {
-            return NextResponse.json([]);
-        }
-
-        const courseQuestions = await db
-            .select({
-                id: questions.id,
-                courseId: questions.courseId,
-                questionText: questions.questionText,
-                type: questions.type,
-            })
-            .from(questions)
-            .where(inArray(questions.courseId, courseIds));
-
-
-        const questionIds = courseQuestions.map((q) => q.id);
-        const questionOptions = await db
-            .select({
-                id: options.id,
-                questionId: options.questionId,
-                optionText: options.optionText,
-                isCorrect: options.isCorrect,
-            })
-            .from(options)
-            .where(inArray(options.questionId, questionIds));
-
-
-        const questionsWithOptions = courseQuestions.map((q) => ({
-            ...q,
-            options: questionOptions.filter((o) => o.questionId === q.id),
-        }));
-
-        const data = coursesWithCounts.map((course) => ({
-            ...course,
-            questions: questionsWithOptions.filter((q) => q.courseId === course.id),
-        }));
-
-        return NextResponse.json(data);
+        return NextResponse.json(coursesWithCounts);
     } catch (error) {
-        console.error("Error fetching CBT courses with questions and options:", error);
+        console.error("Error fetching CBT courses:", error);
         return NextResponse.json(
             { error: "Failed to fetch courses" },
             { status: 500 }

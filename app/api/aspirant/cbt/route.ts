@@ -3,6 +3,7 @@ import { db } from "@/database/drizzle";
 import { postUtmeQuestions, postUtmeOptions, candidateAttempts, candidateProfiles } from "@/database/schema";
 import { eq, sql, inArray } from "drizzle-orm";
 import { getCurrentUser } from "@/lib/auth";
+import { shuffle } from "@/lib/shuffle";
 import { z } from "zod";
 
 const submitAttemptSchema = z.object({
@@ -71,11 +72,17 @@ export async function GET(req: Request) {
 
     const formattedQuestions = questions.map((q) => ({
       ...q,
-      options: (optionMap.get(q.id) ?? []).map((o) => ({
-        id: o.id,
-        optionText: o.optionText,
-        isCorrect: o.isCorrect,
-      })),
+      // Options are stored/generated in a fixed order, which would let a
+      // repeat test-taker learn "the correct one is always 2nd" instead of
+      // the actual subject matter - shuffle per fetch, same as the question
+      // selection above.
+      options: shuffle(
+        (optionMap.get(q.id) ?? []).map((o) => ({
+          id: o.id,
+          optionText: o.optionText,
+          isCorrect: o.isCorrect,
+        })),
+      ),
     }));
 
     return NextResponse.json({ success: true, questions: formattedQuestions });

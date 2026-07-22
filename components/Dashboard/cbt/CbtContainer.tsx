@@ -21,6 +21,7 @@ export default function CbtContainer() {
   const [answers, setAnswers] = useState<{ [key: string]: string }>({}); // Changed key to string to match question ID type if needed, or keep number if IDs are numbers
   const [showSubmit, setShowSubmit] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isStarting, setIsStarting] = useState(false);
   const [score, setScore] = useState(0);
   const { data: courses, isLoading: coursesLoading } = useCbtCourses(); // Added isLoading
 
@@ -53,23 +54,33 @@ export default function CbtContainer() {
     }
   }, [setupData, answers, stage]);
 
-  // Reset state when starting fresh
-  const handleSetupStart = (data: any) => {
-      // 1. Slice questions according to `numQuestions` randomly or from the top.
-      const selectedQuestions = [...(data.course.questions || [])]
-          .sort(() => 0.5 - Math.random())
-          .slice(0, data.numQuestions);
+  // Reset state when starting fresh. Questions are drawn fresh (server-side
+  // random selection + option shuffle) on every start rather than reshuffling
+  // a bulk-preloaded pool, so retaking a course's CBT doesn't keep surfacing
+  // the same set of questions in the same option order.
+  const handleSetupStart = async (data: any) => {
+      setIsStarting(true);
+      try {
+          const res = await fetch(`/api/cbt/courses/${data.course.id}/questions?limit=${data.numQuestions}`);
+          const json = await res.json();
+          if (!res.ok || !json.success) throw new Error(json.error || "Failed to load questions");
 
-      setSetupData({
-          ...data,
-          course: {
-              ...data.course,
-              questions: selectedQuestions,
-          }
-      });
-      setAnswers({});
-      setScore(0);
-      setStage("instructions");
+          setSetupData({
+              ...data,
+              course: {
+                  ...data.course,
+                  questions: json.questions,
+              }
+          });
+          setAnswers({});
+          setScore(0);
+          setStage("instructions");
+      } catch (err) {
+          console.error("Failed to start CBT:", err);
+          toast.error("Failed to load questions. Please try again.");
+      } finally {
+          setIsStarting(false);
+      }
   }
 
   const handleSubmit = async () => {
@@ -134,6 +145,7 @@ export default function CbtContainer() {
         <CbtSetup
           courses={courses}
           loading={coursesLoading}
+          starting={isStarting}
           onStart={handleSetupStart}
         />
       )}

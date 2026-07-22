@@ -67,7 +67,11 @@ async function generateWithGeminiRoundRobin(prompt: string): Promise<string> {
     try {
       const ai = new GoogleGenAI({ apiKey: key });
       const result = await ai.models.generateContent({
-        model: "gemini-flash-latest",
+        // Pinned, not "gemini-flash-latest" - Google silently repointed that
+        // alias to gemini-3.6-flash, whose free tier is capped at 20
+        // requests/day/project (vs. gemini-2.5-flash's much higher quota),
+        // which is what stalled generation. Re-check quotas before bumping.
+        model: "gemini-2.5-flash",
         contents: [{ parts: [{ text: prompt }] }],
       });
       return result.text || "";

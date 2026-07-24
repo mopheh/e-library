@@ -26,7 +26,9 @@ export async function generateWithGemini(
   input: string | GeminiMessage[],
   // Pinned - "gemini-flash-latest" now aliases to gemini-3.6-flash, whose
   // free tier is capped at 20 requests/day/project (see generateQuestions.ts).
-  model: string = "gemini-2.5-flash"
+  // gemini-2.5-flash was retired for new-user/new-project API keys as of
+  // July 2026 - moved to gemini-3.5-flash, the current GA stable model.
+  model: string = "gemini-3.5-flash"
 ) {
   return withRetry(async () => {
     const ai = getAI();
@@ -65,7 +67,7 @@ export async function generateWithGemini(
  */
 export async function* generateStreamWithGemini(
   input: string | GeminiMessage[],
-  model: string = "gemini-2.5-flash"
+  model: string = "gemini-3.5-flash"
 ) {
   const ai = getAI();
 

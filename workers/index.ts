@@ -1,10 +1,15 @@
 import "./bootstrap";
-import { eq, sql, and, isNull, lt, gte, SQL, desc, or } from "drizzle-orm";
+import { eq, sql, and, isNull, lt, lte, gte, SQL, desc, or } from "drizzle-orm";
 import { processJob } from "./processor";
-import { jobs, books } from "@/database/schema";
+import { jobs, books, opportunities } from "@/database/schema";
 import { db } from "./db";
 import { JobPayload } from "@/types";
-export const JOB_TYPES = ["parse_book", "generate_questions", "send_scholarship_email"] as const;
+export const JOB_TYPES = [
+  "parse_book",
+  "generate_questions",
+  "send_scholarship_email",
+  "send_scholarship_reminder_email",
+] as const;
 export type JobType = (typeof JOB_TYPES)[number];
 
 const POLL_INTERVAL = 3000;
@@ -61,6 +66,44 @@ async function reapOrphanedJobs() {
       console.error(`💀 Reaped ${orphans.length} orphaned job(s) stuck past max attempts.`);
     }
   });
+}
+
+const REMINDER_WINDOW_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
+const REMINDER_CHECK_INTERVAL_MS = 60 * 60 * 1000; // hourly is plenty for a 7-day window
+
+// Finds SCHOLARSHIP opportunities whose deadline falls within the next 7 days
+// and haven't had a reminder sent yet, and enqueues one reminder-email job per
+// opportunity. The UPDATE...RETURNING atomically "claims" each row (sets
+// reminderSentAt) so that if multiple worker instances run this sweep at the
+// same time, only one of them enqueues the job for a given opportunity.
+async function checkExpiringScholarships() {
+  const now = new Date();
+  const windowEnd = new Date(now.getTime() + REMINDER_WINDOW_MS);
+
+  const claimed = await db
+    .update(opportunities)
+    .set({ reminderSentAt: now })
+    .where(
+      and(
+        eq(opportunities.type, "SCHOLARSHIP"),
+        isNull(opportunities.reminderSentAt),
+        gte(opportunities.deadline, now),
+        lte(opportunities.deadline, windowEnd),
+      )
+    )
+    .returning({ id: opportunities.id });
+
+  if (claimed.length === 0) return;
+
+  await db.insert(jobs).values(
+    claimed.map((opp) => ({
+      type: "send_scholarship_reminder_email",
+      payload: { opportunityId: opp.id },
+      status: "pending",
+    }))
+  );
+
+  console.log(`📧 Enqueued ${claimed.length} scholarship deadline reminder email(s).`);
 }
 
 async function fetchNextJob() {
@@ -125,6 +168,18 @@ async function run() {
   setInterval(() => {
     reapOrphanedJobs().catch((err) => console.error("⚠️ Failed to reap orphaned jobs:", err.message));
   }, 10 * 60 * 1000);
+
+  try {
+    await checkExpiringScholarships();
+  } catch (err: any) {
+    console.error("⚠️ Failed to check expiring scholarships on startup:", err.message);
+  }
+
+  setInterval(() => {
+    checkExpiringScholarships().catch((err) =>
+      console.error("⚠️ Failed to check expiring scholarships:", err.message)
+    );
+  }, REMINDER_CHECK_INTERVAL_MS);
 
   while (true) {
     let job;

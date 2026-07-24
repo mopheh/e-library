@@ -122,7 +122,11 @@ export interface Activity {
   createdAt: string;
 }
 
-export type JobType = "parse_book" | "generate_questions" | "send_scholarship_email";
+export type JobType =
+  | "parse_book"
+  | "generate_questions"
+  | "send_scholarship_email"
+  | "send_scholarship_reminder_email";
 
 export type JobPayload = { bookId: string } | { opportunityId: string };
 

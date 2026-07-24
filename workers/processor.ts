@@ -4,7 +4,7 @@ import { eq, sql } from "drizzle-orm";
 import { db } from "./db";
 import { parsePdfPages, parseDocxPages } from "@/actions/parseBook";
 import { generateQuestionsFromBook } from "@/lib/generateQuestions";
-import { sendScholarshipEmails } from "@/lib/email";
+import { sendScholarshipEmails, sendScholarshipReminderEmails } from "@/lib/email";
 import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
@@ -41,6 +41,12 @@ export async function processJob(job: {
   if (job.type === "send_scholarship_email") {
     const { opportunityId } = job.payload as { opportunityId: string };
     await sendScholarshipEmails(opportunityId, db);
+    return;
+  }
+
+  if (job.type === "send_scholarship_reminder_email") {
+    const { opportunityId } = job.payload as { opportunityId: string };
+    await sendScholarshipReminderEmails(opportunityId, db);
     return;
   }
 

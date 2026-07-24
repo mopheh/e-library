@@ -306,7 +306,10 @@ export async function POST(req: NextRequest) {
       // which is what got new API keys locked out previously) - "-latest"
       // itself isn't safe either: Google silently repointed it to
       // gemini-3.6-flash, whose free tier is capped at 20 requests/day.
-      model: google("gemini-2.5-flash"),
+      // gemini-2.5-flash was retired for new-user/new-project API keys
+      // (404 "no longer available to new users") as of July 2026 - moved to
+      // gemini-3.5-flash, the current GA stable model.
+      model: google("gemini-3.5-flash"),
       instructions: systemPromptContent,
       messages: coreMessages,
       onFinish: async () => {

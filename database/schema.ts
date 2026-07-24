@@ -677,6 +677,7 @@ export const opportunities = pgTable("opportunities", {
   deadline: timestamp("deadline", { withTimezone: true }),
   departmentId: uuid("department_id").references(() => departments.id),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  reminderSentAt: timestamp("reminder_sent_at", { withTimezone: true }),
 });
 
 export const targetLevelEnum = pgEnum("target_level", ["100", "200", "300", "400", "500", "600", "ALL"]);

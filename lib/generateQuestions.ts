@@ -71,7 +71,10 @@ async function generateWithGeminiRoundRobin(prompt: string): Promise<string> {
         // alias to gemini-3.6-flash, whose free tier is capped at 20
         // requests/day/project (vs. gemini-2.5-flash's much higher quota),
         // which is what stalled generation. Re-check quotas before bumping.
-        model: "gemini-2.5-flash",
+        // gemini-2.5-flash itself was retired for new-user/new-project API
+        // keys as of July 2026 (404) - moved to gemini-3.5-flash, the
+        // current GA stable model.
+        model: "gemini-3.5-flash",
         contents: [{ parts: [{ text: prompt }] }],
       });
       return result.text || "";
@@ -122,6 +125,10 @@ const META_QUESTION_PATTERNS: RegExp[] = [
   /\bcover\s+page\b/i,
   /\btitle\s+of\s+(this|the)\s+(book|document|material|text|module)\b/i,
   /\bhow many pages\b/i,
+  /\b(according to|based on|as (shown|described|discussed|mentioned|provided|given|stated|implied)\s+(in|by))\s+the\s+(provided\s+)?(text|passage|document|material|article|excerpt|paper)\b/i,
+  /\b(the|this)\s+(text|passage|document|material|article|paper)\s+(discusses|describes|states|mentions|provides|contains|implies)\b/i,
+  /\b(figure|diagram|graph|chart|schematic|circuit)\s+(above|below|shown|provided)\b/i,
+  /\bwhat is the correct answer to this (problem|question)\b/i,
 ];
 
 function isMetaQuestion(text: string): boolean {
@@ -162,6 +169,15 @@ export async function generateQuestionsFromBook(bookId: string) {
   const batchSize = 5;
   // Track whether OpenRouter has failed permanently so we skip it for remaining batches
   let openRouterDisabled = !process.env.OPENROUTER_API_KEY;
+  // Neither generateWithGeminiRoundRobin nor the OpenRouter fetch throw out of
+  // this loop - every failure is caught and the batch is skipped so one bad
+  // batch doesn't kill the whole book. That means a fully-exhausted run (all
+  // Gemini keys over their daily quota, OpenRouter out of credits) would
+  // otherwise finish "successfully" having inserted nothing, and the caller
+  // (workers/processor.ts) would mark the book "completed" with zero
+  // questions - no retry, no failure signal. Track real output and throw at
+  // the end if there was work to do but literally none of it landed.
+  let insertedCount = 0;
 
   for (let i = 0; i < pages.length; i += batchSize) {
     const batch = pages.slice(i, i + batchSize);
@@ -176,8 +192,9 @@ CRITICAL RULES:
 3. NEVER generate a question about exam/assessment logistics mentioned in the text: venue, date, duration, marks allocation, invigilators, matriculation numbers, or instructions to candidates.
 4. COMPLETELY IGNORE cover pages, copyright notices, tables of contents, formatting notes, and exam instructions as source material - do not turn them into questions.
 5. If the provided text contains NO actual educational subject matter (e.g. it is entirely front matter/boilerplate), return an empty JSON array: []
-6. Each question must be self-contained and accurate based strictly on the text.
-7. Format output as strict JSON:
+6. Each question must be fully self-contained: a reader with ONLY the question text and options - no access to the source text, book, or any figure - must be able to answer it. Never write a question that refers back to "the text", "the passage", "the document", "the table above/below", or similar - restate the relevant fact directly in the question instead.
+7. NEVER generate a question whose answer depends on seeing a diagram, figure, graph, circuit schematic, chart, or image (e.g. "what is the output if R1 and R2 are cut off" referring to an unreproduced circuit). This app has no way to display images alongside questions, so such a question is unanswerable no matter how it's worded. If a concept can only be tested by reference to a figure, skip it and generate a different question from text-only content instead.
+8. Format output as strict JSON:
 [
   {
     "questionText": "...",
@@ -220,7 +237,7 @@ Text: ${textBatch}
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            model: "google/gemini-2.5-flash",
+            model: "google/gemini-3.5-flash",
             messages: [{ role: "user", content: prompt }],
             response_format: { type: "json_object" },
           }),
@@ -327,11 +344,19 @@ Text: ${textBatch}
             isCorrect: Boolean(opt.isCorrect || opt.correct || opt.is_correct),
           }))
         );
+        insertedCount++;
       } catch (insertErr) {
         console.error("Database insert failed for question:", qText, insertErr);
       }
     }
 
     console.log(`Processed batch ${i}–${i + batch.length}`);
+  }
+
+  if (pages.length > 0 && insertedCount === 0) {
+    throw new Error(
+      `generateQuestionsFromBook produced 0 questions from ${pages.length} eligible pages for book ${bookId} - ` +
+      `likely Gemini quota exhaustion and/or an unfunded OpenRouter fallback (see logs above for the actual per-batch errors).`
+    );
   }
 }

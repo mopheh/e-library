@@ -7,6 +7,27 @@ const nextConfig: NextConfig = {
   // (native binaries / WASM / worker scripts) that letting webpack trace and
   // bundle them into the server build risks OOMing the build container.
   serverExternalPackages: ["canvas", "pdfjs-dist", "tesseract.js", "mammoth"],
+  // lib/embedding-worker.cjs is loaded via `new Worker(path.join(...))`, a
+  // runtime-constructed path outside the webpack module graph, so Next's
+  // serverless file tracer can't statically discover its @xenova/transformers
+  // (+ onnxruntime-node native binary) dependency from there. Only the two
+  // entrypoints that actually call getEmbedding() at request time need it -
+  // the background job worker (workers/index.ts) is a separate long-running
+  // Node process with a plain node_modules install, not a traced serverless
+  // bundle, so it doesn't need this.
+  outputFileTracingIncludes: {
+    "/api/ask": ["./node_modules/@xenova/transformers/**/*", "./node_modules/onnxruntime-node/**/*"],
+    "/dashboard/tutor/[courseId]": ["./node_modules/@xenova/transformers/**/*", "./node_modules/onnxruntime-node/**/*"],
+  },
+  // onnxruntime-node bundles darwin/linux/win32 native binaries directly in
+  // the package (no per-platform optionalDependencies split), and Vercel's
+  // functions always run linux - excluding the other two keeps ~60MB out of
+  // the traced bundle, which otherwise lands right at Vercel's 250MB
+  // unzipped function size limit.
+  outputFileTracingExcludes: {
+    "/api/ask": ["./node_modules/onnxruntime-node/bin/napi-v3/darwin/**/*", "./node_modules/onnxruntime-node/bin/napi-v3/win32/**/*"],
+    "/dashboard/tutor/[courseId]": ["./node_modules/onnxruntime-node/bin/napi-v3/darwin/**/*", "./node_modules/onnxruntime-node/bin/napi-v3/win32/**/*"],
+  },
   webpack: (config, { isServer }) => {
     if (!isServer) {
       // Ignore native canvas for client/PWA builds

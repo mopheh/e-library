@@ -69,35 +69,35 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto p-4 md:p-6 font-poppins">
+    <div className="max-w-6xl mx-auto px-3 py-4 sm:p-4 md:p-6 font-poppins">
       <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="mb-8"
+        className="mb-6 sm:mb-8"
       >
-        <h1 className="text-3xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
+        <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
           My Profile
         </h1>
-        <p className="text-zinc-500 dark:text-zinc-400 mt-1">
+        <p className="text-zinc-500 dark:text-zinc-400 mt-1 text-sm">
           Manage your personal information, academic details, and security settings.
         </p>
       </motion.div>
 
       <Tabs defaultValue="overview" className="space-y-6">
-        <TabsList className="bg-zinc-100 dark:bg-zinc-900/50 p-1 w-full flex-wrap h-auto md:h-12 md:max-w-fit md:inline-flex rounded-xl">
-          <TabsTrigger value="overview" className="rounded-lg py-2 px-4 shadow-none data-[state=active]:shadow-sm">
+        <TabsList className="bg-zinc-100 dark:bg-zinc-900/50 p-1 w-full overflow-x-auto no-scrollbar flex-nowrap sm:flex-wrap h-auto md:h-12 md:max-w-fit md:inline-flex rounded-xl">
+          <TabsTrigger value="overview" className="rounded-lg py-2 px-3 sm:px-4 text-xs sm:text-sm shadow-none data-[state=active]:shadow-sm shrink-0">
             Overview
           </TabsTrigger>
-          <TabsTrigger value="edit" className="rounded-lg py-2 px-4 shadow-none data-[state=active]:shadow-sm">
-            Edit Profile
+          <TabsTrigger value="edit" className="rounded-lg py-2 px-3 sm:px-4 text-xs sm:text-sm shadow-none data-[state=active]:shadow-sm shrink-0">
+            Edit
           </TabsTrigger>
-          <TabsTrigger value="activity" className="rounded-lg py-2 px-4 shadow-none data-[state=active]:shadow-sm">
-             Activity &amp; Stats
+          <TabsTrigger value="activity" className="rounded-lg py-2 px-3 sm:px-4 text-xs sm:text-sm shadow-none data-[state=active]:shadow-sm shrink-0">
+             Activity
           </TabsTrigger>
-          <TabsTrigger value="preferences" className="rounded-lg py-2 px-4 shadow-none data-[state=active]:shadow-sm">
+          <TabsTrigger value="preferences" className="rounded-lg py-2 px-3 sm:px-4 text-xs sm:text-sm shadow-none data-[state=active]:shadow-sm shrink-0">
              Preferences
           </TabsTrigger>
-          <TabsTrigger value="security" className="rounded-lg py-2 px-4 shadow-none data-[state=active]:shadow-sm">
+          <TabsTrigger value="security" className="rounded-lg py-2 px-3 sm:px-4 text-xs sm:text-sm shadow-none data-[state=active]:shadow-sm shrink-0">
             Security
           </TabsTrigger>
         </TabsList>
@@ -130,7 +130,7 @@ export default function ProfilePage() {
           </TabsContent>
 
           <TabsContent value="security" className="space-y-6">
-             <div className="max-w-3xl rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-5 flex items-center justify-between gap-4">
+             <div className="max-w-3xl rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
                 <div>
                   <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">Sign out</h3>
                   <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">

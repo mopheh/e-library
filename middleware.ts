@@ -40,6 +40,8 @@ const askRatelimit = redis ? new Ratelimit({
   analytics: true,
 }) : null;
 
+let rateLimitWarnShown = false;
+
 export default clerkMiddleware(async (auth, req) => {
   const { userId, sessionClaims } = await auth();
   const path = req.nextUrl.pathname;
@@ -69,10 +71,11 @@ export default clerkMiddleware(async (auth, req) => {
         }
       } catch (err) {
         // Fail OPEN: a Redis/Upstash hiccup should degrade rate-limiting,
-        // not take down every API route on the site. This middleware runs
-        // in front of all /api/* traffic, so an unhandled throw here would
-        // turn a transient Redis blip into a site-wide 500 outage.
-        console.error("[middleware] Rate limiter unavailable, allowing request through:", err);
+        // not take down every API route on the site.
+        if (!rateLimitWarnShown) {
+          rateLimitWarnShown = true;
+          console.warn("[middleware] Rate limiter unavailable, allowing requests through. Subsequent errors suppressed.", err);
+        }
       }
     }
   }

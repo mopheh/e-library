@@ -13,7 +13,7 @@ export default function MobileMessagingButton() {
     return (
         <Link
             href="/dashboard/messages"
-            className="fixed bottom-24 right-6 z-50 p-4 bg-blue-600 text-white rounded-2xl shadow-2xl hover:bg-blue-700 transition-all active:scale-90 md:hidden flex items-center justify-center border border-white/20 backdrop-blur-sm shadow-blue-500/20"
+            className="fixed bottom-[5.5rem] right-4 z-50 p-3.5 bg-blue-600 text-white rounded-2xl shadow-2xl hover:bg-blue-700 transition-all active:scale-90 md:hidden flex items-center justify-center border border-white/20 backdrop-blur-sm shadow-blue-500/20"
             aria-label="Open Messages"
         >
             <div className="relative">

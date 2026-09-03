@@ -25,11 +25,11 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
         <div
           ref={scrollRef}
-          className={`flex-1 flex flex-col p-2 sm:p-4 sm:py-6 min-w-0
-            w-full overflow-y-auto ${isSidebarOpen ? "!overflow-hidden" : ""}`}
+          className={`flex-1 flex flex-col p-0 sm:p-4 sm:py-6 min-w-0
+            w-full overflow-y-auto overflow-x-hidden ${isSidebarOpen ? "!overflow-hidden" : ""}`}
         >
           <Nav />
-          <main>{children}</main>
+          <main className="pb-24 sm:pb-0">{children}</main>
         </div>
       </div>
       {!pathname?.includes("/book/") && (

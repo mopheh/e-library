@@ -11,7 +11,7 @@ interface SmartLibraryHeaderProps {
 
 export const SmartLibraryHeader = ({ searchQuery, setSearchQuery, onFilterClick }: SmartLibraryHeaderProps) => {
   return (
-    <div className="w-full bg-white dark:bg-zinc-950 border-b border-zinc-200 dark:border-zinc-800 pb-8 pt-10 px-4 md:px-8">
+    <div className="w-full bg-white dark:bg-zinc-950 border-b border-zinc-200 dark:border-zinc-800 pb-6 sm:pb-8 pt-6 sm:pt-10 px-4 md:px-8">
       <div className="max-w-[1400px] mx-auto">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
           

@@ -52,7 +52,7 @@ export default function CbtSetup({ courses, onStart, loading, starting }: CbtSet
   }
 
   return (
-    <Card className="w-full max-w-lg mx-auto p-6 rounded-2xl shadow font-poppins bg-white dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800">
+    <Card className="w-full max-w-lg mx-auto p-4 sm:p-6 rounded-2xl shadow font-poppins bg-white dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800">
       <CardContent className="space-y-6">
         <div className="space-y-1">
             <h2 className="text-xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100 italic uppercase">

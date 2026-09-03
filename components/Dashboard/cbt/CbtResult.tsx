@@ -16,11 +16,11 @@ export default function CbtResult({
 }) {
 
   return (
-    <div className="flex-1 p-4 md:p-8 pt-6 min-h-[80vh] font-poppins flex items-center justify-center bg-zinc-50 dark:bg-zinc-950 rounded-xl">
-       <motion.div 
-         initial={{ opacity: 0, scale: 0.95 }} 
-         animate={{ opacity: 1, scale: 1 }} 
-         className="bg-white dark:bg-zinc-900 rounded-3xl p-8 max-w-2xl w-full shadow-2xl border border-zinc-100 dark:border-zinc-800 text-center"
+    <div className="flex-1 p-2 sm:p-4 md:p-8 pt-4 sm:pt-6 min-h-[80vh] font-poppins flex items-start sm:items-center justify-center bg-zinc-50 dark:bg-zinc-950 rounded-xl">
+       <motion.div
+         initial={{ opacity: 0, scale: 0.95 }}
+         animate={{ opacity: 1, scale: 1 }}
+         className="bg-white dark:bg-zinc-900 rounded-2xl sm:rounded-3xl p-4 sm:p-8 max-w-2xl w-full shadow-2xl border border-zinc-100 dark:border-zinc-800 text-center"
        >
           <div className="w-24 h-24 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-full flex items-center justify-center mx-auto mb-6 text-4xl font-bold">
             {score}

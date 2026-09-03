@@ -82,16 +82,16 @@ function MobileAspirantHeader({ streak }: { streak: number }) {
   const firstName = isLoaded ? (user?.firstName ?? "Aspirant") : null;
 
   return (
-    <div className="px-5 pt-safe-or-6 pb-4 space-y-4" style={{ paddingTop: "max(24px, env(safe-area-inset-top))" }}>
+    <div className="px-4 pt-safe-or-6 pb-4 space-y-3" style={{ paddingTop: "max(24px, env(safe-area-inset-top))" }}>
       {/* Top Bar */}
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex items-center justify-between gap-2">
         {/* Avatar + Greeting */}
-        <div className="flex items-center gap-3 min-w-0">
+        <div className="flex items-center gap-2.5 min-w-0">
           <motion.div
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ type: "spring", stiffness: 300, damping: 24 }}
-            className="relative w-11 h-11 rounded-2xl overflow-hidden border-2 border-white dark:border-zinc-800 shadow-md shrink-0 bg-gradient-to-br from-indigo-500 to-violet-600"
+            className="relative w-10 h-10 rounded-2xl overflow-hidden border-2 border-white dark:border-zinc-800 shadow-md shrink-0 bg-gradient-to-br from-indigo-500 to-violet-600"
           >
             {isLoaded && user?.imageUrl ? (
               <Image src={user.imageUrl} alt="Avatar" fill className="object-cover" />
@@ -103,25 +103,25 @@ function MobileAspirantHeader({ streak }: { streak: number }) {
           </motion.div>
 
           <div className="min-w-0">
-            <p className="text-[10px] font-bold text-zinc-400 dark:text-zinc-505 font-poppins uppercase tracking-widest leading-none mb-0.5">
+            <p className="text-[10px] font-bold text-zinc-400 dark:text-zinc-500 font-poppins uppercase tracking-widest leading-none mb-0.5">
               {greeting}
             </p>
-            <p className="text-[17px] font-black font-cabin tracking-tight text-zinc-900 dark:text-zinc-50 leading-tight truncate">
+            <p className="text-[15px] font-black font-cabin tracking-tight text-zinc-900 dark:text-zinc-50 leading-tight truncate">
               {firstName ?? (
-                <span className="inline-block w-24 h-4 bg-zinc-100 dark:bg-zinc-800 rounded-md animate-pulse" />
+                <span className="inline-block w-20 h-4 bg-zinc-100 dark:bg-zinc-800 rounded-md animate-pulse" />
               )}
             </p>
           </div>
         </div>
 
         {/* Action icons */}
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex items-center gap-1.5 shrink-0">
           {streak > 0 && (
             <motion.div
               initial={{ scale: 0, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ type: "spring", stiffness: 400, damping: 20, delay: 0.15 }}
-              className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200/60 dark:border-amber-800/40"
+              className="flex items-center gap-1 px-2 py-1.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200/60 dark:border-amber-800/40"
             >
               <span className="text-sm leading-none">🔥</span>
               <span className="text-[11px] font-black font-cabin text-amber-600 dark:text-amber-400">{streak}</span>
@@ -130,7 +130,7 @@ function MobileAspirantHeader({ streak }: { streak: number }) {
 
           <Link
             href="/dashboard/ai"
-            className="flex items-center gap-1.5 bg-zinc-900 dark:bg-white hover:bg-zinc-800 dark:hover:bg-zinc-100 text-white dark:text-zinc-900 px-3.5 py-2 rounded-xl text-[10px] font-black font-cabin uppercase tracking-widest transition-all active:scale-95 shadow-sm"
+            className="flex items-center gap-1.5 bg-zinc-900 dark:bg-white hover:bg-zinc-800 dark:hover:bg-zinc-100 text-white dark:text-zinc-900 px-3 py-2 rounded-xl text-[10px] font-black font-cabin uppercase tracking-widest transition-all active:scale-95 shadow-sm"
           >
             <Sparkles className="w-3.5 h-3.5" />
             AI
@@ -147,9 +147,9 @@ function MobileAspirantHeader({ streak }: { streak: number }) {
 
       {/* Search Hint Bar */}
       <Link href="/library" className="block">
-        <div className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-zinc-100 dark:bg-zinc-900 border border-zinc-200/60 dark:border-zinc-800/60 hover:bg-zinc-200/60 dark:hover:bg-zinc-800/60 transition-colors active:scale-[0.98]">
-          <Search className="w-4 h-4 text-zinc-400 dark:text-zinc-505 shrink-0" />
-          <span className="text-sm text-zinc-400 dark:text-zinc-505 font-poppins select-none">
+        <div className="flex items-center gap-3 px-3.5 py-2.5 rounded-2xl bg-zinc-100 dark:bg-zinc-900 border border-zinc-200/60 dark:border-zinc-800/60 hover:bg-zinc-200/60 dark:hover:bg-zinc-800/60 transition-colors active:scale-[0.98]">
+          <Search className="w-4 h-4 text-zinc-400 dark:text-zinc-500 shrink-0" />
+          <span className="text-sm text-zinc-400 dark:text-zinc-500 font-poppins select-none">
             Search syllabus, mock materials...
           </span>
           <div className="ml-auto flex items-center gap-1">
@@ -197,7 +197,7 @@ function MobileAspirantKPIStrip({ stats, isLoading }: { stats: Stats | null; isL
   ];
 
   return (
-    <div className="grid grid-cols-4 gap-2.5 mx-5">
+    <div className="grid grid-cols-4 gap-2 mx-4">
       {kpiItems.map(({ icon: Icon, value, label, color, bg }, i) => (
         <motion.div
           key={label}
@@ -263,7 +263,7 @@ function AspirantQuickActions() {
   ];
 
   return (
-    <div className="grid grid-cols-4 gap-3">
+    <div className="grid grid-cols-4 gap-2 sm:gap-3">
       {actions.map((action, i) => (
         <motion.div
           key={i}
@@ -273,10 +273,10 @@ function AspirantQuickActions() {
         >
           <Link
             href={action.href}
-            className={`flex flex-col items-center gap-2.5 p-3 rounded-2xl border ${action.border} ${action.bg} hover:scale-[1.04] active:scale-95 transition-all duration-200 group`}
+            className={`flex flex-col items-center gap-2 p-2.5 sm:p-3 rounded-2xl border ${action.border} ${action.bg} hover:scale-[1.04] active:scale-95 transition-all duration-200 group`}
           >
-            <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-white dark:bg-zinc-900 shadow-sm border border-inherit group-hover:shadow-md transition-shadow">
-              <action.icon className={`w-5 h-5 ${action.color}`} strokeWidth={2} />
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center bg-white dark:bg-zinc-900 shadow-sm border border-inherit group-hover:shadow-md transition-shadow">
+              <action.icon className={`w-4 h-4 sm:w-5 sm:h-5 ${action.color}`} strokeWidth={2} />
             </div>
             <div className="text-center">
               <p className={`text-[9px] font-black font-cabin uppercase tracking-wider ${action.color}`}>
@@ -320,28 +320,28 @@ export default function MobileAspirantDashboard() {
       {/* Main Content */}
       <div className="flex flex-col gap-7 pt-2">
         {/* 1. Carousel Section */}
-        <section className="px-5">
+        <section className="px-4">
           <MobileStudyCarousel />
         </section>
 
         {/* 2. KPI Stats */}
         <section>
-          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400 dark:text-zinc-505 font-cabin px-5 mb-3">
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400 dark:text-zinc-500 font-cabin px-4 mb-3">
             Exam Metrics
           </p>
           <MobileAspirantKPIStrip stats={stats} isLoading={statsLoading} />
         </section>
 
         {/* 3. Quick Actions */}
-        <section className="px-5">
-          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400 dark:text-zinc-505 font-cabin mb-3">
+        <section className="px-4">
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400 dark:text-zinc-500 font-cabin mb-3">
             Quick Access
           </p>
           <AspirantQuickActions />
         </section>
 
         {/* 4. Subject Combination */}
-        <section className="px-5">
+        <section className="px-4">
           <div className="bg-white dark:bg-zinc-900 rounded-[22px] p-6 shadow-sm border border-zinc-100 dark:border-zinc-800/60">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-sm font-black font-cabin tracking-tight text-zinc-900 dark:text-zinc-50 flex items-center gap-1.5">
@@ -403,7 +403,7 @@ export default function MobileAspirantDashboard() {
         </section>
 
         {/* 5. Claim Your Future */}
-        <section className="px-5">
+        <section className="px-4">
           <div className="p-6 rounded-[22px] bg-gradient-to-br from-indigo-600 via-violet-600 to-purple-700 text-white shadow-xl relative overflow-hidden flex flex-col justify-between">
             <div className="absolute -top-10 -right-10 w-32 h-32 bg-white/10 rounded-full blur-xl" />
             <div className="relative z-10 mb-4">
@@ -432,7 +432,7 @@ export default function MobileAspirantDashboard() {
 
         {/* 6. Recent CBT Attempts */}
         {stats && stats.recentAttempts.length > 0 && (
-          <section className="px-5">
+          <section className="px-4">
             <div className="bg-white dark:bg-zinc-900 rounded-[22px] p-6 shadow-sm border border-zinc-100 dark:border-zinc-800/60">
               <h2 className="text-sm font-black font-cabin tracking-tight text-zinc-900 dark:text-zinc-50 mb-4">
                 Recent Mock Attempts
@@ -469,18 +469,18 @@ export default function MobileAspirantDashboard() {
         )}
 
         {/* 7. Post-UTME Simulator Card & Mentorship Card */}
-        <section className="grid grid-cols-2 gap-4 px-5">
+        <section className="grid grid-cols-2 gap-3 px-4">
           {/* UTME Simulator */}
-          <div className="bg-white dark:bg-zinc-900 rounded-[22px] p-5 shadow-sm border border-zinc-100 dark:border-zinc-800/60 relative overflow-hidden flex flex-col justify-between">
+          <div className="bg-white dark:bg-zinc-900 rounded-[22px] p-4 shadow-sm border border-zinc-100 dark:border-zinc-800/60 relative overflow-hidden flex flex-col justify-between">
             <div>
-              <div className="w-9 h-9 bg-indigo-600 rounded-xl flex items-center justify-center mb-3.5 shadow-md shadow-indigo-500/20">
+              <div className="w-8 h-8 bg-indigo-600 rounded-xl flex items-center justify-center mb-3 shadow-md shadow-indigo-500/20">
                 <Brain className="w-4 h-4 text-white" />
               </div>
               <h3 className="text-xs font-black font-cabin tracking-tight text-zinc-900 dark:text-zinc-50 mb-1">
                 Post-UTME Mock
               </h3>
-              <p className="text-[10px] text-zinc-500 leading-relaxed mb-4">
-                Timed mock exams based on real syllabus questions.
+              <p className="text-[10px] text-zinc-500 leading-relaxed mb-3">
+                Timed mock exams based on real syllabus.
               </p>
             </div>
             <Link href="/cbt" className="w-full">
@@ -492,15 +492,15 @@ export default function MobileAspirantDashboard() {
           </div>
 
           {/* Mentorship */}
-          <div className="bg-white dark:bg-zinc-900 rounded-[22px] p-5 shadow-sm border border-zinc-100 dark:border-zinc-800/60 flex flex-col justify-between">
+          <div className="bg-white dark:bg-zinc-900 rounded-[22px] p-4 shadow-sm border border-zinc-100 dark:border-zinc-800/60 flex flex-col justify-between">
             <div>
-              <div className="w-9 h-9 bg-emerald-100 dark:bg-emerald-900/30 rounded-xl flex items-center justify-center mb-3.5">
+              <div className="w-8 h-8 bg-emerald-100 dark:bg-emerald-900/30 rounded-xl flex items-center justify-center mb-3">
                 <Users className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
               </div>
               <h3 className="text-xs font-black font-cabin tracking-tight text-zinc-900 dark:text-zinc-50 mb-1">
                 Find a Mentor
               </h3>
-              <p className="text-[10px] text-zinc-500 leading-relaxed mb-4">
+              <p className="text-[10px] text-zinc-500 leading-relaxed mb-3">
                 Talk to undergrads studying your course.
               </p>
             </div>
@@ -513,7 +513,7 @@ export default function MobileAspirantDashboard() {
         </section>
 
         {/* 8. Locked Premium Resources */}
-        <section className="px-5">
+        <section className="px-4">
           <div className="relative bg-white dark:bg-zinc-900 rounded-[22px] p-5 shadow-sm border border-zinc-100 dark:border-zinc-800/60 overflow-hidden">
             {/* Blur Overlay */}
             <div className="absolute inset-0 backdrop-blur-[3px] bg-white/60 dark:bg-black/60 z-10 flex flex-col items-center justify-center p-4 text-center rounded-[22px]">

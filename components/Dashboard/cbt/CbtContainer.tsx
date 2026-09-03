@@ -139,7 +139,7 @@ export default function CbtContainer() {
   };
 
   return (
-    <div className="w-full h-full p-6">
+    <div className="w-full h-full p-3 sm:p-6">
       {stage === "instructions" && <CbtInstructions onStart={handleStart} />}
       {stage === "setup" && (
         <CbtSetup

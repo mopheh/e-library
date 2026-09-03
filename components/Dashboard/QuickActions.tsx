@@ -52,7 +52,7 @@ export default function QuickActions({ hideSectionLabel }: { hideSectionLabel?: 
           Quick Access
         </p>
       )}
-      <div className="grid grid-cols-4 gap-3">
+      <div className="grid grid-cols-4 gap-2 sm:gap-3">
         {actions.map((action, i) => (
           <motion.div
             key={i}
@@ -62,10 +62,10 @@ export default function QuickActions({ hideSectionLabel }: { hideSectionLabel?: 
           >
             <Link
               href={action.href}
-              className={`flex flex-col items-center gap-2.5 p-3.5 rounded-2xl border ${action.border} ${action.bg} hover:scale-[1.04] active:scale-95 transition-all duration-200 group`}
+              className={`flex flex-col items-center gap-2 p-2.5 sm:p-3.5 rounded-2xl border ${action.border} ${action.bg} hover:scale-[1.04] active:scale-95 transition-all duration-200 group`}
             >
-              <div className={`w-10 h-10 rounded-xl flex items-center justify-center bg-white dark:bg-zinc-900 shadow-sm border ${action.border} group-hover:shadow-md transition-shadow`}>
-                <action.icon className={`w-5 h-5 ${action.color}`} strokeWidth={2} />
+              <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center bg-white dark:bg-zinc-900 shadow-sm border ${action.border} group-hover:shadow-md transition-shadow`}>
+                <action.icon className={`w-4 h-4 sm:w-5 sm:h-5 ${action.color}`} strokeWidth={2} />
               </div>
               <div className="text-center">
                 <p className={`text-[8px] sm:text-[11px] font-black font-cabin uppercase tracking-wider ${action.color}`}>

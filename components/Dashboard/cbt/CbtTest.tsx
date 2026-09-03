@@ -55,8 +55,8 @@ export default function CbtTest({
 
         {/* Main Content */}
         <div className="col-span-1 lg:col-span-9 flex flex-col space-y-6">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white dark:bg-zinc-950 p-4 rounded-xl border border-zinc-200 dark:border-zinc-800">
-                <div className="w-full sm:w-auto flex-1 mr-4">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4 bg-white dark:bg-zinc-950 p-3 sm:p-4 rounded-xl border border-zinc-200 dark:border-zinc-800">
+                <div className="w-full sm:w-auto flex-1 sm:mr-4">
                      <div className="flex justify-between text-xs text-zinc-500 mb-2">
                         <span>Progress</span>
                         <span>{Math.round(progress)}%</span>

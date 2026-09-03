@@ -49,7 +49,7 @@ function MobileKPIStrip() {
   ];
 
   return (
-    <div className="mx-5 grid grid-cols-4 gap-2.5">
+    <div className="mx-4 grid grid-cols-4 gap-2">
       {stats.map(({ icon: Icon, value, label, color, bg }, i) => (
         <motion.div
           key={label}
@@ -80,7 +80,7 @@ function MobileKPIStrip() {
 // ── Section header ─────────────────────────────────────────────
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400 dark:text-zinc-500 font-cabin px-5 mb-3">
+    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400 dark:text-zinc-500 font-cabin px-4 mb-3">
       {children}
     </p>
   );
@@ -104,7 +104,7 @@ export default function MobileDashboard() {
       <div className="flex flex-col gap-7 pt-2">
 
         {/* 1. Carousel Section */}
-        <section className="px-5" data-tour="mobile-carousel">
+        <section className="px-4" data-tour="mobile-carousel">
           <MobileStudyCarousel />
         </section>
 
@@ -115,7 +115,7 @@ export default function MobileDashboard() {
         </section>
 
         {/* 3. Quick Actions */}
-        <section className="px-5" data-tour="mobile-quick-actions">
+        <section className="px-4" data-tour="mobile-quick-actions">
           <SectionLabel>Quick Access</SectionLabel>
           <QuickActions hideSectionLabel />
         </section>
@@ -127,7 +127,7 @@ export default function MobileDashboard() {
         </section>
 
         {/* 5. Streak Tracker — DO NOT TOUCH */}
-        <section className="px-5" data-tour="mobile-streak">
+        <section className="px-4" data-tour="mobile-streak">
           <SectionLabel>Study Streak</SectionLabel>
           <StreakTracker />
         </section>
@@ -135,7 +135,7 @@ export default function MobileDashboard() {
         {/* 6. Continue Reading */}
         <section>
           <SectionLabel>Resume</SectionLabel>
-          <div className="mx-5 bg-white dark:bg-zinc-900 rounded-[22px] border border-zinc-100 dark:border-zinc-800/60 shadow-sm overflow-hidden">
+          <div className="mx-4 bg-white dark:bg-zinc-900 rounded-[22px] border border-zinc-100 dark:border-zinc-800/60 shadow-sm overflow-hidden">
             <ContinueReading />
           </div>
         </section>

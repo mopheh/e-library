@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useUserData } from "@/hooks/useUsers";
 import ResourceRequestsTable from "@/components/adminDashboard/ResourceRequestsTable";
 import PendingBooksTable from "@/components/adminDashboard/PendingBooksTable";
@@ -10,10 +10,10 @@ import CourseManagement from "@/components/adminDashboard/CourseManagement";
 import AspirantManagement from "@/components/adminDashboard/AspirantManagement";
 import AcademicScheduleManager from "@/components/adminDashboard/AcademicScheduleManager";
 import CourseCbtQuestionManager from "@/components/adminDashboard/CourseCbtQuestionManager";
-import { 
-    LayoutDashboard, 
-    Link as LinkIcon, 
-    ShieldCheck, 
+import {
+    LayoutDashboard,
+    Link as LinkIcon,
+    ShieldCheck,
     Settings,
     Users,
     ChevronRight,
@@ -21,13 +21,54 @@ import {
     BookOpen,
     Database,
     GraduationCap,
-    Calendar
+    Calendar,
+    Download,
+    FileSpreadsheet,
+    Loader2
 } from "lucide-react";
 import Link from "next/link";
 
 export default function FacultyManagementPage() {
     const { data: userData } = useUserData();
     const [activeTab, setActiveTab] = useState<"overview" | "requests" | "uploads" | "announcements" | "courses" | "aspirants" | "schedule" | "data" | "coursecbt">("overview");
+    const [exporting, setExporting] = useState<string | null>(null);
+    const [showExportMenu, setShowExportMenu] = useState(false);
+
+    const exportRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        const handleClickOutside = (e: MouseEvent) => {
+            if (exportRef.current && !exportRef.current.contains(e.target as Node)) {
+                setShowExportMenu(false);
+            }
+        };
+        if (showExportMenu) {
+            document.addEventListener("mousedown", handleClickOutside);
+        }
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, [showExportMenu]);
+
+    const handleExport = async (type: "students" | "activity") => {
+        setExporting(type);
+        setShowExportMenu(false);
+        try {
+            const res = await fetch(`/api/admin/export?type=${type}`);
+            if (!res.ok) throw new Error("Export failed");
+            const blob = await res.blob();
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = res.headers.get("content-disposition")?.match(/filename="(.+)"/)?.[1] || `${type}-report.csv`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            URL.revokeObjectURL(url);
+        } catch {
+            alert("Failed to generate report. Please try again.");
+        } finally {
+            setExporting(null);
+        }
+    };
 
     if (!userData || (userData.role !== "ADMIN" && userData.role !== "FACULTY REP")) {
         return (
@@ -48,12 +89,56 @@ export default function FacultyManagementPage() {
             {/* Header section with Stats or Welcome */}
             <div className="bg-zinc-900 dark:bg-zinc-50 rounded-[3rem] p-10 md:p-14 text-white dark:text-zinc-900 shadow-2xl shadow-zinc-900/20 relative overflow-hidden group">
                 <div className="relative z-10">
-                    <h1 className="text-4xl md:text-5xl font-black mb-4 font-cabin uppercase tracking-tighter">Management</h1>
-                    <p className="text-zinc-400 dark:text-zinc-500 max-w-xl font-normal text-sm leading-relaxed">
-                        {isAdmin 
-                            ? "Platform-wide control center for managing faculties, departments, and academic resources." 
-                            : `Central management for the Faculty of ${userData.facultyName || 'Your Assigned Faculty'}.`}
-                    </p>
+                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+                        <div>
+                            <h1 className="text-4xl md:text-5xl font-black mb-4 font-cabin uppercase tracking-tighter">Management</h1>
+                            <p className="text-zinc-400 dark:text-zinc-500 max-w-xl font-normal text-sm leading-relaxed">
+                                {isAdmin
+                                    ? "Platform-wide control center for managing faculties, departments, and academic resources."
+                                    : `Central management for the Faculty of ${userData.facultyName || 'Your Assigned Faculty'}.`}
+                            </p>
+                        </div>
+                        {isAdmin && (
+                            <div className="relative" ref={exportRef}>
+                                <button
+                                    onClick={() => setShowExportMenu(!showExportMenu)}
+                                    disabled={!!exporting}
+                                    className="flex items-center gap-2 px-5 py-2.5 bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl text-sm font-medium transition-all duration-200 disabled:opacity-50 whitespace-nowrap"
+                                >
+                                    {exporting ? (
+                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                    ) : (
+                                        <Download className="w-4 h-4" />
+                                    )}
+                                    {exporting ? "Generating..." : "Export Report"}
+                                </button>
+                                {showExportMenu && (
+                                    <div className="absolute right-0 top-full mt-2 bg-white dark:bg-zinc-900 rounded-xl shadow-2xl border border-zinc-200 dark:border-zinc-700 overflow-hidden z-50 min-w-[220px]">
+                                        <button
+                                            onClick={() => handleExport("students")}
+                                            className="flex items-center gap-3 w-full px-4 py-3 text-left text-sm text-zinc-700 dark:text-zinc-200 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
+                                        >
+                                            <Users className="w-4 h-4 text-blue-500" />
+                                            <div>
+                                                <p className="font-medium">Student Directory</p>
+                                                <p className="text-[11px] text-zinc-400">Names, emails, departments</p>
+                                            </div>
+                                        </button>
+                                        <button
+                                            onClick={() => handleExport("activity")}
+                                            className="flex items-center gap-3 w-full px-4 py-3 text-left text-sm text-zinc-700 dark:text-zinc-200 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
+                                        >
+                                            <FileSpreadsheet className="w-4 h-4 text-emerald-500" />
+                                            <div>
+                                                <p className="font-medium">Activity Report</p>
+                                                <p className="text-[11px] text-zinc-400">Reading, CBT scores, usage</p>
+                                            </div>
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </div>
                 </div>
                 {/* Decorative Elements */}
                 <div className="absolute top-0 right-0 -translate-y-4 translate-x-4 opacity-5 group-hover:scale-110 transition-transform">

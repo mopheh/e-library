@@ -97,7 +97,7 @@ export default function BottomNav({
       <div className="absolute inset-0 bg-white/80 dark:bg-zinc-950/90 backdrop-blur-2xl border-t border-zinc-200/60 dark:border-white/[0.06]" />
 
       {/* Nav items */}
-      <div className="relative flex items-center justify-around px-2 pt-2 pb-safe-or-3"
+      <div className="relative flex items-center justify-around px-1 pt-2 pb-safe-or-3"
            style={{ paddingBottom: "max(12px, env(safe-area-inset-bottom))" }}>
         {menuItems.map(({ name, icon: Icon, path, id }) => {
           const isActive =
@@ -108,7 +108,7 @@ export default function BottomNav({
             <button
               key={id}
               onClick={() => router.push(path)}
-              className="flex flex-col items-center gap-1 min-w-[52px] py-1 px-1 relative group"
+              className="flex flex-col items-center gap-1 min-w-0 flex-1 py-1 px-0.5 relative group"
               aria-label={name}
             >
               {/* Active background pill */}
@@ -162,7 +162,7 @@ export default function BottomNav({
 
         <button
           onClick={toggleSidebar}
-          className="flex flex-col items-center gap-1 min-w-[52px] py-1 px-1 relative group"
+          className="flex flex-col items-center gap-1 min-w-0 flex-1 py-1 px-0.5 relative group"
           aria-label="Menu"
         >
           <div className="relative z-10 flex flex-col items-center gap-0.5">

@@ -65,7 +65,7 @@ export default function WorkspacesPage() {
   const isLoading = userLoading || coursesLoading;
 
   return (
-    <div className="min-h-screen pb-28">
+    <div className="min-h-screen pb-28 px-3 sm:px-0">
 
       {/* ── Page Header ───────────────────────────────────────────── */}
       <div className="mb-6">
@@ -89,7 +89,7 @@ export default function WorkspacesPage() {
 
           {/* Stats + CTA */}
           {!isLoading && (
-            <div className="flex items-center gap-3 flex-shrink-0 flex-wrap">
+            <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0 flex-wrap">
               {/* Stat chips */}
               <div className="flex items-center gap-2 glass-card rounded-xl px-3 py-2">
                 <GraduationCap className="w-3.5 h-3.5 text-blue-500" />
@@ -129,26 +129,26 @@ export default function WorkspacesPage() {
       </div>
 
       {/* ── AI Banner ─────────────────────────────────────────────── */}
-      <div className="glass-card rounded-2xl p-4 mb-6 flex items-center gap-4 overflow-hidden relative">
+      <div className="glass-card rounded-2xl p-3 sm:p-4 mb-6 flex items-center gap-3 sm:gap-4 overflow-hidden relative">
         <div className="absolute right-0 top-0 w-40 h-full bg-gradient-to-l from-blue-50/50 dark:from-blue-950/10 to-transparent pointer-events-none" />
-        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-violet-600 flex items-center justify-center flex-shrink-0 shadow-sm">
-          <Brain className="w-5 h-5 text-white" />
+        <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-blue-600 to-violet-600 flex items-center justify-center flex-shrink-0 shadow-sm">
+          <Brain className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-xs font-bold text-zinc-900 dark:text-zinc-100 font-poppins">AI-Powered Study Assistant</p>
-          <p className="text-[11px] text-zinc-500 leading-relaxed mt-0.5">
+          <p className="text-xs font-bold text-zinc-900 dark:text-zinc-100 font-poppins">AI Study Assistant</p>
+          <p className="text-[11px] text-zinc-500 leading-relaxed mt-0.5 hidden sm:block">
             Open any workspace and your AI tutor has read every material — ask questions, get summaries, generate practice tests.
           </p>
         </div>
-        <div className="flex items-center gap-1.5 text-[10px] font-semibold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 rounded-full px-2.5 py-1 flex-shrink-0 font-poppins">
+        <div className="flex items-center gap-1.5 text-[10px] font-semibold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 rounded-full px-2 sm:px-2.5 py-1 flex-shrink-0 font-poppins">
           <Sparkles className="w-3 h-3" />
-          RAG Active
+          <span className="hidden sm:inline">RAG</span> Active
         </div>
       </div>
 
       {/* ── Semester Tabs + Toolbar ────────────────────────────────── */}
-      <div className="flex items-center justify-between gap-4 mb-6">
-        <div className="flex items-center gap-1 bg-zinc-100 dark:bg-zinc-800/60 rounded-xl p-1">
+      <div className="flex items-center justify-between gap-2 sm:gap-4 mb-6">
+        <div className="flex items-center gap-1 bg-zinc-100 dark:bg-zinc-800/60 rounded-xl p-1 min-w-0">
           <SemesterTab
             active={activeSemester === "FIRST"}
             label="1st Semester"

@@ -15,7 +15,7 @@ export const SemesterTab = ({
 }: SemesterTabProps) => (
   <button
     onClick={onClick}
-    className={`relative flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold font-poppins transition-all duration-200 ${
+    className={`relative flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-xl text-[11px] sm:text-xs font-semibold font-poppins transition-all duration-200 whitespace-nowrap ${
       active
         ? "bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white shadow-md shadow-black/5 dark:shadow-black/30 border border-zinc-200 dark:border-zinc-700"
         : "text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 hover:bg-white/60 dark:hover:bg-zinc-900/60"

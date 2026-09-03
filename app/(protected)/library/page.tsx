@@ -25,7 +25,7 @@ import { Ghost, MailPlus, Loader2 } from "lucide-react";
 import { Book } from "@/types";
 
 const BooksGridSkeleton = () => (
-   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+   <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
       {[1,2,3,4,5,6,7,8].map((i) => (
          <div key={i} className="flex flex-col gap-3 p-4 border border-zinc-200 dark:border-zinc-800 rounded-2xl">
             <div className="flex justify-between w-full">
@@ -53,14 +53,14 @@ const EmptyState = ({ onReset }: { onReset: () => void }) => (
       <p className="text-xs font-poppins text-zinc-500 max-w-md mb-8">
          We couldn&apos;t find any resources matching your exact criteria. Try adjusting your filters or request this material.
       </p>
-      <div className="flex items-center gap-4">
-         <button 
+      <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4 w-full sm:w-auto">
+         <button
             onClick={onReset}
-            className="text-xs font-normal font-poppins text-zinc-900 dark:text-white bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 px-6 py-2.5 rounded-xl shadow-sm hover:bg-zinc-50 dark:hover:bg-zinc-700 transition"
+            className="text-xs font-normal font-poppins text-zinc-900 dark:text-white bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 px-6 py-2.5 rounded-xl shadow-sm hover:bg-zinc-50 dark:hover:bg-zinc-700 transition w-full sm:w-auto"
          >
             Clear all filters
          </button>
-         <button className="text-xs font-normal font-poppins text-white bg-blue-600 px-6 py-2.5 rounded-xl shadow-sm hover:bg-blue-700 flex items-center gap-2 transition">
+         <button className="text-xs font-normal font-poppins text-white bg-blue-600 px-6 py-2.5 rounded-xl shadow-sm hover:bg-blue-700 flex items-center justify-center gap-2 transition w-full sm:w-auto">
             <MailPlus className="w-4 h-4" /> Request Resource
          </button>
       </div>
@@ -148,7 +148,7 @@ const Page = () => {
          onFilterClick={handleQuickFilter}
       />
 
-      <div className="flex-1 w-full max-w-[1400px] mx-auto p-4 md:p-8 flex flex-col lg:flex-row gap-8">
+      <div className="flex-1 w-full max-w-[1400px] mx-auto px-3 py-4 sm:p-4 md:p-8 flex flex-col lg:flex-row gap-6 sm:gap-8">
          <LibrarySidebar 
            department={department}
            setDepartment={setDepartment}
@@ -168,7 +168,7 @@ const Page = () => {
                <EmptyState onReset={() => { setType("All"); setLevel(""); setSearchQuery(""); setDepartment(""); }} />
             ) : (
                <div className="space-y-10 pb-10">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
                     {booksData.books.map((book: Book) => (
                       <LibrarySaaSCard key={book.id} book={book} onPreview={setSelectedBook} />
                     ))}

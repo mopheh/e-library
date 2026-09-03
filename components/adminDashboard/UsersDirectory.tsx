@@ -10,11 +10,18 @@ import {
   Bot,
   ChevronLeft,
   ChevronRight,
+  MoreVertical,
+  ShieldCheck,
+  ShieldOff,
+  UserCog,
+  Loader2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useUsersDirectory } from "@/hooks/useUsers";
 import { useFaculties } from "@/hooks/useFaculties";
 import { SkeletonRow } from "@/components/adminDashboard/SkeletonRow";
+import { useQueryClient } from "@tanstack/react-query";
+import { useUser } from "@clerk/nextjs";
 
 const ROLE_STYLES: Record<string, string> = {
   STUDENT: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300",
@@ -57,14 +64,131 @@ function formatJoinDate(value?: string | Date | null) {
 
 const ROLE_OPTIONS = ["ALL", "STUDENT", "ADMIN", "FACULTY REP", "ASPIRANT"] as const;
 
+function RoleMenu({
+  user,
+  onRoleChange,
+  isUpdating,
+  currentClerkId,
+}: {
+  user: any;
+  onRoleChange: (userId: string, role: string) => void;
+  isUpdating: string | null;
+  currentClerkId?: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = React.useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    if (open) document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [open]);
+
+  const isSelf = user.clerkId === currentClerkId;
+  const busy = isUpdating === user.id;
+
+  const roles = [
+    { value: "ADMIN", label: "Make Admin", icon: ShieldCheck, color: "text-rose-500" },
+    { value: "FACULTY REP", label: "Make Faculty Rep", icon: UserCog, color: "text-amber-500" },
+    { value: "STUDENT", label: "Set as Student", icon: Users, color: "text-blue-500" },
+  ];
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        onClick={() => setOpen(!open)}
+        disabled={busy}
+        className="p-1.5 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors disabled:opacity-50"
+      >
+        {busy ? (
+          <Loader2 className="w-4 h-4 animate-spin text-zinc-400" />
+        ) : (
+          <MoreVertical className="w-4 h-4 text-zinc-400" />
+        )}
+      </button>
+      {open && (
+        <div className="absolute right-0 top-full mt-1 bg-white dark:bg-zinc-900 rounded-xl shadow-2xl border border-zinc-200 dark:border-zinc-700 overflow-hidden z-50 min-w-[180px] py-1">
+          <div className="px-3 py-2 border-b border-zinc-100 dark:border-zinc-800">
+            <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Change Role</p>
+          </div>
+          {roles.map((r) => {
+            const isCurrentRole = user.role === r.value;
+            return (
+              <button
+                key={r.value}
+                disabled={isCurrentRole || isSelf}
+                onClick={() => {
+                  setOpen(false);
+                  onRoleChange(user.id, r.value);
+                }}
+                className={`flex items-center gap-2.5 w-full px-3 py-2.5 text-left text-xs transition-colors ${
+                  isCurrentRole
+                    ? "bg-zinc-50 dark:bg-zinc-800/50 text-zinc-400 cursor-default"
+                    : isSelf
+                    ? "text-zinc-300 dark:text-zinc-600 cursor-not-allowed"
+                    : "text-zinc-700 dark:text-zinc-200 hover:bg-zinc-50 dark:hover:bg-zinc-800"
+                }`}
+              >
+                <r.icon className={`w-3.5 h-3.5 ${isCurrentRole ? "text-zinc-300" : r.color}`} />
+                <span className="font-medium">{r.label}</span>
+                {isCurrentRole && (
+                  <span className="ml-auto text-[9px] font-bold text-zinc-400 uppercase">Current</span>
+                )}
+              </button>
+            );
+          })}
+          {isSelf && (
+            <p className="px-3 py-2 text-[9px] text-zinc-400 border-t border-zinc-100 dark:border-zinc-800">
+              You cannot change your own role
+            </p>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 const UsersDirectory: React.FC = () => {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState<string>("ALL");
   const [facultyFilter, setFacultyFilter] = useState<string>("ALL");
+  const [updatingUserId, setUpdatingUserId] = useState<string | null>(null);
   const limit = 20;
 
+  const queryClient = useQueryClient();
+  const { user: clerkUser } = useUser();
   const { data: faculties } = useFaculties(1, 100);
+
+  const handleRoleChange = async (userId: string, newRole: string) => {
+    const roleLabel =
+      newRole === "FACULTY REP"
+        ? "Faculty Rep"
+        : newRole === "ADMIN"
+        ? "Admin"
+        : "Student";
+
+    if (!confirm(`Are you sure you want to change this user's role to ${roleLabel}?`)) return;
+
+    setUpdatingUserId(userId);
+    try {
+      const res = await fetch("/api/admin/role", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId, role: newRole }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to update role");
+      toast.success(`Role updated to ${roleLabel}`);
+      queryClient.invalidateQueries({ queryKey: ["usersDirectory"] });
+    } catch (err: any) {
+      toast.error(err.message || "Failed to update role");
+    } finally {
+      setUpdatingUserId(null);
+    }
+  };
 
   const { data, isLoading, isFetching, isError, error } = useUsersDirectory({
     page,
@@ -219,6 +343,14 @@ const UsersDirectory: React.FC = () => {
               <div className="hidden xl:block shrink-0 w-24 text-right">
                 <p className="text-[10px] text-zinc-400 font-poppins">{formatJoinDate(user.createdAt)}</p>
               </div>
+
+              {/* Role actions */}
+              <RoleMenu
+                user={user}
+                onRoleChange={handleRoleChange}
+                isUpdating={updatingUserId}
+                currentClerkId={clerkUser?.id}
+              />
             </motion.div>
           ))
         )}

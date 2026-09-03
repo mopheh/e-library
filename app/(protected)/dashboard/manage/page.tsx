@@ -87,7 +87,7 @@ export default function FacultyManagementPage() {
     return (
         <div className="space-y-12 font-poppins pb-20 italic-none">
             {/* Header section with Stats or Welcome */}
-            <div className="bg-zinc-900 dark:bg-zinc-50 rounded-[3rem] p-10 md:p-14 text-white dark:text-zinc-900 shadow-2xl shadow-zinc-900/20 relative overflow-hidden group">
+            <div className="bg-zinc-900 dark:bg-zinc-50 rounded-[3rem] p-10 md:p-14 text-white dark:text-zinc-900 shadow-2xl shadow-zinc-900/20 relative group">
                 <div className="relative z-10">
                     <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
                         <div>

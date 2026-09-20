@@ -4,6 +4,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { eq, and, not } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { clerkClient } from "@clerk/nextjs/server";
+import * as Sentry from "@sentry/nextjs";
 
 export async function GET(req: Request) {
   try {
@@ -49,6 +50,7 @@ export async function GET(req: Request) {
 
     return NextResponse.json({ rep });
   } catch (error) {
+    Sentry.captureException(error);
     console.error("Error fetching faculty rep:", error);
     return NextResponse.json(
       { error: "Failed to fetch faculty rep" },

@@ -35,7 +35,7 @@ const CustomList = ({
         </button>
       </div>
       {children}
-      <FormModal open={open} setOpen={setOpen}>
+      <FormModal open={open} setOpen={setOpen} size={name === "Books" ? "lg" : "md"}>
         {name === "Books" && (
           <UploadBookForm department={department} setOpen={setOpen} />
         )}

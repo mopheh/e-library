@@ -4,6 +4,7 @@ import { questions, questionTopics, examInsights } from "@/database/schema";
 import { eq, inArray } from "drizzle-orm";
 import { generateContent } from "@/lib/ai";
 import { getCurrentUser } from "@/lib/auth";
+import * as Sentry from "@sentry/nextjs";
 
 export async function POST(
   req: Request,
@@ -97,6 +98,7 @@ export async function POST(
 
     return NextResponse.json({ insights: newInsights });
   } catch (error) {
+    Sentry.captureException(error);
     console.error("[POST /api/courses/[courseId]/insights]", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
@@ -120,6 +122,7 @@ export async function GET(
 
     return NextResponse.json(insights.reverse());
   } catch (error) {
+    Sentry.captureException(error);
     console.error("[GET /api/courses/[courseId]/insights]", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }

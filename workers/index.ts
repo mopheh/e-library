@@ -1,9 +1,10 @@
-import "./bootstrap";
+import { Sentry } from "./sentry";
 import { eq, sql, and, isNull, lt, lte, gte, SQL, desc, or } from "drizzle-orm";
 import { processJob } from "./processor";
-import { jobs, books, opportunities } from "@/database/schema";
+import { jobs, books, opportunities, verificationRequests } from "@/database/schema";
 import { db } from "./db";
 import { JobPayload } from "@/types";
+import { listB2ObjectsOlderThan, deleteB2Key, b2KeyFromUrl } from "@/lib/b2-delete";
 export const JOB_TYPES = [
   "parse_book",
   "generate_questions",
@@ -21,10 +22,26 @@ const POLL_INTERVAL = 3000;
 // this entire worker on a transient network blip with nothing to restart it.
 process.on("uncaughtException", (err) => {
   console.error("⚠️ Uncaught exception (worker staying alive):", err.message);
+  Sentry.captureException(err);
 });
 process.on("unhandledRejection", (reason: any) => {
   console.error("⚠️ Unhandled rejection (worker staying alive):", reason?.message ?? reason);
+  Sentry.captureException(reason instanceof Error ? reason : new Error(String(reason)));
 });
+
+// Dead-man's-switch: if this stops showing up in Sentry (Cron Monitoring,
+// slug "e-library-worker"), the worker process itself is down — as opposed
+// to a job failing, which is visible via the captures below regardless.
+// Requires creating a Cron Monitor with this slug in the Sentry project to
+// actually alert on a missed check-in; the call below is a no-op otherwise.
+const HEARTBEAT_INTERVAL_MS = 5 * 60 * 1000;
+function heartbeat() {
+  try {
+    Sentry.captureCheckIn({ monitorSlug: "e-library-worker", status: "ok" });
+  } catch (err) {
+    console.error("⚠️ Failed to send worker heartbeat:", err);
+  }
+}
 
 async function sleep(ms: number) {
   return new Promise((res) => setTimeout(res, ms));
@@ -64,8 +81,60 @@ async function reapOrphanedJobs() {
 
     if (orphans.length > 0) {
       console.error(`💀 Reaped ${orphans.length} orphaned job(s) stuck past max attempts.`);
+      // Orphaned jobs are evidence a worker instance died mid-job (crash/OOM/
+      // redeploy) - surface that in Sentry even though this sweep itself
+      // didn't throw, since nothing else would otherwise report it.
+      Sentry.captureMessage(`Reaped ${orphans.length} orphaned job(s) - a worker instance likely crashed mid-job`, "warning");
     }
   });
+}
+
+// A client can get a presigned B2 upload URL, upload the file straight to
+// B2, and then never call POST /api/books (or submit the verification form)
+// to actually register it - abandoned form, network drop, etc. Nothing else
+// ever points at that object, so left alone it sits in B2 forever, quietly
+// costing storage. This sweep finds and removes those orphans.
+const B2_ORPHAN_MIN_AGE_MS = 24 * 60 * 60 * 1000; // grace period — don't race an in-flight registration
+const B2_SWEEP_INTERVAL_MS = 6 * 60 * 60 * 1000;
+
+async function sweepOrphanedB2Uploads() {
+  const cutoff = new Date(Date.now() - B2_ORPHAN_MIN_AGE_MS);
+  const candidates = await listB2ObjectsOlderThan("books/", cutoff);
+  if (candidates.length === 0) return;
+
+  // Every upload through /api/b2 (book materials AND aspirant verification
+  // documents) is written under the same "books/" prefix, so both tables
+  // that can reference one need to be checked before anything is deleted.
+  const [bookRows, verificationRows] = await Promise.all([
+    db.select({ fileUrl: books.fileUrl }).from(books),
+    db.select({ proofUrl: verificationRequests.proofUrl }).from(verificationRequests),
+  ]);
+
+  const referencedKeys = new Set<string>();
+  for (const row of bookRows) {
+    const key = row.fileUrl ? b2KeyFromUrl(row.fileUrl) : null;
+    if (key) referencedKeys.add(key);
+  }
+  for (const row of verificationRows) {
+    const key = b2KeyFromUrl(row.proofUrl);
+    if (key) referencedKeys.add(key);
+  }
+
+  const orphanKeys = candidates.map((c) => c.key).filter((key) => !referencedKeys.has(key));
+  if (orphanKeys.length === 0) return;
+
+  let deleted = 0;
+  for (const key of orphanKeys) {
+    try {
+      await deleteB2Key(key);
+      deleted++;
+    } catch (err) {
+      console.error(`⚠️ Failed to delete orphaned B2 object ${key}:`, err);
+      Sentry.captureException(err);
+    }
+  }
+
+  console.log(`🧹 Swept ${deleted}/${orphanKeys.length} orphaned B2 upload(s) (uploaded but never registered).`);
 }
 
 const REMINDER_WINDOW_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
@@ -156,30 +225,53 @@ async function fetchNextJob() {
 async function run() {
   console.log("🟢 Worker started");
 
+  heartbeat();
+  setInterval(heartbeat, HEARTBEAT_INTERVAL_MS);
+
   try {
     await reapOrphanedJobs();
   } catch (err: any) {
     console.error("⚠️ Failed to reap orphaned jobs on startup:", err.message);
+    Sentry.captureException(err);
   }
 
   // Also sweep periodically, not just on startup - if a *different* worker
   // instance crashes, this one may stay up for a long time without a restart
   // of its own to trigger the startup sweep above.
   setInterval(() => {
-    reapOrphanedJobs().catch((err) => console.error("⚠️ Failed to reap orphaned jobs:", err.message));
+    reapOrphanedJobs().catch((err) => {
+      console.error("⚠️ Failed to reap orphaned jobs:", err.message);
+      Sentry.captureException(err);
+    });
   }, 10 * 60 * 1000);
 
   try {
     await checkExpiringScholarships();
   } catch (err: any) {
     console.error("⚠️ Failed to check expiring scholarships on startup:", err.message);
+    Sentry.captureException(err);
   }
 
   setInterval(() => {
-    checkExpiringScholarships().catch((err) =>
-      console.error("⚠️ Failed to check expiring scholarships:", err.message)
-    );
+    checkExpiringScholarships().catch((err) => {
+      console.error("⚠️ Failed to check expiring scholarships:", err.message);
+      Sentry.captureException(err);
+    });
   }, REMINDER_CHECK_INTERVAL_MS);
+
+  try {
+    await sweepOrphanedB2Uploads();
+  } catch (err: any) {
+    console.error("⚠️ Failed to sweep orphaned B2 uploads on startup:", err.message);
+    Sentry.captureException(err);
+  }
+
+  setInterval(() => {
+    sweepOrphanedB2Uploads().catch((err) => {
+      console.error("⚠️ Failed to sweep orphaned B2 uploads:", err.message);
+      Sentry.captureException(err);
+    });
+  }, B2_SWEEP_INTERVAL_MS);
 
   while (true) {
     let job;
@@ -190,6 +282,7 @@ async function run() {
       // there's no supervisor restarting it, so this is the only line of
       // defense against a permanently-dead job queue.
       console.error("⚠️ Failed to fetch next job, will retry:", err.message);
+      Sentry.captureException(err);
       await sleep(POLL_INTERVAL);
       continue;
     }
@@ -227,6 +320,10 @@ async function run() {
       try {
         const failed = (job.attempts + 1) >= job.maxAttempts;
 
+        Sentry.captureException(err, {
+          tags: { jobId: job.id, jobType: job.type, terminal: failed },
+        });
+
         await db
           .update(jobs)
           .set({
@@ -256,13 +353,18 @@ async function run() {
         }
       } catch (dbErr: any) {
         console.error(`⚠️ Failed to update job status in DB after error: ${dbErr.message}`);
+        Sentry.captureException(dbErr);
         // We don't throw here to avoid crashing the whole worker loop
       }
     }
   }
 }
 
-run().catch((err) => {
+run().catch(async (err) => {
   console.error("Worker crashed:", err);
+  Sentry.captureException(err, { tags: { fatal: true } });
+  // The process is about to exit - without this, the queued event above may
+  // never actually reach Sentry before the process dies.
+  await Sentry.flush(2000).catch(() => {});
   process.exit(1);
 });

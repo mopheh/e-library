@@ -3,6 +3,7 @@ import { db } from "@/database/drizzle";
 import { examSchedules, faculty } from "@/database/schema";
 import { eq, and, desc } from "drizzle-orm";
 import { requireRole } from "@/lib/auth";
+import * as Sentry from "@sentry/nextjs";
 
 // GET – list exam schedules, optionally by session/semester/faculty
 export async function GET(req: NextRequest) {
@@ -39,6 +40,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ schedules });
   } catch (err: any) {
+    Sentry.captureException(err);
     console.error("[GET /api/admin/exam-schedules]", err);
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
@@ -74,6 +76,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ schedule }, { status: 201 });
   } catch (err: any) {
+    Sentry.captureException(err);
     console.error("[POST /api/admin/exam-schedules]", err);
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
@@ -94,6 +97,7 @@ export async function DELETE(req: NextRequest) {
     await db.delete(examSchedules).where(eq(examSchedules.id, id));
     return NextResponse.json({ success: true });
   } catch (err: any) {
+    Sentry.captureException(err);
     console.error("[DELETE /api/admin/exam-schedules]", err);
     return NextResponse.json({ error: err.message }, { status: 500 });
   }

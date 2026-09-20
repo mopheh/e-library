@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/database/drizzle";
 import { departmentCommunities, communityPosts, users } from "@/database/schema";
 import { eq, desc } from "drizzle-orm";
+import * as Sentry from "@sentry/nextjs";
 
 export async function GET(req: Request) {
   try {
@@ -39,6 +40,7 @@ export async function GET(req: Request) {
 
     return NextResponse.json({ success: true, posts });
   } catch (error) {
+    Sentry.captureException(error);
     console.error("Fetch Community Error:", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }

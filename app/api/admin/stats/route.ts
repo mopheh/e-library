@@ -3,6 +3,7 @@ import { users, courses, books, readingSessions, departments, faculty, sessions 
 import { count, sql } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { requireRole } from "@/lib/auth";
+import * as Sentry from "@sentry/nextjs";
 
 export async function GET() {
   try {
@@ -45,6 +46,7 @@ export async function GET() {
         revenue: 0 // Placeholder
     });
   } catch (error) {
+    Sentry.captureException(error);
     console.error("Admin Stats Error:", error);
     return NextResponse.json(
       { error: "Internal Server Error" },

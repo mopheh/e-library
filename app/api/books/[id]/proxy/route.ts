@@ -4,6 +4,7 @@ import { books } from "@/database/schema";
 import { eq } from "drizzle-orm";
 import { authorizeB2, b2 } from "@/lib/utils";
 import { requireRole } from "@/lib/auth";
+import * as Sentry from "@sentry/nextjs";
 
 export async function GET(
   req: Request,
@@ -119,6 +120,7 @@ export async function GET(
     // Non-B2 URLs — just redirect
     return NextResponse.redirect(fileUrl);
   } catch (err: any) {
+    Sentry.captureException(err);
     console.error("[proxy] Unhandled error:", err?.message ?? err);
     return NextResponse.json(
       { error: "Internal server error", detail: err?.message },

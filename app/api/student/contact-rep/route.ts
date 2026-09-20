@@ -3,6 +3,7 @@ import { complaints, notifications } from "@/database/schema";
 import { getCurrentUser } from "@/lib/auth";
 import { pusherServer } from "@/lib/pusher";
 import { NextResponse } from "next/server";
+import * as Sentry from "@sentry/nextjs";
 
 export async function POST(req: Request) {
   try {
@@ -46,6 +47,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ success: true, complaint: newComplaint });
 
   } catch (error) {
+    Sentry.captureException(error);
     console.error("Error submitting complaint:", error);
     return NextResponse.json(
       { error: "Failed to submit message" },

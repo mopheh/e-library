@@ -3,6 +3,7 @@ import { courses, questions, studentCourses } from "@/database/schema";
 import { eq, sql } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
+import * as Sentry from "@sentry/nextjs";
 
 // Only the course list + counts are needed for the setup screen - the
 // question bank itself (which can run into the hundreds per course) is
@@ -29,6 +30,7 @@ export async function GET() {
 
         return NextResponse.json(coursesWithCounts);
     } catch (error) {
+        Sentry.captureException(error);
         console.error("Error fetching CBT courses:", error);
         return NextResponse.json(
             { error: "Failed to fetch courses" },

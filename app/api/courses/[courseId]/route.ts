@@ -3,6 +3,7 @@ import { db } from "@/database/drizzle";
 import { courses, courseDepartments, sessions, answers, questions, options } from "@/database/schema";
 import { eq, inArray } from "drizzle-orm";
 import { requireRole } from "@/lib/auth";
+import * as Sentry from "@sentry/nextjs";
 
 export async function GET(
   req: NextRequest,
@@ -31,6 +32,7 @@ export async function GET(
       borrowingDepartments: deptRows.map((r) => r.departmentId),
     });
   } catch (error: any) {
+    Sentry.captureException(error);
     console.error("[GET /api/courses/[courseId]]", error);
     return NextResponse.json(
       { error: error?.message || "Failed to fetch course" },
@@ -95,6 +97,7 @@ export async function PUT(
 
     return NextResponse.json({ message: "Course updated successfully" });
   } catch (error: any) {
+    Sentry.captureException(error);
     console.error("[PUT /api/courses/[courseId]]", error);
     return NextResponse.json(
       { error: error?.message || "Failed to update course" },
@@ -159,6 +162,7 @@ export async function DELETE(
 
     return NextResponse.json({ message: "Course deleted successfully" });
   } catch (error: any) {
+    Sentry.captureException(error);
     console.error("[DELETE /api/courses/[courseId]]", error);
     return NextResponse.json(
       { error: error?.message || "Failed to delete course" },

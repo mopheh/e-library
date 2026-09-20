@@ -4,6 +4,7 @@ import { db } from "@/database/drizzle";
 import { users, chatRooms } from "@/database/schema";
 import { eq, or, and } from "drizzle-orm";
 import { NextResponse } from "next/server";
+import * as Sentry from "@sentry/nextjs";
 
 export async function POST(req: Request) {
   try {
@@ -46,6 +47,7 @@ export async function POST(req: Request) {
     return NextResponse.json(authResponse);
 
   } catch (error) {
+    Sentry.captureException(error);
     console.error("Pusher Auth Error:", error);
     return new NextResponse("Internal Error", { status: 500 });
   }

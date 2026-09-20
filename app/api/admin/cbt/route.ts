@@ -4,6 +4,7 @@ import { postUtmeQuestions, postUtmeOptions } from "@/database/schema";
 import { eq, ilike, sql, and, inArray } from "drizzle-orm";
 import { requireRole } from "@/lib/auth";
 import { z } from "zod";
+import * as Sentry from "@sentry/nextjs";
 
 // ── Validation ─────────────────────────────────────────────────────────
 const optionSchema = z.object({
@@ -86,6 +87,7 @@ export async function GET(req: Request) {
       pagination: { page, limit, total: count, totalPages: Math.ceil(count / limit) },
     });
   } catch (error) {
+    Sentry.captureException(error);
     console.error("[GET /api/admin/cbt]", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
@@ -132,6 +134,7 @@ export async function POST(req: Request) {
       { status: 201 }
     );
   } catch (error) {
+    Sentry.captureException(error);
     console.error("[POST /api/admin/cbt]", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }

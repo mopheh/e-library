@@ -46,7 +46,6 @@ function Avatar({ fullName, imageUrl }: { fullName?: string; imageUrl?: string |
       style={{ background: "linear-gradient(135deg, #6366f1, #8b5cf6)" }}
     >
       {imageUrl ? (
-        // eslint-disable-next-line @next/next/no-img-element
         <img src={imageUrl} alt={fullName ?? ""} className="w-full h-full object-cover" />
       ) : (
         fullName?.charAt(0)?.toUpperCase() ?? "?"

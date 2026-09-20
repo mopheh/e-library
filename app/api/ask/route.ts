@@ -8,6 +8,7 @@ import { streamText, convertToModelMessages, ModelMessage, UIMessage } from "ai"
 import { google } from "@ai-sdk/google";
 import { withCache } from "@/lib/redis";
 import { getStudentContextBlock } from "@/lib/studentContext";
+import * as Sentry from "@sentry/nextjs";
 
 export async function POST(req: NextRequest) {
   try {
@@ -343,6 +344,7 @@ export async function POST(req: NextRequest) {
     return isLegacyFormat ? result.toTextStreamResponse() : result.toUIMessageStreamResponse();
 
   } catch (error: any) {
+    Sentry.captureException(error);
     console.error("[POST /api/ask]", error);
     return new Response(
       JSON.stringify({ error: error?.message || "Failed to process AI request" }),

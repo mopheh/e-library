@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/database/drizzle";
 import { bookPages } from "@/database/schema";
 import { eq } from "drizzle-orm";
+import * as Sentry from "@sentry/nextjs";
 
 export async function GET(
   req: NextRequest,
@@ -21,6 +22,7 @@ export async function GET(
 
     return NextResponse.json({ pages });
   } catch (err: any) {
+    Sentry.captureException(err);
     console.error("[GET /books/:bookId/pages]", err);
     return NextResponse.json(
       { error: err.message || "Failed to fetch pages" },

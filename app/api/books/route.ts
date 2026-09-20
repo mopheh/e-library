@@ -11,6 +11,7 @@ import { db } from "@/database/drizzle";
 import { and, eq, sql, desc, ilike, or } from "drizzle-orm";
 import { z } from "zod";
 import { requireRole, getCurrentUser } from "@/lib/auth";
+import * as Sentry from "@sentry/nextjs";
 
 const bookSchema = z.object({
   title: z.string().min(1, "Title is required").max(255),
@@ -142,6 +143,7 @@ export async function GET(req: NextRequest) {
       totalPages: Math.ceil(count / pageSize),
     });
   } catch (error) {
+    Sentry.captureException(error);
     console.error("[GET /api/books]", error);
     return NextResponse.json(
       { error: "Failed to fetch books" },
@@ -153,8 +155,7 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: Request) {
   try {
-    // Only ADMIN or FACULTY REP can upload materials
-    const authCheck = await requireRole(["ADMIN", "FACULTY REP"]);
+    const authCheck = await requireRole(["ADMIN", "FACULTY REP", "STUDENT"]);
     if (!authCheck.authorized) {
       return NextResponse.json({ error: authCheck.error }, { status: authCheck.status });
     }
@@ -206,6 +207,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json(createdBook, { status: 201 });
   } catch (error) {
+    Sentry.captureException(error);
     console.error("[POST /api/books]", error);
     return NextResponse.json(
       { error: "Failed to create book" },

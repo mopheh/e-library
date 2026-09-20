@@ -4,6 +4,7 @@ import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { desc, eq, and, gte, sql } from "drizzle-orm";
 import { subDays, format } from "date-fns";
+import * as Sentry from "@sentry/nextjs";
 
 export async function GET() {
   try {
@@ -88,6 +89,7 @@ export async function GET() {
 
     return NextResponse.json({ insights });
   } catch (error: any) {
+    Sentry.captureException(error);
     console.error("AI Insights fetch error:", error);
     return NextResponse.json({ error: "Failed to generate insights" }, { status: 500 });
   }

@@ -29,7 +29,6 @@ export default async function Image() {
             "radial-gradient(circle at 25% 20%, #0057e733 0%, transparent 50%), radial-gradient(circle at 80% 80%, #0057e71a 0%, transparent 50%)",
         }}
       >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={logoSrc} width={340} height={156} alt="" />
         <div
           style={{

@@ -4,6 +4,7 @@ import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { eq, and, gt, sql } from "drizzle-orm";
 import { z } from "zod";
+import * as Sentry from "@sentry/nextjs";
 
 const goalSchema = z.object({
   type: z.enum(["minutes_read", "books_read"], {
@@ -57,6 +58,7 @@ export async function GET() {
 
     return NextResponse.json(goalsWithProgress);
   } catch (error) {
+    Sentry.captureException(error);
     console.error("[GET /api/goals]", error);
     return NextResponse.json({ error: "Failed to fetch goals" }, { status: 500 });
   }
@@ -103,6 +105,7 @@ export async function POST(req: Request) {
       .returning();
     return NextResponse.json(newGoal, { status: 201 });
   } catch (error) {
+    Sentry.captureException(error);
     console.error("[POST /api/goals]", error);
     return NextResponse.json({ error: "Failed to create goal" }, { status: 500 });
   }

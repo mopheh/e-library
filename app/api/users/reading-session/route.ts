@@ -6,6 +6,7 @@ import { readingSessions, users } from "@/database/schema";
 import { auth } from "@clerk/nextjs/server";
 import { z } from "zod";
 import { format, subDays } from "date-fns";
+import * as Sentry from "@sentry/nextjs";
 
 // ── Zod Schemas ────────────────────────────────────────────────────────────────
 
@@ -84,6 +85,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ success: true }, { status: 200 });
   } catch (error) {
+    Sentry.captureException(error);
     console.error("[POST /api/users/reading-session]", error);
     return NextResponse.json({ error: "Failed to log session" }, { status: 500 });
   }
@@ -163,6 +165,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json(result, { status: 200 });
   } catch (error) {
+    Sentry.captureException(error);
     console.error("[GET /api/users/reading-session]", error);
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }

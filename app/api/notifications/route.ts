@@ -3,6 +3,7 @@ import { notifications } from "@/database/schema";
 import { getCurrentUser } from "@/lib/auth";
 import { eq, desc } from "drizzle-orm";
 import { NextResponse } from "next/server";
+import * as Sentry from "@sentry/nextjs";
 
 export async function GET(req: Request) {
   try {
@@ -25,6 +26,7 @@ export async function GET(req: Request) {
         userId: user.id 
     });
   } catch (error) {
+    Sentry.captureException(error);
     console.error("Error fetching notifications:", error);
     return NextResponse.json(
       { error: "Failed to fetch notifications" },

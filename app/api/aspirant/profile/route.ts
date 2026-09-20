@@ -3,6 +3,7 @@ import { db } from "@/database/drizzle";
 import { candidateProfiles, users } from "@/database/schema";
 import { eq } from "drizzle-orm";
 import { auth } from "@clerk/nextjs/server";
+import * as Sentry from "@sentry/nextjs";
 
 export async function GET() {
   try {
@@ -19,6 +20,7 @@ export async function GET() {
 
     return NextResponse.json({ success: true, profile: profile || null });
   } catch (error) {
+    Sentry.captureException(error);
     console.error("Fetch Aspirant Profile Error:", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }

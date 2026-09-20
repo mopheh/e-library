@@ -11,6 +11,7 @@ import {
 } from "@/database/schema";
 import { eq, and, sql, desc } from "drizzle-orm";
 import { getCurrentUser } from "@/lib/auth";
+import * as Sentry from "@sentry/nextjs";
 
 export async function GET() {
   try {
@@ -123,6 +124,7 @@ export async function GET() {
       enrolledCourses,
     });
   } catch (error) {
+    Sentry.captureException(error);
     console.error("[GET /api/dashboard]", error);
     return NextResponse.json(
       { error: "Failed to load dashboard" },

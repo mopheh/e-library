@@ -3,6 +3,7 @@ import { db } from "@/database/drizzle";
 import { studyRooms, studyRoomMembers, users } from "@/database/schema";
 import { eq, and } from "drizzle-orm";
 import { getCurrentUser } from "@/lib/auth";
+import * as Sentry from "@sentry/nextjs";
 
 export async function GET(
   req: Request,
@@ -47,6 +48,7 @@ export async function GET(
       isMember: members.some(m => m.id === user.id)
     });
   } catch (error) {
+    Sentry.captureException(error);
     console.error("[GET /api/study-rooms/[roomId]]", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
@@ -77,6 +79,7 @@ export async function POST(
 
     return NextResponse.json({ success: true });
   } catch (error) {
+    Sentry.captureException(error);
     console.error("[POST /api/study-rooms/[roomId]]", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }

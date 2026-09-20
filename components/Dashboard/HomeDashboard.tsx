@@ -16,6 +16,7 @@ import StudyCarousel from "./StudyCarousel";
 import QuickActions from "./QuickActions";
 import StreakTracker from "./StreakTracker";
 import { OnboardingTour } from "./OnboardingTour";
+import { ContributeWelcomeNudge } from "./ContributeWelcomeNudge";
 import { Sparkles, Bell } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -37,6 +38,7 @@ const HomeDashboard = () => {
     <div className="flex-1 p-5 md:p-8 pt-3 space-y-8 min-h-screen font-poppins bg-zinc-50/50 dark:bg-zinc-950">
       {/* Onboarding tour — fires once for new users */}
       <OnboardingTour />
+      <ContributeWelcomeNudge />
       <CourseRegistrationModal departmentId={data?.user?.departmentId} />
 
       {/* ── Desktop Greeting header ─────────────────── */}

@@ -9,6 +9,7 @@ import StreakTracker from "./StreakTracker";
 import ContinueReading from "./Analytics/ContinueReading";
 import { useAnalytics } from "@/hooks/useAnalytics";
 import { OnboardingTour } from "./OnboardingTour";
+import { ContributeWelcomeNudge } from "./ContributeWelcomeNudge";
 import { motion } from "framer-motion";
 import { BookOpen, Clock, Flame, Brain } from "lucide-react";
 
@@ -94,6 +95,7 @@ export default function MobileDashboard() {
 
       {/* Onboarding tour — fires once for new mobile users */}
       <OnboardingTour isMobile />
+      <ContributeWelcomeNudge />
 
       {/* 0. Sticky header */}
       <div className="sticky top-0 z-30 bg-zinc-50/90 dark:bg-zinc-950/90 backdrop-blur-xl border-b border-transparent">

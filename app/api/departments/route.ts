@@ -3,6 +3,7 @@ import { db } from "@/database/drizzle"
 import { departments } from "@/database/schema"
 import { eq, ilike, and } from "drizzle-orm"
 import { requireRole } from "@/lib/auth"
+import * as Sentry from "@sentry/nextjs";
 
 export async function GET(req: NextRequest) {
   try {
@@ -45,6 +46,7 @@ export async function GET(req: NextRequest) {
       .offset(skip)
     return NextResponse.json(allDepartments)
   } catch (error) {
+    Sentry.captureException(error);
     console.error("[GET /api/departments]", error)
     return NextResponse.json(
       { error: "Failed to fetch departments" },
@@ -75,6 +77,7 @@ export async function PUT(req: NextRequest) {
       .returning()
     return NextResponse.json(updated)
   } catch (err: any) {
+    Sentry.captureException(err);
     console.error("[PUT /api/departments]", err)
     return NextResponse.json({ error: err.message }, { status: 500 })
   }
@@ -94,6 +97,7 @@ export async function DELETE(req: NextRequest) {
     await db.delete(departments).where(eq(departments.id, id))
     return NextResponse.json({ success: true })
   } catch (err: any) {
+    Sentry.captureException(err);
     console.error("[DELETE /api/departments]", err)
     return NextResponse.json({ error: err.message }, { status: 500 })
   }

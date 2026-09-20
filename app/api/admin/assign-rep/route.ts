@@ -6,6 +6,7 @@ import { eq, and } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { clerkClient } from "@clerk/nextjs/server";
 import { z } from "zod";
+import * as Sentry from "@sentry/nextjs";
 
 const assignRepSchema = z.object({
   userIdToAssign: z.string().uuid("userIdToAssign must be a valid UUID"),
@@ -99,6 +100,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ success: true, user: updatedUser });
   } catch (error) {
+    Sentry.captureException(error);
     console.error("[POST /api/admin/assign-rep]", error);
     return NextResponse.json({ error: "Failed to assign faculty rep" }, { status: 500 });
   }

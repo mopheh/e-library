@@ -4,6 +4,7 @@ import { questions, options } from "@/database/schema";
 import { eq } from "drizzle-orm";
 import { requireRole } from "@/lib/auth";
 import { z } from "zod";
+import * as Sentry from "@sentry/nextjs";
 
 const optionSchema = z.object({
   id: z.string().uuid().optional(),
@@ -96,6 +97,7 @@ export async function PATCH(
       question: { ...updatedQuestion, options: finalOptions },
     });
   } catch (error) {
+    Sentry.captureException(error);
     console.error("[PATCH /api/admin/course-cbt/[id]]", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
@@ -127,6 +129,7 @@ export async function DELETE(
 
     return NextResponse.json({ success: true, deletedId: id });
   } catch (error) {
+    Sentry.captureException(error);
     console.error("[DELETE /api/admin/course-cbt/[id]]", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }

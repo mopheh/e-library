@@ -4,6 +4,7 @@ import { eq, and, sql, inArray } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { shuffle } from "@/lib/shuffle";
+import * as Sentry from "@sentry/nextjs";
 
 // Draws a fresh random subset of a course's question bank (and shuffles each
 // question's option order) on every call, so re-taking a CBT for the same
@@ -72,6 +73,7 @@ export async function GET(
 
     return NextResponse.json({ success: true, questions: data });
   } catch (error) {
+    Sentry.captureException(error);
     console.error("[GET /api/cbt/courses/[courseId]/questions]", error);
     return NextResponse.json({ error: "Failed to fetch questions" }, { status: 500 });
   }

@@ -4,6 +4,7 @@ import { db } from "@/database/drizzle";
 import { users, userBooks } from "@/database/schema";
 import { eq, and } from "drizzle-orm";
 import { z } from "zod";
+import * as Sentry from "@sentry/nextjs";
 
 const progressSchema = z.object({
   bookId: z.string().uuid("bookId must be a valid UUID"),
@@ -43,6 +44,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
+    Sentry.captureException(error);
     console.error("[POST /api/users/book-progress]", error);
     return NextResponse.json({ error: "Failed to update progress" }, { status: 500 });
   }
@@ -74,6 +76,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json(progress || { progress: 0, lastPage: 0 });
   } catch (error) {
+    Sentry.captureException(error);
     console.error("[GET /api/users/book-progress]", error);
     return NextResponse.json({ error: "Failed to fetch progress" }, { status: 500 });
   }

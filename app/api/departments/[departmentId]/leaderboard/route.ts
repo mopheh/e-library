@@ -11,6 +11,7 @@ import {
 } from "@/database/schema";
 import { eq, count, sql, desc } from "drizzle-orm";
 import { getCurrentUser } from "@/lib/auth";
+import * as Sentry from "@sentry/nextjs";
 
 export async function GET(
   req: Request,
@@ -53,6 +54,7 @@ export async function GET(
 
     return NextResponse.json(leaderboard);
   } catch (error) {
+    Sentry.captureException(error);
     console.error("[GET /api/departments/[departmentId]/leaderboard]", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }

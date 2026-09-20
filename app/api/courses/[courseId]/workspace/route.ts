@@ -3,6 +3,7 @@ import { db } from "@/database/drizzle";
 import { books, bookCourses, courses, threads, users, questions } from "@/database/schema";
 import { and, eq, desc, sql } from "drizzle-orm";
 import { requireRole } from "@/lib/auth";
+import * as Sentry from "@sentry/nextjs";
 
 export async function GET(
   req: Request,
@@ -77,6 +78,7 @@ export async function GET(
       questionsCount: questionsCount[0]?.count ?? 0,
     });
   } catch (error) {
+    Sentry.captureException(error);
     console.error("[GET /api/courses/[courseId]/workspace]", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }

@@ -4,6 +4,7 @@ import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { z } from "zod";
+import * as Sentry from "@sentry/nextjs";
 
 const answerSchema = z.object({
   content: z.string().min(1, "content is required"),
@@ -37,6 +38,7 @@ export async function GET(
 
     return NextResponse.json(answers);
   } catch (error) {
+    Sentry.captureException(error);
     console.error("[GET /api/senior-qa/[id]/answers]", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
@@ -71,6 +73,7 @@ export async function POST(
 
     return NextResponse.json(answer, { status: 201 });
   } catch (error) {
+    Sentry.captureException(error);
     console.error("[POST /api/senior-qa/[id]/answers]", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }

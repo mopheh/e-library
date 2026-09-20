@@ -11,6 +11,7 @@ import {
 import { eq, sql } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 import { requireRole } from "@/lib/auth";
+import * as Sentry from "@sentry/nextjs";
 
 async function getSummaryStats() {
   const roleCounts = await db
@@ -98,6 +99,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ error: "Invalid export type" }, { status: 400 });
   } catch (error) {
+    Sentry.captureException(error);
     console.error("[GET /api/admin/export]", error);
     return NextResponse.json(
       { error: "Failed to generate export" },

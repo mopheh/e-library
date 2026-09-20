@@ -16,6 +16,7 @@ export function useB2Upload() {
               action: "standard",
               fileName: file.name,
               fileType: file.type || "application/octet-stream",
+              fileSize: file.size,
             }),
           });
           

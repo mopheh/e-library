@@ -3,6 +3,7 @@ import { db } from "@/database/drizzle";
 import { academicCalendarEvents } from "@/database/schema";
 import { eq, desc, and, sql } from "drizzle-orm";
 import { requireRole, getCurrentUser } from "@/lib/auth";
+import * as Sentry from "@sentry/nextjs";
 
 // GET – list all events, optionally filtered by session/semester
 export async function GET(req: NextRequest) {
@@ -23,6 +24,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ events });
   } catch (err: any) {
+    Sentry.captureException(err);
     console.error("[GET /api/admin/calendar]", err);
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
@@ -56,6 +58,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ event }, { status: 201 });
   } catch (err: any) {
+    Sentry.captureException(err);
     console.error("[POST /api/admin/calendar]", err);
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
@@ -81,6 +84,7 @@ export async function PUT(req: NextRequest) {
 
     return NextResponse.json({ event: updated });
   } catch (err: any) {
+    Sentry.captureException(err);
     console.error("[PUT /api/admin/calendar]", err);
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
@@ -101,6 +105,7 @@ export async function DELETE(req: NextRequest) {
     await db.delete(academicCalendarEvents).where(eq(academicCalendarEvents.id, id));
     return NextResponse.json({ success: true });
   } catch (err: any) {
+    Sentry.captureException(err);
     console.error("[DELETE /api/admin/calendar]", err);
     return NextResponse.json({ error: err.message }, { status: 500 });
   }

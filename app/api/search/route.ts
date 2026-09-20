@@ -3,6 +3,7 @@ import { books, courses } from "@/database/schema";
 import { and, eq, ilike, or, sql } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
+import * as Sentry from "@sentry/nextjs";
 
 export async function GET(req: Request) {
   try {
@@ -63,6 +64,7 @@ export async function GET(req: Request) {
       courses: coursesRel,
     });
   } catch (error) {
+    Sentry.captureException(error);
     console.error("Search API Error:", error);
     return NextResponse.json(
       { error: "Internal Server Error" },

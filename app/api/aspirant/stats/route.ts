@@ -3,6 +3,7 @@ import { db } from "@/database/drizzle";
 import { candidateProfiles, candidateAttempts, users, departments } from "@/database/schema";
 import { eq, desc } from "drizzle-orm";
 import { auth } from "@clerk/nextjs/server";
+import * as Sentry from "@sentry/nextjs";
 
 export async function GET() {
   try {
@@ -106,6 +107,7 @@ export async function GET() {
       },
     });
   } catch (error) {
+    Sentry.captureException(error);
     console.error("[GET /api/aspirant/stats]", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }

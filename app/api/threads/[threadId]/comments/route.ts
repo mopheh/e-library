@@ -4,6 +4,7 @@ import { comments, users } from "@/database/schema";
 import { eq, asc } from "drizzle-orm";
 import { getCurrentUser } from "@/lib/auth";
 import { z } from "zod";
+import * as Sentry from "@sentry/nextjs";
 
 const commentSchema = z.object({
   content: z.string().min(1, "content is required").max(2000),
@@ -33,6 +34,7 @@ export async function GET(
 
     return NextResponse.json(threadComments);
   } catch (error) {
+    Sentry.captureException(error);
     console.error("[GET /api/threads/[threadId]/comments]", error);
     return NextResponse.json({ error: "Failed to load comments" }, { status: 500 });
   }
@@ -74,6 +76,7 @@ export async function POST(
 
     return NextResponse.json(newComment, { status: 201 });
   } catch (error) {
+    Sentry.captureException(error);
     console.error("[POST /api/threads/[threadId]/comments]", error);
     return NextResponse.json({ error: "Failed to create comment" }, { status: 500 });
   }

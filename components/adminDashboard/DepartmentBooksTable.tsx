@@ -14,11 +14,6 @@ import {
   X,
   Plus,
   ExternalLink,
-  FileText,
-  GraduationCap,
-  ScrollText,
-  BookMarked,
-  HelpCircle,
   ChevronLeft,
   ChevronRight,
   Sparkles,
@@ -35,37 +30,9 @@ import { UploadBookForm } from "@/components/adminDashboard/AddBook";
 import { Book, Course, Department } from "@/types";
 import { useRouter } from "next/navigation";
 import { useForm, Controller } from "react-hook-form";
-
-const BOOK_TYPES = ["textbook", "past question", "material", "note", "research"] as const;
-type BookType = (typeof BOOK_TYPES)[number];
-
-const TYPE_STYLES: Record<string, { color: string; icon: React.ReactNode }> = {
-  textbook: {
-    color: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300",
-    icon: <BookMarked className="w-3.5 h-3.5" />,
-  },
-  "past question": {
-    color: "bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300",
-    icon: <HelpCircle className="w-3.5 h-3.5" />,
-  },
-  material: {
-    color: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300",
-    icon: <FileText className="w-3.5 h-3.5" />,
-  },
-  note: {
-    color: "bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-300",
-    icon: <ScrollText className="w-3.5 h-3.5" />,
-  },
-  research: {
-    color: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300",
-    icon: <GraduationCap className="w-3.5 h-3.5" />,
-  },
-};
+import { BOOK_TYPES, BookType, TYPE_STYLES, DEFAULT_TYPE_STYLE, QUESTION_ELIGIBLE_TYPES } from "@/lib/bookTypes";
 
 const PAGE_SIZE = 8;
-
-// Book types that support AI question generation
-const QUESTION_ELIGIBLE_TYPES = new Set(["past question", "material", "handout"]);
 
 // ── Parse-status badge ─────────────────────────────────────────────────────
 const PARSE_STATUS_CONFIG: Record<
@@ -439,7 +406,7 @@ const DepartmentBooksTable: React.FC<Props> = ({ departmentId, department }) => 
           loading={deleteLoading}
         />
       )}
-      <FormModal open={addOpen} setOpen={setAddOpen}>
+      <FormModal open={addOpen} setOpen={setAddOpen} size="lg" title="Add Resource">
         <UploadBookForm department={deptForForm} setOpen={setAddOpen} departmentId={departmentId} />
       </FormModal>
 
@@ -520,10 +487,7 @@ const DepartmentBooksTable: React.FC<Props> = ({ departmentId, department }) => 
           ) : (
             bookList.map((book: Book, i: number) => {
               const typeKey = book.type?.toLowerCase() as BookType;
-              const typeStyle = TYPE_STYLES[typeKey] ?? {
-                color: "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400",
-                icon: <FileText className="w-3.5 h-3.5" />,
-              };
+              const typeStyle = TYPE_STYLES[typeKey] ?? DEFAULT_TYPE_STYLE;
 
               return (
                 <motion.div

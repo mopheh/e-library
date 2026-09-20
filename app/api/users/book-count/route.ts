@@ -7,6 +7,7 @@ import { auth } from "@clerk/nextjs/server";
 import { and, eq } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import * as Sentry from "@sentry/nextjs";
 
 const bookCountSchema = z.object({
   bookId: z.string().uuid("bookId must be a valid UUID"),
@@ -55,6 +56,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ success: true }, { status: 200 });
   } catch (error) {
+    Sentry.captureException(error);
     console.error("[POST /api/users/book-count]", error);
     return NextResponse.json({ error: "Failed to update read count" }, { status: 500 });
   }

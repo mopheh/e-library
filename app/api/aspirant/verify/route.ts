@@ -4,6 +4,7 @@ import { users, verificationRequests } from "@/database/schema";
 import { eq } from "drizzle-orm";
 import { auth } from "@clerk/nextjs/server";
 import { z } from "zod";
+import * as Sentry from "@sentry/nextjs";
 
 const verifySchema = z.object({
   proofUrl: z.string().url("proofUrl must be a valid URL"),
@@ -64,6 +65,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ success: true, request }, { status: 201 });
   } catch (error) {
+    Sentry.captureException(error);
     console.error("[POST /api/aspirant/verify]", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
@@ -88,6 +90,7 @@ export async function GET() {
 
     return NextResponse.json({ success: true, requests });
   } catch (error) {
+    Sentry.captureException(error);
     console.error("[GET /api/aspirant/verify]", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }

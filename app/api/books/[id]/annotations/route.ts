@@ -4,6 +4,7 @@ import { eq, and, or } from "drizzle-orm";
 import { getCurrentUser } from "@/lib/auth";
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import * as Sentry from "@sentry/nextjs";
 
 const annotationSchema = z.object({
   pageNumber: z.number().int().nonnegative("pageNumber must be a non-negative integer"),
@@ -50,6 +51,7 @@ export async function GET(
 
     return NextResponse.json(data);
   } catch (error) {
+    Sentry.captureException(error);
     console.error("[GET /api/books/[id]/annotations]", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
@@ -89,6 +91,7 @@ export async function POST(
 
     return NextResponse.json(newAnnotation, { status: 201 });
   } catch (error) {
+    Sentry.captureException(error);
     console.error("[POST /api/books/[id]/annotations]", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }

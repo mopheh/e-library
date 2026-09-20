@@ -4,6 +4,7 @@ import { eq, sql, desc, and } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { withCache } from "@/lib/redis";
+import * as Sentry from "@sentry/nextjs";
 
 // Leaderboard is cached for 2 minutes per (filter, department) combination.
 // Without this, every dashboard/leaderboard load re-runs a multi-join
@@ -107,6 +108,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json(leaderboard);
   } catch (error) {
+    Sentry.captureException(error);
     console.error("[LEADERBOARD_GET]", error);
     return NextResponse.json({ error: "Internal Error" }, { status: 500 });
   }

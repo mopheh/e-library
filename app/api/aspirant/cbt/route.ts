@@ -5,6 +5,7 @@ import { eq, sql, inArray } from "drizzle-orm";
 import { getCurrentUser } from "@/lib/auth";
 import { shuffle } from "@/lib/shuffle";
 import { z } from "zod";
+import * as Sentry from "@sentry/nextjs";
 
 const submitAttemptSchema = z.object({
   score: z.number().int().nonnegative("score must be a non-negative integer"),
@@ -87,6 +88,7 @@ export async function GET(req: Request) {
 
     return NextResponse.json({ success: true, questions: formattedQuestions });
   } catch (error) {
+    Sentry.captureException(error);
     console.error("[GET /api/aspirant/cbt]", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
@@ -113,6 +115,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ success: true, attempt }, { status: 201 });
   } catch (error) {
+    Sentry.captureException(error);
     console.error("[POST /api/aspirant/cbt]", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }

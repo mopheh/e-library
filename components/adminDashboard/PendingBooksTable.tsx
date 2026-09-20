@@ -80,7 +80,7 @@ export default function PendingBooksTable() {
                     <h3 className="text-lg font-bold text-zinc-900 dark:text-zinc-50 flex items-center gap-2">
                         Pending Uploads <Inbox className="w-5 h-5 text-blue-600" />
                     </h3>
-                    <p className="text-xs text-zinc-500 mt-1">Review Faculty Rep material submissions before they go live.</p>
+                    <p className="text-xs text-zinc-500 mt-1">Review user material submissions before they go live.</p>
                 </div>
                 <button
                    onClick={load}

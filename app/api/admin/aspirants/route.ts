@@ -11,6 +11,7 @@ import {
 import { eq, desc, count, sql, ilike, or, and } from "drizzle-orm";
 import { requireRole } from "@/lib/auth";
 import { clerkClient } from "@clerk/nextjs/server";
+import * as Sentry from "@sentry/nextjs";
 
 export async function GET(req: NextRequest) {
   try {
@@ -131,6 +132,7 @@ export async function GET(req: NextRequest) {
       },
     });
   } catch (error: any) {
+    Sentry.captureException(error);
     console.error("[GET /api/admin/aspirants]", error);
     return NextResponse.json({ error: error?.message || "Internal Server Error" }, { status: 500 });
   }

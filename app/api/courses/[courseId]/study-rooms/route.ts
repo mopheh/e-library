@@ -4,6 +4,7 @@ import { studyRooms, studyRoomMembers, users } from "@/database/schema";
 import { eq, desc, inArray } from "drizzle-orm";
 import { getCurrentUser } from "@/lib/auth";
 import { z } from "zod";
+import * as Sentry from "@sentry/nextjs";
 
 const studyRoomSchema = z.object({
   name: z.string().min(1, "Room name is required").max(100),
@@ -60,6 +61,7 @@ export async function GET(
 
     return NextResponse.json(enrichedRooms);
   } catch (error) {
+    Sentry.captureException(error);
     console.error("[GET /api/courses/[courseId]/study-rooms]", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
@@ -94,6 +96,7 @@ export async function POST(
 
     return NextResponse.json(newRoom, { status: 201 });
   } catch (error) {
+    Sentry.captureException(error);
     console.error("[POST /api/courses/[courseId]/study-rooms]", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }

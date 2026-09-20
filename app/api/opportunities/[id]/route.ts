@@ -4,6 +4,7 @@ import { opportunities } from "@/database/schema";
 import { eq, sql } from "drizzle-orm";
 import { requireRole } from "@/lib/auth";
 import { z } from "zod";
+import * as Sentry from "@sentry/nextjs";
 
 const updateSchema = z.object({
   title: z.string().min(1).max(255).optional(),
@@ -81,6 +82,7 @@ export async function PATCH(
 
     return NextResponse.json(updated);
   } catch (error) {
+    Sentry.captureException(error);
     console.error("[PATCH /api/opportunities/:id]", error);
     return NextResponse.json(
       { error: "Internal Server Error" },
@@ -117,6 +119,7 @@ export async function DELETE(
 
     return NextResponse.json({ success: true });
   } catch (error) {
+    Sentry.captureException(error);
     console.error("[DELETE /api/opportunities/:id]", error);
     return NextResponse.json(
       { error: "Internal Server Error" },

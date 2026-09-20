@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/database/drizzle";
 import { getCurrentUser } from "@/lib/auth";
 import { sql } from "drizzle-orm";
+import * as Sentry from "@sentry/nextjs";
 
 export async function GET(req: Request) {
   try {
@@ -84,6 +85,7 @@ export async function GET(req: Request) {
       hasMore: feedItems.rows.length === limit,
     });
   } catch (error) {
+    Sentry.captureException(error);
     console.error("[GET /api/feed]", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }

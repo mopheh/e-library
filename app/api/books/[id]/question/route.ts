@@ -3,6 +3,7 @@ import { books, jobs } from "@/database/schema";
 import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
+import * as Sentry from "@sentry/nextjs";
 
 // Question generation runs a long AI loop per page-batch (with mandatory
 // rate-limit sleeps between batches - see lib/generateQuestions.ts), so it's
@@ -45,6 +46,7 @@ export async function POST(
       { status: 202 }
     );
   } catch (err: any) {
+    Sentry.captureException(err);
     console.error("[POST /api/books/[id]/question]", err);
     return NextResponse.json(
       { error: err.message || "Failed to enqueue question generation" },

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, Suspense } from "react";
 import { useUserData } from "@/hooks/useUsers";
 import { useDepartments } from "@/hooks/useDepartments";
 import { useBooks } from "@/hooks/useBooks";
@@ -13,7 +13,7 @@ import {
   PaginationPrevious,
   PaginationEllipsis,
 } from "@/components/ui/pagination";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { LibrarySidebar } from "@/components/library/LibrarySidebar";
 import { LibrarySaaSCard } from "@/components/library/LibrarySaaSCard";
 import { SmartLibraryHeader } from "@/components/library/SmartLibraryHeader";
@@ -21,8 +21,11 @@ import { PersonalizedSection } from "@/components/library/PersonalizedSection";
 import { BookPreviewModal } from "@/components/library/BookPreviewModal";
 import { useDebounce } from "@/hooks/useDebounce";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Ghost, MailPlus, Loader2 } from "lucide-react";
+import { Ghost, MailPlus, Loader2, Upload } from "lucide-react";
 import { Book } from "@/types";
+import { UploadBookForm } from "@/components/adminDashboard/AddBook";
+import FormModal from "@/components/FormDialogBody";
+import { toast } from "sonner";
 
 const BooksGridSkeleton = () => (
    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
@@ -44,14 +47,28 @@ const BooksGridSkeleton = () => (
    </div>
 );
 
-const EmptyState = ({ onReset }: { onReset: () => void }) => (
+const EmptyState = ({
+   onReset,
+   searchQuery,
+   canContribute,
+   onContribute,
+}: {
+   onReset: () => void;
+   searchQuery: string;
+   canContribute: boolean;
+   onContribute: () => void;
+}) => (
    <div className="flex flex-col items-center justify-center py-20 px-4 mt-8 bg-dashed-zinc dark:bg-dashed-zinc-dark rounded-3xl text-center border-2 border-dashed border-zinc-200 dark:border-zinc-800">
       <div className="w-20 h-20 bg-zinc-100 dark:bg-zinc-900 rounded-full flex items-center justify-center mb-6">
          <Ghost className="w-10 h-10 text-zinc-400" strokeWidth={1.5} />
       </div>
-      <h3 className="text-2xl font-bold font-cabin text-zinc-900 dark:white mb-3">No matching resources</h3>
+      <h3 className="text-2xl font-bold font-cabin text-zinc-900 dark:white mb-3">
+         {searchQuery ? `No results for "${searchQuery}"` : "No matching resources"}
+      </h3>
       <p className="text-xs font-poppins text-zinc-500 max-w-md mb-8">
-         We couldn&apos;t find any resources matching your exact criteria. Try adjusting your filters or request this material.
+         {canContribute
+            ? "We couldn't find any resources matching your criteria. Try adjusting your filters, or be the one to add it."
+            : "We couldn't find any resources matching your criteria. Try adjusting your filters."}
       </p>
       <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4 w-full sm:w-auto">
          <button
@@ -60,16 +77,22 @@ const EmptyState = ({ onReset }: { onReset: () => void }) => (
          >
             Clear all filters
          </button>
-         <button className="text-xs font-normal font-poppins text-white bg-blue-600 px-6 py-2.5 rounded-xl shadow-sm hover:bg-blue-700 flex items-center justify-center gap-2 transition w-full sm:w-auto">
-            <MailPlus className="w-4 h-4" /> Request Resource
-         </button>
+         {canContribute && (
+            <button
+               onClick={onContribute}
+               className="text-xs font-normal font-poppins text-white bg-blue-600 px-6 py-2.5 rounded-xl shadow-sm hover:bg-blue-700 flex items-center justify-center gap-2 transition w-full sm:w-auto"
+            >
+               <MailPlus className="w-4 h-4" /> Contribute this material
+            </button>
+         )}
       </div>
    </div>
 );
 
-const Page = () => {
+const LibraryPage = () => {
   const { data: user, isLoading: userLoading } = useUserData();
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const [department, setDepartment] = useState<string | undefined>();
   const [level, setLevel] = useState<string | undefined>();
@@ -81,6 +104,8 @@ const Page = () => {
   const pageSize = 12;
 
   const [selectedBook, setSelectedBook] = useState<Book | null>(null);
+  const [uploadOpen, setUploadOpen] = useState(false);
+  const [prefillTitle, setPrefillTitle] = useState("");
 
   useEffect(() => {
     if (user && !department && !level) {
@@ -117,6 +142,37 @@ const Page = () => {
   };
 
   const pageRange = generatePageRange(currentPage, booksData.totalPages);
+  const canContribute = !!user && user.role !== "ASPIRANT";
+
+  const openContributeModal = (title = "") => {
+    setPrefillTitle(title);
+    setUploadOpen(true);
+  };
+
+  // Nudge the user toward contributing when their search comes up empty —
+  // dismissible, and re-fires per distinct search term rather than spamming.
+  useEffect(() => {
+    if (!canContribute || isLoading || !debouncedSearch) return;
+    if (booksData.books.length > 0) return;
+
+    toast("Can't find it?", {
+      id: "empty-search-contribute",
+      description: `No results for "${debouncedSearch}" — be the one to add it.`,
+      action: {
+        label: "Contribute material",
+        onClick: () => openContributeModal(debouncedSearch),
+      },
+    });
+  }, [debouncedSearch, booksData.books.length, isLoading, canContribute]);
+
+  // Deep-link support: sidebar / first-login nudges send users to
+  // /library?contribute=1 to auto-open the contribute modal on arrival.
+  useEffect(() => {
+    if (searchParams.get("contribute") === "1") {
+      openContributeModal();
+      router.replace("/library", { scroll: false });
+    }
+  }, [searchParams]);
 
   const handleOpenReader = (bookId: string) => {
     setSelectedBook(null);
@@ -142,11 +198,23 @@ const Page = () => {
 
   return (
     <div className="min-h-[calc(100vh-4rem)] flex flex-col bg-zinc-50/50 dark:bg-[#0a0a0c]">
-      <SmartLibraryHeader 
-         searchQuery={searchQuery} 
-         setSearchQuery={setSearchQuery} 
+      <SmartLibraryHeader
+         searchQuery={searchQuery}
+         setSearchQuery={setSearchQuery}
          onFilterClick={handleQuickFilter}
       />
+
+      {user.role !== "ASPIRANT" && (
+        <div className="w-full max-w-[1400px] mx-auto px-3 sm:px-4 md:px-8 pt-2">
+          <button
+            onClick={() => openContributeModal()}
+            className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-xl transition-colors shadow-sm"
+          >
+            <Upload className="w-4 h-4" />
+            Contribute Material
+          </button>
+        </div>
+      )}
 
       <div className="flex-1 w-full max-w-[1400px] mx-auto px-3 py-4 sm:p-4 md:p-8 flex flex-col lg:flex-row gap-6 sm:gap-8">
          <LibrarySidebar 
@@ -165,7 +233,12 @@ const Page = () => {
             {isLoading ? (
                <BooksGridSkeleton />
             ) : booksData.books.length === 0 ? (
-               <EmptyState onReset={() => { setType("All"); setLevel(""); setSearchQuery(""); setDepartment(""); }} />
+               <EmptyState
+                  onReset={() => { setType("All"); setLevel(""); setSearchQuery(""); setDepartment(""); }}
+                  searchQuery={debouncedSearch}
+                  canContribute={canContribute}
+                  onContribute={() => openContributeModal(debouncedSearch)}
+               />
             ) : (
                <div className="space-y-10 pb-10">
                   <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
@@ -218,14 +291,36 @@ const Page = () => {
          </div>
       </div>
 
-      <BookPreviewModal 
+      <BookPreviewModal
          isOpen={!!selectedBook}
          book={selectedBook || undefined}
          onClose={() => setSelectedBook(null)}
          onOpenReader={handleOpenReader}
       />
+
+      <FormModal open={uploadOpen} setOpen={setUploadOpen} size="lg" title="Contribute Material">
+        <UploadBookForm
+          department={departments as any}
+          setOpen={setUploadOpen}
+          departmentId={user.departmentId}
+          initialTitle={prefillTitle}
+        />
+      </FormModal>
     </div>
   );
 };
 
-export default Page;
+export default function Page() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex flex-col justify-center items-center h-[70vh] gap-4">
+          <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
+          <p className="text-zinc-500 text-xs font-poppins font-medium">Initializing workspace...</p>
+        </div>
+      }
+    >
+      <LibraryPage />
+    </Suspense>
+  );
+}

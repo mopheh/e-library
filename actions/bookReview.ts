@@ -6,6 +6,7 @@ import { eq, and, desc, inArray } from "drizzle-orm";
 import { auth, clerkClient } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import { pusherServer } from "@/lib/pusher";
+import { deleteB2File } from "@/lib/b2-delete";
 
 async function requireReviewer() {
   const { userId: clerkId } = await auth();
@@ -125,23 +126,28 @@ export async function rejectBook(bookId: string, reason: string) {
       }
     }
 
-    await db.update(books).set({
-      reviewStatus: "REJECTED",
-      reviewedBy: currentUser.id,
-      reviewedAt: new Date(),
-      rejectionReason: reason || null,
-    }).where(eq(books.id, bookId));
-
+    // Notify the uploader before deleting the record
     const [notif] = await db.insert(notifications).values({
       userId: book.postedBy,
       type: "GENERAL",
       message: `Your upload "${book.title}" was rejected.${reason ? ` Reason: ${reason}` : ""}`,
-      targetId: book.id,
     }).returning();
 
     pusherServer
       .trigger(`user-${book.postedBy}`, "new-notification", notif)
       .catch((err) => console.error("Pusher trigger failed (new-notification):", err));
+
+    // Clean up: delete the file from B2 storage
+    if (book.fileUrl && book.fileUrl.includes("backblazeb2.com")) {
+      try {
+        await deleteB2File(book.fileUrl);
+      } catch (err) {
+        console.error("[rejectBook] B2 delete failed (non-blocking):", err);
+      }
+    }
+
+    // Remove the book record entirely so rejected uploads don't accumulate
+    await db.delete(books).where(eq(books.id, bookId));
 
     revalidatePath("/dashboard/manage");
     return { success: true };

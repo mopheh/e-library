@@ -4,6 +4,7 @@ import { opportunities, jobs } from "@/database/schema";
 import { eq, desc, and, or, isNull } from "drizzle-orm";
 import { getCurrentUser, requireRole } from "@/lib/auth";
 import { z } from "zod";
+import * as Sentry from "@sentry/nextjs";
 
 const opportunitySchema = z.object({
   title: z.string().min(1, "title is required").max(255),
@@ -50,6 +51,7 @@ export async function GET(req: Request) {
 
     return NextResponse.json(data);
   } catch (error) {
+    Sentry.captureException(error);
     console.error("[GET /api/opportunities]", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
@@ -104,6 +106,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json(newOpportunity, { status: 201 });
   } catch (error) {
+    Sentry.captureException(error);
     console.error("[POST /api/opportunities]", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }

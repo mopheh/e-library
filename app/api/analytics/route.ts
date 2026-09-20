@@ -5,6 +5,7 @@ import { withCache } from "@/lib/redis";
 import { NextResponse } from "next/server";
 import { and, desc, eq, gte, sql } from "drizzle-orm";
 import { format, subDays, eachDayOfInterval, parseISO } from "date-fns";
+import * as Sentry from "@sentry/nextjs";
 
 // Analytics are cached per-user for 5 minutes (300 s).
 // This means at 1 000 concurrent dashboard loads, the DB sees at most
@@ -212,6 +213,7 @@ export async function GET() {
     return NextResponse.json(payload);
 
   } catch (error: any) {
+    Sentry.captureException(error);
     console.error("Analytics fetch error:", error);
     return NextResponse.json(
       { error: "Failed to load analytics" },

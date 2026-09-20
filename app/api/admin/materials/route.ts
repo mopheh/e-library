@@ -3,6 +3,7 @@ import { db } from "@/database/drizzle";
 import { books, departments, faculty } from "@/database/schema";
 import { eq, sql } from "drizzle-orm";
 import { requireRole } from "@/lib/auth";
+import * as Sentry from "@sentry/nextjs";
 
 export async function GET() {
   try {
@@ -46,6 +47,7 @@ export async function GET() {
       byType,
     });
   } catch (error) {
+    Sentry.captureException(error);
     console.error("[GET /api/admin/materials]", error);
     return NextResponse.json({ error: "Failed to fetch materials overview" }, { status: 500 });
   }

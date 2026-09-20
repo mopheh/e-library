@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { SignInButton, SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
+import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
 import { motion, AnimatePresence } from "framer-motion";
 import { BookOpen, Menu, X } from "lucide-react";
 
@@ -69,13 +69,11 @@ export const Navbar = () => {
               <UserButton afterSignOutUrl="/" />
             </SignedIn>
             <SignedOut>
-              <SignInButton mode="modal">
-                <button className="relative text-sm font-inter font-semibold px-5 py-2.5 rounded-lg overflow-hidden group">
-                  <div className="absolute inset-0 bg-gradient-to-r from-[#0057e7] to-[#0099ff] group-hover:opacity-90 transition-opacity" />
-                  <div className="absolute inset-0 opacity-0 group-hover:opacity-100 bg-gradient-to-r from-[#0057e7]/80 to-[#00c6ff]/80 transition-opacity" />
-                  <span className="relative text-white">Get Started Free</span>
-                </button>
-              </SignInButton>
+              <Link href="/sign-in" className="relative text-sm font-inter font-semibold px-5 py-2.5 rounded-lg overflow-hidden group inline-block">
+                <div className="absolute inset-0 bg-gradient-to-r from-[#0057e7] to-[#0099ff] group-hover:opacity-90 transition-opacity" />
+                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 bg-gradient-to-r from-[#0057e7]/80 to-[#00c6ff]/80 transition-opacity" />
+                <span className="relative text-white">Get Started Free</span>
+              </Link>
             </SignedOut>
           </div>
 
@@ -110,11 +108,13 @@ export const Navbar = () => {
             ))}
             <div className="mt-4 pt-4 border-t border-white/5">
               <SignedOut>
-                <SignInButton mode="modal">
-                  <button className="w-full py-3 rounded-lg bg-gradient-to-r from-[#0057e7] to-[#0099ff] text-white text-sm font-inter font-semibold">
-                    Get Started Free
-                  </button>
-                </SignInButton>
+                <Link
+                  href="/sign-in"
+                  onClick={() => setMobileOpen(false)}
+                  className="block w-full py-3 text-center rounded-lg bg-gradient-to-r from-[#0057e7] to-[#0099ff] text-white text-sm font-inter font-semibold"
+                >
+                  Get Started Free
+                </Link>
               </SignedOut>
               <SignedIn>
                 <Link href="/dashboard" className="block w-full py-3 text-center rounded-lg bg-white/5 text-white text-sm font-inter font-semibold">

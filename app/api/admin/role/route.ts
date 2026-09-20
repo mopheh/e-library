@@ -6,6 +6,7 @@ import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { clerkClient } from "@clerk/nextjs/server";
 import { z } from "zod";
+import * as Sentry from "@sentry/nextjs";
 
 const ASSIGNABLE_ROLES = ["STUDENT", "ADMIN", "FACULTY REP", "ASPIRANT"] as const;
 
@@ -122,6 +123,7 @@ export async function PATCH(req: Request) {
       },
     });
   } catch (error) {
+    Sentry.captureException(error);
     console.error("[PATCH /api/admin/role]", error);
     return NextResponse.json(
       { error: "Failed to update role" },

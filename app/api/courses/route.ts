@@ -3,6 +3,7 @@ import { db } from "@/database/drizzle";
 import { courses, courseDepartments } from "@/database/schema";
 import { eq, or, inArray } from "drizzle-orm";
 import { auth } from "@clerk/nextjs/server";
+import * as Sentry from "@sentry/nextjs";
 
 export async function GET(req: NextRequest) {
   try {
@@ -15,8 +16,9 @@ export async function GET(req: NextRequest) {
     const departmentId = searchParams.get("departmentId");
     const includeBorrowed = searchParams.get("includeBorrowed") === "true";
 
-    const skip = Number(searchParams.get("skip")) || 0;
-    const limit = Number(searchParams.get("limit")) || 1000;
+    const skip = Math.max(0, Number(searchParams.get("skip")) || 0);
+    // Clamp so a caller can't force an unbounded/huge scan via ?limit=
+    const limit = Math.min(2000, Math.max(1, Number(searchParams.get("limit")) || 1000));
 
     if (departmentId) {
       if (includeBorrowed) {
@@ -64,10 +66,11 @@ export async function GET(req: NextRequest) {
       return NextResponse.json(result);
     }
 
-    // No departmentId — return all courses
-    const allCourses = await db.select().from(courses);
+    // No departmentId — return all courses (still bounded)
+    const allCourses = await db.select().from(courses).limit(limit).offset(skip);
     return NextResponse.json(allCourses);
   } catch (error) {
+    Sentry.captureException(error);
     console.error("[GET /api/courses]", error);
     return NextResponse.json(
       { error: "Failed to fetch courses" },

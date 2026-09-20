@@ -10,6 +10,7 @@ import {
 } from "@/database/schema";
 import { and, eq, sql, inArray } from "drizzle-orm";
 import { auth } from "@clerk/nextjs/server";
+import * as Sentry from "@sentry/nextjs";
 
 export async function GET(
   _req: NextRequest,
@@ -92,6 +93,7 @@ export async function GET(
       },
     });
   } catch (error) {
+    Sentry.captureException(error);
     console.error("[GET /api/workspaces/[courseId]]", error);
     return NextResponse.json(
       { error: "Failed to fetch workspace" },

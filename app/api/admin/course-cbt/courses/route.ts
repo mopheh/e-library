@@ -3,6 +3,7 @@ import { db } from "@/database/drizzle";
 import { courses, departments, questions, bookCourses, books } from "@/database/schema";
 import { and, eq, ilike, or, sql } from "drizzle-orm";
 import { requireRole } from "@/lib/auth";
+import * as Sentry from "@sentry/nextjs";
 
 // ── GET /api/admin/course-cbt/courses ──────────────────────────────────
 // Course-level rollup for the admin CBT overview: question count per course
@@ -85,6 +86,7 @@ export async function GET(req: Request) {
       pagination: { page, limit, total, totalPages: Math.max(1, Math.ceil(total / limit)) },
     });
   } catch (error) {
+    Sentry.captureException(error);
     console.error("[GET /api/admin/course-cbt/courses]", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }

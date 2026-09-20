@@ -4,6 +4,7 @@ import { eq, desc } from "drizzle-orm";
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import * as Sentry from "@sentry/nextjs";
 
 const activitySchema = z.object({
   type: z.string().min(1, "type is required"),
@@ -74,6 +75,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ success: true });
   } catch (err) {
+    Sentry.captureException(err);
     console.error("[POST /api/activity]", err);
     return NextResponse.json({ error: "Failed to log activity" }, { status: 500 });
   }

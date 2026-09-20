@@ -3,6 +3,7 @@ import { seniorQa } from "@/database/schema";
 import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
+import * as Sentry from "@sentry/nextjs";
 
 export async function POST(
   req: Request,
@@ -31,6 +32,7 @@ export async function POST(
 
     return NextResponse.json({ success: true, newUpvotes: question.upvotes + 1 });
   } catch (error) {
+    Sentry.captureException(error);
     console.error("[SENIOR_QA_UPVOTE]", error);
     return new NextResponse("Internal Error", { status: 500 });
   }

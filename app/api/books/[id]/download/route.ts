@@ -4,6 +4,7 @@ import { books } from "@/database/schema";
 import { eq } from "drizzle-orm";
 import { authorizeB2, b2 } from "@/lib/utils";
 import { requireRole } from "@/lib/auth";
+import * as Sentry from "@sentry/nextjs";
 
 export async function GET(
   req: Request,
@@ -60,6 +61,7 @@ export async function GET(
 
     return NextResponse.json({ url: signedUrl });
   } catch (err: any) {
+    Sentry.captureException(err);
     console.error("[download] Error:", err?.message ?? err);
     return NextResponse.json({ error: err.message }, { status: 500 });
   }

@@ -3,6 +3,7 @@ import { notifications } from "@/database/schema";
 import { getCurrentUser } from "@/lib/auth";
 import { eq, inArray, and } from "drizzle-orm";
 import { NextResponse } from "next/server";
+import * as Sentry from "@sentry/nextjs";
 
 export async function POST(req: Request) {
   try {
@@ -31,6 +32,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
+    Sentry.captureException(error);
     console.error("Error marking notifications as read:", error);
     return NextResponse.json(
       { error: "Failed to mark notifications as read" },

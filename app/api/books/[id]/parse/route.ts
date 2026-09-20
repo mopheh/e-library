@@ -2,8 +2,15 @@ import { db } from "@/database/drizzle";
 import { books, jobs } from "@/database/schema";
 import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
+import { requireRole } from "@/lib/auth";
+import * as Sentry from "@sentry/nextjs";
 
 export async function POST(_: Request, { params }: { params: Promise<{ id: string }> }) {
+  const authCheck = await requireRole(["ADMIN", "FACULTY REP"]);
+  if (!authCheck.authorized) {
+    return NextResponse.json({ error: authCheck.error }, { status: authCheck.status });
+  }
+
   const { id: bookId } = await params;
 
   const [book] = await db.select().from(books).where(eq(books.id, bookId));
@@ -29,6 +36,7 @@ export async function POST(_: Request, { params }: { params: Promise<{ id: strin
 
     return NextResponse.json({ success: true, message: "Parsing started in the background" }, { status: 202 });
   } catch (error) {
+    Sentry.captureException(error);
     console.error("Failed to enqueue parse job:", error);
     return NextResponse.json({ error: "Job dispatch failed" }, { status: 500 });
   }

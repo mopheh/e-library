@@ -12,6 +12,7 @@ import {
   activities,
 } from "@/database/schema";
 import { validateMatricNo } from "@/lib/facultyCodes";
+import * as Sentry from "@sentry/nextjs";
 
 export async function GET() {
   try {
@@ -109,6 +110,7 @@ export async function GET() {
 
     return NextResponse.json(mergedProfile);
   } catch (error: any) {
+    Sentry.captureException(error);
     console.error("Profile fetch error:", error);
     return NextResponse.json(
       { error: "Failed to load profile" },
@@ -208,6 +210,7 @@ export async function PUT(req: Request) {
       message: "Profile updated successfully",
     });
   } catch (error: any) {
+    Sentry.captureException(error);
     console.error("Profile update error:", error);
     return NextResponse.json(
       { error: "Failed to update profile" },

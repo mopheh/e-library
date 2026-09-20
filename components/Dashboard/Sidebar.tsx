@@ -27,6 +27,7 @@ import {
   Mic,
   Grid3X3,
   LogOut,
+  Upload,
 } from "lucide-react";
 import { useAuth, useUser } from "@clerk/nextjs";
 import { useUserData } from "@/hooks/useUsers";
@@ -121,6 +122,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggle }) => {
        items: [
          { name: "My Workspaces", path: "/workspaces", icon: Layers, id: "/workspaces" },
          { name: "Library", path: "/library", icon: BookOpen, id: "/library" },
+         { name: "Contribute Material", path: "/library?contribute=1", icon: Upload, id: "library-contribute" },
          { name: "CBT", path: "/cbt", icon: ClipboardList, id: "/cbt" },
          { name: "Saved", path: "/saved", icon: Bookmark, id: "/saved" },
        ]

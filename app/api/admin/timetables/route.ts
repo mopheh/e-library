@@ -3,6 +3,7 @@ import { db } from "@/database/drizzle";
 import { classTimetables, departments, faculty } from "@/database/schema";
 import { eq, and } from "drizzle-orm";
 import { requireRole } from "@/lib/auth";
+import * as Sentry from "@sentry/nextjs";
 
 // GET – list timetables, optionally filtered
 export async function GET(req: NextRequest) {
@@ -42,6 +43,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ timetables });
   } catch (err: any) {
+    Sentry.captureException(err);
     console.error("[GET /api/admin/timetables]", err);
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
@@ -76,6 +78,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ timetable: tt }, { status: 201 });
   } catch (err: any) {
+    Sentry.captureException(err);
     console.error("[POST /api/admin/timetables]", err);
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
@@ -96,6 +99,7 @@ export async function DELETE(req: NextRequest) {
     await db.delete(classTimetables).where(eq(classTimetables.id, id));
     return NextResponse.json({ success: true });
   } catch (err: any) {
+    Sentry.captureException(err);
     console.error("[DELETE /api/admin/timetables]", err);
     return NextResponse.json({ error: err.message }, { status: 500 });
   }

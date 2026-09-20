@@ -4,6 +4,7 @@ import { courses, studentCourses } from "@/database/schema";
 import { eq } from "drizzle-orm";
 import { getCurrentUser } from "@/lib/auth";
 import { z } from "zod";
+import * as Sentry from "@sentry/nextjs";
 
 const enrollCoursesSchema = z.object({
   courseIds: z.array(z.string().uuid("Each courseId must be a valid UUID")).min(0),
@@ -29,6 +30,7 @@ export async function GET() {
 
     return NextResponse.json(enrolledCourses);
   } catch (error) {
+    Sentry.captureException(error);
     console.error("[GET /api/users/courses]", error);
     return NextResponse.json({ error: "Failed to load courses" }, { status: 500 });
   }
@@ -59,6 +61,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ success: true, message: "Courses updated successfully" });
   } catch (error) {
+    Sentry.captureException(error);
     console.error("[POST /api/users/courses]", error);
     return NextResponse.json({ error: "Failed to update courses" }, { status: 500 });
   }

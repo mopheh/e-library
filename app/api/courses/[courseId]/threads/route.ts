@@ -4,6 +4,7 @@ import { threads, users } from "@/database/schema";
 import { eq, desc } from "drizzle-orm";
 import { getCurrentUser } from "@/lib/auth";
 import { z } from "zod";
+import * as Sentry from "@sentry/nextjs";
 
 const threadSchema = z.object({
   title: z.string().min(1, "title is required").max(255),
@@ -35,6 +36,7 @@ export async function GET(
 
     return NextResponse.json(courseThreads);
   } catch (error) {
+    Sentry.captureException(error);
     console.error("[GET /api/courses/[courseId]/threads]", error);
     return NextResponse.json({ error: "Failed to load threads" }, { status: 500 });
   }
@@ -77,6 +79,7 @@ export async function POST(
 
     return NextResponse.json(newThread, { status: 201 });
   } catch (error) {
+    Sentry.captureException(error);
     console.error("[POST /api/courses/[courseId]/threads]", error);
     return NextResponse.json({ error: "Failed to create thread" }, { status: 500 });
   }

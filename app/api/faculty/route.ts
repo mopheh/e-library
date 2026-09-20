@@ -4,6 +4,7 @@ import { db } from "@/database/drizzle";
 import { faculty } from "@/database/schema";
 import { eq } from "drizzle-orm";
 import { requireRole } from "@/lib/auth";
+import * as Sentry from "@sentry/nextjs";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -14,6 +15,7 @@ export async function GET(request: Request) {
     const faculties = await db.select().from(faculty).limit(limit).offset(skip);
     return NextResponse.json(faculties);
   } catch (error) {
+    Sentry.captureException(error);
     console.error(error);
     return NextResponse.json({ error: "Failed to fetch faculties" }, { status: 500 });
   }
@@ -31,6 +33,7 @@ export async function POST(req: Request) {
     const [newFaculty] = await db.insert(faculty).values({ name }).returning();
     return NextResponse.json(newFaculty, { status: 201 });
   } catch (err: any) {
+    Sentry.captureException(err);
     console.error("[POST /api/faculty]", err);
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
@@ -48,6 +51,7 @@ export async function PUT(req: Request) {
     const [updated] = await db.update(faculty).set({ name }).where(eq(faculty.id, id)).returning();
     return NextResponse.json(updated);
   } catch (err: any) {
+    Sentry.captureException(err);
     console.error("[PUT /api/faculty]", err);
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
@@ -65,6 +69,7 @@ export async function DELETE(req: Request) {
     await db.delete(faculty).where(eq(faculty.id, id));
     return NextResponse.json({ success: true });
   } catch (err: any) {
+    Sentry.captureException(err);
     console.error("[DELETE /api/faculty]", err);
     return NextResponse.json({ error: err.message }, { status: 500 });
   }

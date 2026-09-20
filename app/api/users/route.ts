@@ -8,8 +8,38 @@ import { requireRole } from "@/lib/auth";
 import { validateMatricNo } from "@/lib/facultyCodes";
 
 import { clerkClient } from "@clerk/nextjs/server";
+import * as Sentry from "@sentry/nextjs";
 
 const USER_ROLES = ["STUDENT", "ADMIN", "FACULTY REP", "ASPIRANT"] as const;
+
+// Self-onboarding (this route's POST) may only ever create a STUDENT or
+// ASPIRANT — ADMIN/FACULTY REP is exclusively granted via the audited
+// PATCH /api/admin/role flow. Anything else in the request body is ignored
+// below via the explicit field allowlist (never spread the raw body into
+// the DB call — that's how a caller could otherwise smuggle in `role`,
+// `id`, or any other column).
+const SELF_ONBOARD_ROLES = new Set(["STUDENT", "ASPIRANT"]);
+const ONBOARD_FIELDS = [
+  "fullName",
+  "email",
+  "phoneNumber",
+  "year",
+  "facultyId",
+  "departmentId",
+  "matricNo",
+  "dateOfBirth",
+  "gender",
+  "address",
+  "interests",
+] as const;
+
+function pickOnboardFields(params: Record<string, unknown>) {
+  const picked: Record<string, unknown> = {};
+  for (const key of ONBOARD_FIELDS) {
+    if (params[key] !== undefined) picked[key] = params[key];
+  }
+  return picked;
+}
 
 async function enrichWithClerkAvatars<T extends { clerkId: string }>(rows: T[]) {
   const clerkIds = rows.map((u) => u.clerkId);
@@ -135,6 +165,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json(await enrichWithClerkAvatars(results));
   } catch (error) {
+    Sentry.captureException(error);
     console.error("[GET /api/users]", error);
     return NextResponse.json(
       { error: "Failed to fetch users" },
@@ -158,8 +189,12 @@ export async function POST(req: Request) {
     }
 
     if (!params.email) {
-      return NextResponse.json({ error: "Missing email" }, { status: 500 });
+      return NextResponse.json({ error: "Missing email" }, { status: 400 });
     }
+
+    // Never trust the caller's `role` — only STUDENT/ASPIRANT are self-servable.
+    const safeRole = SELF_ONBOARD_ROLES.has(params.role) ? params.role : "STUDENT";
+    const safeFields = pickOnboardFields(params);
     const existingMatNo = await db
       .select()
       .from(users)
@@ -172,17 +207,15 @@ export async function POST(req: Request) {
       .limit(1);
 
     if (existingMatNo.length > 0) {
-      console.log("Matric Number is taken!!!");
-      console.error("Failed to insert user");
       return NextResponse.json(
         { message: "Matric Number is already taken!!!" },
-        { status: 500 },
+        { status: 409 },
       );
     }
 
     // JAMB reg numbers (ASPIRANT signup) reuse the matricNo column and don't
     // follow the faculty-code format, so only students are gated here.
-    if (params.role === "STUDENT" && params.facultyId && params.matricNo) {
+    if (safeRole === "STUDENT" && params.facultyId && params.matricNo) {
       const [fac] = await db
         .select({ name: faculty.name })
         .from(faculty)
@@ -205,16 +238,19 @@ export async function POST(req: Request) {
       .limit(1);
 
     if (existingUser.length > 0) {
-      // User already exists, let's update their onboarding info instead of throwing an error
-      await db.update(users).set(params).where(eq(users.email, params.email));
+      // User already exists, let's update their onboarding info instead of
+      // throwing an error. Role is deliberately excluded from `safeFields` —
+      // an existing user's role never changes through this endpoint, only
+      // through the audited PATCH /api/admin/role flow.
+      await db.update(users).set(safeFields).where(eq(users.email, params.email));
 
       // Sync with Clerk Metadata
       try {
         const client = await clerkClient();
-        await client.users.updateUserMetadata(params.clerkId, {
+        await client.users.updateUserMetadata(userId, {
           publicMetadata: {
             onboarded: true,
-            role: params.role || "STUDENT",
+            role: existingUser[0].role || "STUDENT",
           },
         });
       } catch (clerkError) {
@@ -224,15 +260,15 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: true, message: "user updated" });
     }
 
-    await db.insert(users).values(params);
+    await db.insert(users).values({ ...safeFields, clerkId: userId, role: safeRole } as typeof users.$inferInsert);
 
     // Sync with Clerk Metadata for immediate role and onboarding update
     try {
       const client = await clerkClient();
-      await client.users.updateUserMetadata(params.clerkId, {
+      await client.users.updateUserMetadata(userId, {
         publicMetadata: {
           onboarded: true,
-          role: params.role || "STUDENT",
+          role: safeRole,
         },
       });
     } catch (clerkError) {
@@ -243,6 +279,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ success: true, message: "user created" });
   } catch (e) {
+    Sentry.captureException(e);
     console.error("[POST /api/users]", e);
     return NextResponse.json(
       { error: "Failed to Create User" },
@@ -289,6 +326,7 @@ export async function PUT(req: NextRequest) {
 
     return NextResponse.json(updated);
   } catch (err: any) {
+    Sentry.captureException(err);
     console.error("[PUT /api/users]", err);
     return NextResponse.json({ error: err.message || "Failed to update user" }, { status: 500 });
   }

@@ -3,7 +3,7 @@
 import React, { useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { SignInButton, SignedIn, SignedOut } from "@clerk/nextjs";
+import { SignedIn, SignedOut } from "@clerk/nextjs";
 import { ArrowRight, BookOpen, BrainCircuit, Flame, MessageSquare, Trophy, GraduationCap, Sparkles } from "lucide-react";
 
 const floatingCards = [
@@ -134,16 +134,17 @@ export const HeroSection = () => {
             className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto mb-12"
           >
             <SignedOut>
-              <SignInButton mode="modal">
-                <button className="group relative px-8 py-4 rounded-xl font-inter font-semibold text-white overflow-hidden transition-all hover:scale-[1.02] active:scale-[0.98]">
-                  <div className="absolute inset-0 bg-gradient-to-r from-[#0057e7] to-[#0099ff]" />
-                  <div className="absolute inset-0 opacity-0 group-hover:opacity-100 bg-gradient-to-r from-[#0040c8] to-[#0080ee] transition-opacity" />
-                  <span className="relative flex items-center justify-center gap-2">
-                    Start Learning Free
-                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                  </span>
-                </button>
-              </SignInButton>
+              <Link
+                href="/sign-in"
+                className="group relative px-8 py-4 rounded-xl font-inter font-semibold text-white overflow-hidden transition-all hover:scale-[1.02] active:scale-[0.98] inline-flex items-center justify-center"
+              >
+                <div className="absolute inset-0 bg-gradient-to-r from-[#0057e7] to-[#0099ff]" />
+                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 bg-gradient-to-r from-[#0040c8] to-[#0080ee] transition-opacity" />
+                <span className="relative flex items-center justify-center gap-2">
+                  Start Learning Free
+                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                </span>
+              </Link>
             </SignedOut>
             <SignedIn>
               <Link

@@ -3,6 +3,7 @@ import { sessions, answers } from "@/database/schema";
 import { getCurrentUser } from "@/lib/auth";
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import * as Sentry from "@sentry/nextjs";
 
 const answerItemSchema = z.object({
   questionId: z.string().uuid("questionId must be a valid UUID"),
@@ -50,6 +51,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ success: true, session: newSession }, { status: 201 });
   } catch (error) {
+    Sentry.captureException(error);
     console.error("[POST /api/cbt/sessions]", error);
     return NextResponse.json({ error: "Failed to save session" }, { status: 500 });
   }

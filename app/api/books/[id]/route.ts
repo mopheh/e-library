@@ -4,6 +4,7 @@ import { db } from "@/database/drizzle";
 import { books, bookCourses, userBooks, readingSessions, bookPages, annotations } from "@/database/schema";
 import { authorizeB2, b2 } from "@/lib/utils";
 import { requireRole, getCurrentUser } from "@/lib/auth";
+import * as Sentry from "@sentry/nextjs";
 
 export async function GET(
   req: Request,
@@ -78,6 +79,7 @@ export async function GET(
     
     return NextResponse.json(book, { status: 200 });
   } catch (error) {
+    Sentry.captureException(error);
     console.error("Error fetching book:", error);
     return NextResponse.json(
       { error: "Failed to fetch book" },
@@ -122,6 +124,7 @@ export async function PUT(
 
     return NextResponse.json({ message: "Book updated successfully" });
   } catch (error: any) {
+    Sentry.captureException(error);
     console.error("[PUT /api/books/:id]", error);
     return NextResponse.json({ error: error?.message || "Failed to update book" }, { status: 500 });
   }
@@ -152,6 +155,7 @@ export async function DELETE(
 
     return NextResponse.json({ message: "Book deleted successfully" });
   } catch (error: any) {
+    Sentry.captureException(error);
     console.error("[DELETE /api/books/:id]", error);
     return NextResponse.json({ error: error?.message || "Failed to delete book" }, { status: 500 });
   }

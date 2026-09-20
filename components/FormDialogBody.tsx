@@ -8,10 +8,15 @@ export default function FormModal({
   open,
   setOpen,
   children,
+  size = "md",
+  title = "New Entry",
 }: {
   open: boolean;
   setOpen: (open: boolean) => void;
   children: ReactNode;
+  /** "lg" gives content-heavy forms (e.g. book upload) more breathing room. */
+  size?: "md" | "lg";
+  title?: string;
 }) {
   const zoomVariants = {
     hidden: { opacity: 0, scale: 0.8 },
@@ -32,11 +37,11 @@ export default function FormModal({
             transition={{ duration: 0.25 }}
           >
             <motion.div
-              className="bg-white dark:bg-zinc-950 rounded-2xl shadow-2xl p-6 w-[90%] max-w-md max-h-[90vh] overflow-y-auto"
+              className={`bg-white dark:bg-zinc-950 rounded-2xl shadow-2xl p-6 w-[90%] ${size === "lg" ? "max-w-xl" : "max-w-md"} max-h-[90vh] overflow-y-auto`}
               variants={zoomVariants}
             >
               <div className="flex justify-between items-center mb-4">
-                <h2 className="text-lg font-semibold font-cabin">New Entry</h2>
+                <h2 className="text-lg font-semibold font-cabin">{title}</h2>
                 <button
                   onClick={() => setOpen(false)}
                   className="text-zinc-500 cursor-pointer hover:text-zinc-800"

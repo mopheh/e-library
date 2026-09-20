@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import Pusher from "pusher";
 import { z } from "zod";
+import * as Sentry from "@sentry/nextjs";
 
 const pusher = new Pusher({
   appId: process.env.PUSHER_APP_ID!,
@@ -57,6 +58,7 @@ export async function POST(
 
     return NextResponse.json(messageData, { status: 201 });
   } catch (error) {
+    Sentry.captureException(error);
     console.error("[POST /api/study-rooms/[roomId]/messages]", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }

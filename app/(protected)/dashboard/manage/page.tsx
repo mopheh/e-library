@@ -212,7 +212,7 @@ export default function FacultyManagementPage() {
                                         <h3 className="text-xl font-medium text-zinc-900 dark:text-zinc-50 mb-2 font-cabin uppercase tracking-tighter flex items-center gap-2">
                                             Library Mgmt <ChevronRight className="w-5 h-5 text-zinc-300 group-hover:translate-x-1 transition-transform" />
                                         </h3>
-                                        <p className="text-xs text-zinc-500 font-poppins font-light leading-relaxed">Review pending Faculty Rep uploads before they go live.</p>
+                                        <p className="text-xs text-zinc-500 font-poppins font-light leading-relaxed">Review pending material uploads before they go live.</p>
                                     </div>
                                     <div className="absolute top-0 right-0 -translate-y-4 translate-x-4 opacity-5 group-hover:scale-125 transition-transform">
                                         <Database className="w-32 h-32" />

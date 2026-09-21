@@ -15,6 +15,18 @@ import { auth, clerkClient } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import { pusherServer } from "@/lib/pusher";
 
+/**
+ * Thrown for messages that are safe to show a user verbatim (validation,
+ * permission, "not found" checks). Anything else caught below -- driver
+ * errors, constraint violations, etc. -- is logged but never exposed, since
+ * their .message can contain raw SQL and bound params.
+ */
+class ActionError extends Error {}
+
+function safeErrorMessage(error: unknown, fallback: string): string {
+    return error instanceof ActionError ? error.message : fallback;
+}
+
 /** Faculty Reps operate faculty-wide (all departments in their faculty), not just their own department. */
 async function departmentIdsForFacultyRep(currentUser: { facultyId: string | null }): Promise<string[]> {
     if (!currentUser.facultyId) return [];
@@ -30,20 +42,20 @@ async function departmentIdsForFacultyRep(currentUser: { facultyId: string | nul
 export async function createResourceRequest(courseId: string, description: string) {
     try {
         const { userId: clerkId } = await auth();
-        if (!clerkId) throw new Error("Unauthorized");
+        if (!clerkId) throw new ActionError("Unauthorized");
 
         const currentUser = await db.query.users.findFirst({
             where: eq(users.clerkId, clerkId),
         });
-        if (!currentUser) throw new Error("User not found");
-        if (!currentUser.departmentId) throw new Error("Your account has no assigned department.");
+        if (!currentUser) throw new ActionError("User not found");
+        if (!currentUser.departmentId) throw new ActionError("Your account has no assigned department.");
 
-        if (!courseId) throw new Error("Please select a course.");
+        if (!courseId) throw new ActionError("Please select a course.");
         const trimmedDescription = description.trim();
-        if (trimmedDescription.length < 10) throw new Error("Please describe what you need in a bit more detail.");
+        if (trimmedDescription.length < 10) throw new ActionError("Please describe what you need in a bit more detail.");
 
         const course = await db.query.courses.findFirst({ where: (c, { eq }) => eq(c.id, courseId) });
-        if (!course) throw new Error("Course not found");
+        if (!course) throw new ActionError("Course not found");
 
         const [request] = await db.insert(resourceRequests).values({
             userId: currentUser.id,
@@ -78,7 +90,7 @@ export async function createResourceRequest(courseId: string, description: strin
         return { success: true, data: request };
     } catch (error) {
         console.error("Error creating resource request:", error);
-        return { success: false, error: error instanceof Error ? error.message : "Failed to submit request" };
+        return { success: false, error: safeErrorMessage(error, "Couldn't submit your request — please try again.") };
     }
 }
 
@@ -152,14 +164,14 @@ export async function getResourceRequests() {
 export async function fulfillResourceRequest(requestId: string, url: string) {
     try {
         const { userId: clerkId } = await auth();
-        if (!clerkId) throw new Error("Unauthorized");
+        if (!clerkId) throw new ActionError("Unauthorized");
 
         const currentUser = await db.query.users.findFirst({
             where: eq(users.clerkId, clerkId),
         });
 
         if (!currentUser || (currentUser.role !== "ADMIN" && currentUser.role !== "FACULTY REP")) {
-            throw new Error("Forbidden");
+            throw new ActionError("Forbidden");
         }
 
         const request = await db.query.resourceRequests.findFirst({
@@ -169,13 +181,13 @@ export async function fulfillResourceRequest(requestId: string, url: string) {
             }
         });
 
-        if (!request) throw new Error("Request not found");
+        if (!request) throw new ActionError("Request not found");
 
         // Faculty Rep check: must be a department in their faculty
         if (currentUser.role === "FACULTY REP") {
             const deptIds = await departmentIdsForFacultyRep(currentUser);
             if (!deptIds.includes(request.departmentId)) {
-                throw new Error("You can only fulfill requests for departments in your own faculty.");
+                throw new ActionError("You can only fulfill requests for departments in your own faculty.");
             }
         }
 
@@ -208,7 +220,7 @@ export async function fulfillResourceRequest(requestId: string, url: string) {
         return { success: true };
     } catch (error) {
         console.error("Error fulfilling resource request:", error);
-        return { success: false, error: error instanceof Error ? error.message : "Failed to fulfill request" };
+        return { success: false, error: safeErrorMessage(error, "Couldn't fulfill this request — please try again.") };
     }
 }
 
@@ -273,18 +285,18 @@ export async function rejectResourceRequest(requestId: string, reason: string) {
 export async function broadcastAnnouncement(content: string, targetType: "DEPARTMENT" | "FACULTY") {
     try {
         const { userId: clerkId } = await auth();
-        if (!clerkId) throw new Error("Unauthorized");
+        if (!clerkId) throw new ActionError("Unauthorized");
 
         const currentUser = await db.query.users.findFirst({
             where: eq(users.clerkId, clerkId),
         });
 
         if (!currentUser || (currentUser.role !== "ADMIN" && currentUser.role !== "FACULTY REP")) {
-            throw new Error("Forbidden");
+            throw new ActionError("Forbidden");
         }
 
         if (!currentUser.departmentId && currentUser.role === "FACULTY REP") {
-            throw new Error("Faculty Rep must have an assigned department.");
+            throw new ActionError("Faculty Rep must have an assigned department.");
         }
 
         let targetDeptIds: string[] = [];
@@ -300,7 +312,7 @@ export async function broadcastAnnouncement(content: string, targetType: "DEPART
             }
         }
 
-        if (targetDeptIds.length === 0) throw new Error("No target departments found.");
+        if (targetDeptIds.length === 0) throw new ActionError("No target departments found.");
 
         // For each department, find their community and post
         const communities = await db.query.departmentCommunities.findMany({
@@ -325,6 +337,6 @@ export async function broadcastAnnouncement(content: string, targetType: "DEPART
 
     } catch (error) {
         console.error("Error broadcasting announcement:", error);
-        return { success: false, error: error instanceof Error ? error.message : "Failed to broadcast announcement" };
+        return { success: false, error: safeErrorMessage(error, "Couldn't broadcast this announcement — please try again.") };
     }
 }

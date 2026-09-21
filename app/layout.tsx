@@ -88,9 +88,17 @@ export default function RootLayout({
               richColors
               duration={4000}
               toastOptions={{
-                className: "font-poppins bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xl border border-zinc-200 dark:border-zinc-800 rounded-[2rem] shadow-2xl transition-all",
+                className: "font-poppins bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xl border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-2xl transition-all !p-4 !gap-3",
+                classNames: {
+                  title: "!text-sm !font-bold",
+                  description: "!text-xs !text-zinc-500 dark:!text-zinc-400 !line-clamp-3 !mt-0.5",
+                  icon: "!mt-0.5",
+                  error: "!border-red-300 dark:!border-red-900",
+                  success: "!border-green-300 dark:!border-green-900",
+                },
                 style: {
-                  boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)"
+                  boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
+                  maxWidth: "380px",
                 }
               }}
             />

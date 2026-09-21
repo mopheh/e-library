@@ -150,7 +150,7 @@ export default function PendingBooksTable() {
                                         <div className="flex items-center justify-end gap-1">
                                             {book.fileUrl && (
                                                 <a
-                                                  href={book.fileUrl}
+                                                  href={`/api/books/${book.id}/proxy`}
                                                   target="_blank"
                                                   rel="noopener noreferrer"
                                                   className="p-2 inline-block hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg text-blue-600 transition-colors"

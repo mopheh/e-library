@@ -13,25 +13,42 @@ export default function RequestMaterialModal({ departmentId }: { departmentId?: 
   const [courseId, setCourseId] = useState("");
   const [description, setDescription] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [courseError, setCourseError] = useState<string | null>(null);
+  const [descriptionError, setDescriptionError] = useState<string | null>(null);
   const router = useRouter();
 
   const { data: courses } = useCourses({ departmentId, limit: 500, includeBorrowed: true });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!courseId) return toast.error("Please select a course");
-    if (description.trim().length < 10) return toast.error("Please describe what you need in a bit more detail");
+    setCourseError(null);
+    setDescriptionError(null);
+
+    let hasError = false;
+    if (!courseId) {
+      setCourseError("Please select a course.");
+      hasError = true;
+    }
+    if (description.trim().length < 10) {
+      setDescriptionError("Please describe what you need in a bit more detail.");
+      hasError = true;
+    }
+    if (hasError) return;
 
     setIsSubmitting(true);
     const res = await createResourceRequest(courseId, description);
     if (res.success) {
-      toast.success("Request submitted — your faculty rep will be notified");
+      toast.success("Request submitted", {
+        description: "Your faculty rep will be notified.",
+      });
       setOpen(false);
       setCourseId("");
       setDescription("");
       router.refresh();
     } else {
-      toast.error(res.error || "Failed to submit request");
+      toast.error("Couldn't submit your request", {
+        description: res.error || "Please try again.",
+      });
     }
     setIsSubmitting(false);
   };
@@ -57,8 +74,15 @@ export default function RequestMaterialModal({ departmentId }: { departmentId?: 
               <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300">Course</label>
               <select
                 value={courseId}
-                onChange={(e) => setCourseId(e.target.value)}
-                className="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500/20 outline-none transition-all"
+                onChange={(e) => {
+                  setCourseId(e.target.value);
+                  if (courseError) setCourseError(null);
+                }}
+                className={`w-full bg-zinc-50 dark:bg-zinc-900 border rounded-xl px-4 py-3 text-sm focus:ring-2 outline-none transition-all ${
+                  courseError
+                    ? "border-red-400 dark:border-red-500 focus:ring-red-500/20"
+                    : "border-zinc-200 dark:border-zinc-800 focus:ring-blue-500/20"
+                }`}
                 required
               >
                 <option value="">Select a course</option>
@@ -68,18 +92,27 @@ export default function RequestMaterialModal({ departmentId }: { departmentId?: 
                   </option>
                 ))}
               </select>
+              {courseError && <p className="text-xs text-red-500">{courseError}</p>}
             </div>
 
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300">What do you need?</label>
               <textarea
                 value={description}
-                onChange={(e) => setDescription(e.target.value)}
+                onChange={(e) => {
+                  setDescription(e.target.value);
+                  if (descriptionError) setDescriptionError(null);
+                }}
                 placeholder="e.g. Past questions for the 2024/2025 session, or the textbook by..."
                 rows={4}
-                className="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500/20 outline-none transition-all"
+                className={`w-full bg-zinc-50 dark:bg-zinc-900 border rounded-xl px-4 py-3 text-sm focus:ring-2 outline-none transition-all ${
+                  descriptionError
+                    ? "border-red-400 dark:border-red-500 focus:ring-red-500/20"
+                    : "border-zinc-200 dark:border-zinc-800 focus:ring-blue-500/20"
+                }`}
                 required
               />
+              {descriptionError && <p className="text-xs text-red-500">{descriptionError}</p>}
             </div>
 
             <button

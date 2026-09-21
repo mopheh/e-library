@@ -1,5 +1,4 @@
-import dotenv from "dotenv";
-dotenv.config({ path: ".env.local" });
+import "dotenv/config";
 
 const b2KeyId = process.env.B2_KEY_ID!;
 const b2AppKey = process.env.B2_APP_KEY!;
@@ -38,20 +37,33 @@ async function setupCors() {
         bucketId: b2BucketId,
         corsRules: [
           {
-            corsRuleName: "next-js-upload",
-            allowedOrigins: ["*"], // allow from anywhere for testing, or ["http://localhost:3000"]
-            allowedHeaders: ["*"], 
+            corsRuleName: "univault-upload",
+            allowedOrigins: [
+              "https://rcfbethelacademy.com",
+              "https://www.rcfbethelacademy.com",
+              "http://localhost:3000",
+              "http://localhost:3001",
+              "http://localhost:3002",
+              "https://*.vercel.app",
+            ],
+            allowedHeaders: [
+              "content-type",
+              "range",
+              "authorization",
+              "x-bz-file-name",
+              "x-bz-content-sha1",
+            ],
             allowedOperations: [
-              "b2_upload_file", 
-              "b2_upload_part", 
-              "b2_download_file_by_id", 
+              "b2_upload_file",
+              "b2_upload_part",
+              "b2_download_file_by_id",
               "b2_download_file_by_name",
               "s3_put",
               "s3_post",
               "s3_get",
-              "s3_head"
+              "s3_head",
             ],
-            exposeHeaders: ["x-bz-content-sha1"],
+            exposeHeaders: ["etag", "content-length", "content-range", "accept-ranges"],
             maxAgeSeconds: 3600
           }
         ]

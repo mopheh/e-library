@@ -184,7 +184,7 @@ export default function FacultyManagementPage() {
                                 <p className="text-xs text-zinc-400 dark:text-zinc-500 font-light mb-0.5">
                                     {greeting},{" "}
                                     <span className="font-semibold text-zinc-600 dark:text-zinc-300">
-                                        {userData.name?.split(" ")[0] ?? "Admin"}
+                                        {userData.fullName?.split(" ")[0] ?? "Admin"}
                                     </span>
                                 </p>
 

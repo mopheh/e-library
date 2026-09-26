@@ -4,7 +4,7 @@ import { db } from "@/database/drizzle";
 import { departments, faculty, systemSettings, users } from "@/database/schema";
 import { eq, and, ne, or, ilike, desc, sql } from "drizzle-orm";
 import { auth } from "@clerk/nextjs/server";
-import { requireRole } from "@/lib/auth";
+import { invalidateUserCache, requireRole } from "@/lib/auth";
 import { validateMatricNo } from "@/lib/facultyCodes";
 
 import { clerkClient } from "@clerk/nextjs/server";
@@ -243,6 +243,7 @@ export async function POST(req: Request) {
       // an existing user's role never changes through this endpoint, only
       // through the audited PATCH /api/admin/role flow.
       await db.update(users).set(safeFields).where(eq(users.email, params.email));
+      await invalidateUserCache({ email: params.email });
 
       // Sync with Clerk Metadata
       try {
@@ -320,6 +321,7 @@ export async function PUT(req: NextRequest) {
       .set({ departmentId: targetDept.id, facultyId: targetDept.facultyId })
       .where(eq(users.id, userId))
       .returning();
+    if (updated) await invalidateUserCache({ clerkId: updated.clerkId });
     if (!updated) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }

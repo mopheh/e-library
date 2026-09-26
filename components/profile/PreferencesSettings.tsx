@@ -5,6 +5,7 @@ import { useTheme } from "next-themes";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import NotificationSettings from "./NotificationSettings";
 
 export default function PreferencesSettings() {
   const { theme, setTheme } = useTheme();
@@ -37,6 +38,8 @@ export default function PreferencesSettings() {
           </RadioGroup>
         </CardContent>
       </Card>
+
+      <NotificationSettings />
     </div>
   );
 }

@@ -2,6 +2,7 @@ import { db } from "@/database/drizzle";
 import { readingSessions, userBooks, users, studentCourses, courses, academicCalendarEvents } from "@/database/schema";
 import { getCurrentUser } from "@/lib/auth";
 import { withCache } from "@/lib/redis";
+import { manualStudyByDate } from "@/lib/study-logs";
 import { NextResponse } from "next/server";
 import { and, desc, eq, gte, sql } from "drizzle-orm";
 import { format, subDays, eachDayOfInterval, parseISO } from "date-fns";
@@ -11,6 +12,24 @@ import * as Sentry from "@sentry/nextjs";
 // This means at 1 000 concurrent dashboard loads, the DB sees at most
 // ~1 000 / 300 ≈ a trickle of unique queries instead of a storm.
 const ANALYTICS_TTL = 300;
+
+// One entry per active day. `value` is total minutes (in-app + logged),
+// `manual` is how many self-reported sittings that day - the heatmap shows
+// days with only logged study in a lighter shade.
+function mergeHeatmap(
+  app: { date: string; count: number; value: number }[],
+  manual: { date: string; sessions: number; minutes: number }[],
+) {
+  const byDate = new Map<string, { date: string; count: number; value: number; manual: number }>();
+  app.forEach(h => byDate.set(h.date, { date: h.date, count: Number(h.count), value: Number(h.value || 0), manual: 0 }));
+  manual.forEach(m => {
+    const entry = byDate.get(m.date) ?? { date: m.date, count: 0, value: 0, manual: 0 };
+    entry.value += Number(m.minutes || 0);
+    entry.manual += Number(m.sessions || 0);
+    byDate.set(m.date, entry);
+  });
+  return [...byDate.values()];
+}
 
 export async function GET() {
   try {
@@ -65,7 +84,7 @@ export async function GET() {
         : null;
 
       // ── 1. KPIs — run all 3 counts in parallel ────────────────────────────
-      const [booksReadRes, timeReadRes, aiUsageRes, sessions] = await Promise.all([
+      const [booksReadRes, timeReadRes, aiUsageRes, sessions, manualByDate] = await Promise.all([
         db
           .select({ count: sql<number>`count(*)` })
           .from(userBooks)
@@ -87,15 +106,20 @@ export async function GET() {
           .from(readingSessions)
           .where(eq(readingSessions.userId, userId))
           .orderBy(desc(readingSessions.date)),
+
+        // Self-reported study outside the app (study_logs) - counts toward
+        // the student's own stats, never the leaderboard.
+        manualStudyByDate(userId),
       ]);
 
       const totalBooksRead    = Number(booksReadRes[0]?.count || 0);
-      const totalMinutesRead  = Number(timeReadRes[0]?.totalMinutes || 0);
+      const manualMinutes     = manualByDate.reduce((sum, d) => sum + Number(d.minutes || 0), 0);
+      const totalMinutesRead  = Number(timeReadRes[0]?.totalMinutes || 0) + manualMinutes;
       const totalAiRequests   = Number(aiUsageRes[0]?.totalAi || 0);
 
       // ── 2. Streak ─────────────────────────────────────────────────────────
       const uniqueDateStrings = Array.from(
-        new Set(sessions.map(s => s.date))
+        new Set([...sessions.map(s => s.date), ...manualByDate.map(d => d.date)])
       ).sort().reverse();
 
       let streak = 0;
@@ -169,6 +193,13 @@ export async function GET() {
         trendsMap.set(format(day, "yyyy-MM-dd"), { user: 0, department: 0 });
       });
 
+      manualByDate.forEach(d => {
+        if (trendsMap.has(d.date)) {
+          const current = trendsMap.get(d.date)!;
+          trendsMap.set(d.date, { ...current, user: current.user + Number(d.minutes || 0) });
+        }
+      });
+
       last7DaysSessions.forEach(session => {
         const key = format(new Date(session.date), "yyyy-MM-dd");
         if (trendsMap.has(key)) {
@@ -201,11 +232,7 @@ export async function GET() {
           daysToExam,
           totalAiRequests,
         },
-        heatmap: heatmapData.map(h => ({
-          date:  h.date,
-          count: h.count,
-          value: h.value,
-        })),
+        heatmap: mergeHeatmap(heatmapData, manualByDate),
         weeklyTrends,
       };
     });

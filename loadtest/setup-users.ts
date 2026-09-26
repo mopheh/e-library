@@ -8,8 +8,8 @@
 // session would be.
 import { createClerkClient } from "@clerk/backend";
 import { db } from "../database/drizzle";
-import { users, departments, courses } from "../database/schema";
-import { eq } from "drizzle-orm";
+import { users, departments, courses, studentCourses } from "../database/schema";
+import { and, eq } from "drizzle-orm";
 import * as fs from "fs";
 import * as path from "path";
 
@@ -29,9 +29,17 @@ async function main() {
   // One representative course per department, so k6 can also exercise the
   // courseId-scoped endpoints (study-rooms, workspaces) that got N+1 fixes.
   const courseByDept = new Map<string, string>();
+  const coursesByDept = new Map<string, string[]>();
   for (const dept of depts) {
-    const [course] = await db.select({ id: courses.id }).from(courses).where(eq(courses.departmentId, dept.id)).limit(1);
-    if (course) courseByDept.set(dept.id, course.id);
+    const deptCourses = await db
+      .select({ id: courses.id })
+      .from(courses)
+      .where(and(eq(courses.departmentId, dept.id), eq(courses.semester, "FIRST")))
+      .limit(5);
+    if (deptCourses.length) {
+      courseByDept.set(dept.id, deptCourses[0].id);
+      coursesByDept.set(dept.id, deptCourses.map((c) => c.id));
+    }
   }
 
   console.log(`Provisioning ${POOL_SIZE} load-test users across ${depts.length} departments...`);
@@ -52,11 +60,22 @@ async function main() {
         firstName: "LoadTest",
         lastName: `User${i}`,
         publicMetadata: { onboarded: true, role: "STUDENT" },
+        // The session token's `metadata` claim (checked by middleware.ts for
+        // the onboarding redirect) maps to unsafeMetadata
+        unsafeMetadata: { onboarded: true, role: "student" },
       });
     } catch (err: any) {
       // Already exists from a previous run - look it up instead of failing.
       const existing = await clerk.users.getUserList({ emailAddress: [email] });
-      if (existing.data.length === 0) throw err;
+      if (existing.data.length === 0) {
+        // Clerk development instances cap total users (100). Keep what we
+        // have - k6 spreads VUs across the pool, so fewer accounts still works.
+        if (err?.errors?.[0]?.code === "user_quota_exceeded") {
+          console.warn(`\nClerk user quota reached after ${tokens.length} users - continuing with those.`);
+          break;
+        }
+        throw err;
+      }
       clerkUser = existing.data[0];
     }
 
@@ -74,6 +93,17 @@ async function main() {
         gender: i % 2 === 0 ? "MALE" : "FEMALE",
         address: "N/A",
       });
+    }
+
+    // Register each user for a few of their department's courses so the
+    // course-scoped features (plan, readiness, study log) do real work
+    const [dbUser] = await db.select({ id: users.id }).from(users).where(eq(users.clerkId, clerkUser.id)).limit(1);
+    const deptCourses = coursesByDept.get(dept.id) ?? [];
+    if (dbUser && deptCourses.length) {
+      await db
+        .insert(studentCourses)
+        .values(deptCourses.map((courseId) => ({ userId: dbUser.id, courseId })))
+        .onConflictDoNothing();
     }
 
     const session = await clerk.sessions.createSession({ userId: clerkUser.id });

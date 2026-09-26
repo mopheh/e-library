@@ -8,6 +8,7 @@ import { useAuth, useUser } from "@clerk/nextjs";
 import { STORAGE_KEY } from "@/lib/utils";
 import { SearchCommand } from "./SearchCommand";
 import NotificationBell from "./Notifications/NotificationBell";
+import { removePushSubscription } from "@/hooks/usePushNotifications";
 
 const Nav = () => {
   const { user } = useUser();
@@ -71,8 +72,8 @@ const Nav = () => {
                   height={20}
                   className="cursor-pointer"
                   onClick={() => {
-                    signOut();
                     localStorage.setItem(STORAGE_KEY, "[]");
+                    removePushSubscription().finally(() => signOut());
                   }}
                 />
               </>

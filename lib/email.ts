@@ -2,8 +2,12 @@ import { Resend } from "resend";
 import { opportunities, users, studentCourses, courses } from "@/database/schema";
 import { eq, inArray, and, gte, lte, isNotNull } from "drizzle-orm";
 import { differenceInDays } from "date-fns";
-import type { NodePgDatabase } from "drizzle-orm/node-postgres";
+import type { PgDatabase, PgQueryResultHKT } from "drizzle-orm/pg-core";
 import type * as schema from "@/database/schema";
+
+// Any drizzle Postgres client works: the worker's node-postgres pool, or the
+// app's Neon HTTP client when emails are sent from the cron endpoint.
+type Db = PgDatabase<PgQueryResultHKT, typeof schema>;
 import type { CreateEmailOptions } from "resend";
 
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
@@ -97,7 +101,7 @@ function buildExamCountdownHtml(exam: NearestExam | null) {
 // courses) landing within the next EXAM_LOOKAHEAD_DAYS days. One joined query
 // for all students rather than one query per recipient.
 async function getNearestExamsByUser(
-  db: NodePgDatabase<typeof schema>,
+  db: Db,
 ): Promise<Map<string, NearestExam>> {
   const now = new Date();
   const windowEnd = new Date(now.getTime() + EXAM_LOOKAHEAD_DAYS * 24 * 60 * 60 * 1000);
@@ -238,7 +242,7 @@ function buildDigestEmailHtml(
 }
 
 async function sendBatchedToStudents(
-  db: NodePgDatabase<typeof schema>,
+  db: Db,
   subject: string,
   buildHtml: (fullName: string, exam: NearestExam | null) => string,
 ) {
@@ -277,7 +281,7 @@ async function sendBatchedToStudents(
 
 export async function sendScholarshipEmails(
   opportunityId: string,
-  db: NodePgDatabase<typeof schema>,
+  db: Db,
 ) {
   if (!resend || !EMAIL_FROM) {
     console.error(
@@ -310,7 +314,7 @@ export async function sendScholarshipEmails(
 
 export async function sendScholarshipReminderEmails(
   opportunityId: string,
-  db: NodePgDatabase<typeof schema>,
+  db: Db,
 ) {
   if (!resend || !EMAIL_FROM) {
     console.error(
@@ -345,7 +349,7 @@ export async function sendScholarshipReminderEmails(
 // scholarships in a single digest email instead of one email per opportunity.
 export async function sendScholarshipDigestEmail(
   opportunityIds: string[],
-  db: NodePgDatabase<typeof schema>,
+  db: Db,
 ) {
   if (!resend || !EMAIL_FROM) {
     console.error("[email] RESEND_API_KEY and/or EMAIL_FROM is not set - skipping digest email.");

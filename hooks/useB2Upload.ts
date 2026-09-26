@@ -1,7 +1,10 @@
 export function useB2Upload() {
   const upload = (
     file: File,
-    onProgress?: (progress: number) => void
+    onProgress?: (progress: number) => void,
+    // "result-slip" stores the file in the student's private slips/ folder
+    // (server enforces <=5MB, PDF/image)
+    options?: { purpose?: "result-slip" }
   ): Promise<string> => {
     return new Promise(async (resolve, reject) => {
       try {
@@ -17,6 +20,7 @@ export function useB2Upload() {
               fileName: file.name,
               fileType: file.type || "application/octet-stream",
               fileSize: file.size,
+              purpose: options?.purpose,
             }),
           });
           

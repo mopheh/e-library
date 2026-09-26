@@ -1,5 +1,5 @@
 import { db } from "@/database/drizzle";
-import { goals, users, readingSessions, userBooks } from "@/database/schema";
+import { goals, users, readingSessions, userBooks, studyLogs } from "@/database/schema";
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { eq, and, gt, sql } from "drizzle-orm";
@@ -43,7 +43,11 @@ export async function GET() {
             .select({ sum: sql<number>`coalesce(sum(${readingSessions.duration}), 0)` })
             .from(readingSessions)
             .where(eq(readingSessions.userId, user.id));
-          currentProgress = Number(result?.sum ?? 0);
+          const [manual] = await db
+            .select({ sum: sql<number>`coalesce(sum(${studyLogs.minutes}), 0)` })
+            .from(studyLogs)
+            .where(eq(studyLogs.userId, user.id));
+          currentProgress = Number(result?.sum ?? 0) + Number(manual?.sum ?? 0);
         } else if (goal.type === "books_read") {
           const [result] = await db
             .select({ count: sql<number>`count(*)` })

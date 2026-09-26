@@ -3,11 +3,8 @@ import { useUser } from "@clerk/nextjs";
 import { useDashboard } from "@/hooks/useDashboard";
 import { useAnalytics } from "@/hooks/useAnalytics";
 import KPICards from "./Analytics/KPICards";
-import ActivityHeatmap from "./Analytics/ActivityHeatmap";
 import GoalsCard from "./Analytics/GoalsCard";
-import AIInsights from "./Analytics/AIInsights";
 import ContinueReading from "./Analytics/ContinueReading";
-import Charts from "./Charts";
 import { CourseRegistrationModal } from "@/components/Dashboard/CourseRegistration";
 import HomeDashboardSkeleton from "@/components/Dashboard/HomeDashboardSkeleton";
 import { ExamPrepBanner } from "@/components/Dashboard/ExamPrepBanner";
@@ -17,7 +14,12 @@ import QuickActions from "./QuickActions";
 import StreakTracker from "./StreakTracker";
 import { OnboardingTour } from "./OnboardingTour";
 import { ContributeWelcomeNudge } from "./ContributeWelcomeNudge";
-import { Sparkles, Bell } from "lucide-react";
+import { PushPrompt } from "./PushPrompt";
+import Charts from "./Charts";
+import { TodayCard } from "@/components/progress/TodayCard";
+import { DashboardReadiness } from "@/components/progress/Readiness";
+import { Sparkles, Bell, Plus } from "lucide-react";
+import { useLogStudySheet } from "@/components/study-log/LogStudySheet";
 import Link from "next/link";
 import Image from "next/image";
 
@@ -25,6 +27,7 @@ const HomeDashboard = () => {
   const { user } = useUser();
   const { data, isLoading: booksLoading } = useDashboard();
   const { data: analyticsData, isLoading: analyticsLoading } = useAnalytics();
+  const { openLogStudy } = useLogStudySheet();
 
   const hour = new Date().getHours();
   const greeting =
@@ -68,6 +71,13 @@ const HomeDashboard = () => {
 
         {/* Right: actions */}
         <div className="hidden md:flex items-center gap-3 shrink-0">
+          <button
+            onClick={() => openLogStudy()}
+            className="flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-black font-cabin text-[10px] uppercase tracking-widest shadow-md shadow-indigo-500/20 transition-all"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            Log study
+          </button>
           <Link
             href="/dashboard/ai"
             className="flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-zinc-900 dark:bg-zinc-50 text-white dark:text-zinc-900 font-black font-cabin text-[10px] uppercase tracking-widest shadow-md hover:bg-zinc-800 dark:hover:bg-zinc-200 transition-all"
@@ -81,6 +91,11 @@ const HomeDashboard = () => {
           </button>
         </div>
       </div>
+
+      <PushPrompt />
+
+      {/* ── Today: the one thing to do, framed by exam/streak/week ── */}
+      <TodayCard />
 
       {/* ── KPI strip ─────────────────────────────────── */}
       <div data-tour="kpi-cards">
@@ -119,9 +134,8 @@ const HomeDashboard = () => {
 
       {/* ── Charts + right column ─────────────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Left */}
         <div className="lg:col-span-8 space-y-6">
-          {/* Learning Activity Chart */}
+          {/* Learning Activity Chart (also shown on the Progress page) */}
           <div
             data-tour="learning-chart"
             className="bg-white dark:bg-zinc-900 rounded-[2rem] p-6 h-[450px] relative overflow-hidden shadow-sm hover:shadow-md transition-all border border-zinc-50 dark:border-zinc-800/60"
@@ -135,42 +149,30 @@ const HomeDashboard = () => {
                   Learning Activity
                 </h3>
               </div>
-              <span className="flex items-center gap-1.5 text-[10px] font-bold text-zinc-400 uppercase tracking-widest font-cabin">
-                <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
-                Last 7 Days
-              </span>
+              <div className="flex items-center gap-4">
+                <span className="flex items-center gap-1.5 text-[10px] font-bold text-zinc-400 uppercase tracking-widest font-cabin">
+                  <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
+                  Last 7 Days
+                </span>
+                <Link
+                  href="/dashboard/progress"
+                  className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-[10px] font-black font-cabin uppercase tracking-widest shadow-md shadow-indigo-500/20 transition"
+                >
+                  Open Progress →
+                </Link>
+              </div>
             </div>
             <Charts />
           </div>
 
-          {/* Heatmap */}
-          <div className="bg-white dark:bg-zinc-900 rounded-[2rem] p-8 shadow-sm hover:shadow-md transition-all border border-zinc-50 dark:border-zinc-800/60">
-            <ActivityHeatmap data={analyticsData?.heatmap || []} loading={analyticsLoading} />
-          </div>
+          <DashboardReadiness
+            tourId="course-readiness"
+            className="bg-white dark:bg-zinc-900 rounded-[2rem] p-6 shadow-sm border border-zinc-50 dark:border-zinc-800/60"
+          />
         </div>
 
-        {/* Right */}
         <div className="lg:col-span-4 space-y-6">
-          {/* Exam Prep */}
           <ExamPrepBanner courses={data?.enrolledCourses || []} />
-          {(!data?.enrolledCourses || data.enrolledCourses.length === 0) && (
-            <div className="bg-white dark:bg-zinc-900 rounded-[2rem] p-7 shadow-sm border border-zinc-50 dark:border-zinc-800/60">
-              <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400 font-cabin mb-1">Progress</p>
-              <h3 className="text-lg font-black font-cabin tracking-tighter text-zinc-900 dark:text-zinc-50 mb-2">
-                Steady Progress
-              </h3>
-              <p className="text-sm text-zinc-500 font-poppins leading-relaxed">
-                Keep exploring materials to stay ahead of your courses.
-              </p>
-            </div>
-          )}
-
-          {/* AI Insights */}
-          <div className="bg-white dark:bg-zinc-900 rounded-[2rem] overflow-hidden shadow-sm hover:shadow-md transition-all border border-zinc-50 dark:border-zinc-800/60">
-            <AIInsights />
-          </div>
-
-          {/* Continue Reading */}
           <div className="bg-white dark:bg-zinc-900 rounded-[2rem] overflow-hidden shadow-sm hover:shadow-md transition-all border border-zinc-50 dark:border-zinc-800/60">
             <ContinueReading />
           </div>

@@ -1,7 +1,7 @@
 import { db } from "@/database/drizzle";
-import { users, auditLogs, notifications } from "@/database/schema";
-import { requireRole } from "@/lib/auth";
-import { pusherServer } from "@/lib/pusher";
+import { users, auditLogs } from "@/database/schema";
+import { invalidateUserCache, requireRole } from "@/lib/auth";
+import { notify } from "@/lib/notify";
 import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { clerkClient } from "@clerk/nextjs/server";
@@ -68,6 +68,7 @@ export async function PATCH(req: Request) {
       .set({ role: newRole })
       .where(eq(users.id, userId))
       .returning();
+    await invalidateUserCache({ clerkId: updatedUser.clerkId });
 
     // Update Clerk publicMetadata
     const client = await clerkClient();
@@ -93,24 +94,13 @@ export async function PATCH(req: Request) {
         ? "Faculty Representative"
         : newRole.charAt(0) + newRole.slice(1).toLowerCase();
 
-    const [notification] = await db
-      .insert(notifications)
-      .values({
-        userId: updatedUser.id,
-        type: "SYSTEM",
-        message: `Your role has been updated to ${roleLabel} by an administrator.`,
-      })
-      .returning();
-
-    try {
-      await pusherServer.trigger(
-        `user-${updatedUser.id}`,
-        "new-notification",
-        notification
-      );
-    } catch {
-      // Non-critical
-    }
+    await notify({
+      userId: updatedUser.id,
+      type: "SYSTEM",
+      category: "account",
+      message: `Your role has been updated to ${roleLabel} by an administrator.`,
+      url: "/dashboard",
+    });
 
     return NextResponse.json({
       success: true,

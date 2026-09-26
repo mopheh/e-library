@@ -4,6 +4,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import * as Sentry from "@sentry/nextjs";
+import { invalidatePlan } from "@/lib/planner";
 
 const answerItemSchema = z.object({
   questionId: z.string().uuid("questionId must be a valid UUID"),
@@ -49,6 +50,7 @@ export async function POST(req: Request) {
       );
     }
 
+    await invalidatePlan(user.id);
     return NextResponse.json({ success: true, session: newSession }, { status: 201 });
   } catch (error) {
     Sentry.captureException(error);

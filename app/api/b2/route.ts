@@ -11,6 +11,7 @@ import { auth } from "@clerk/nextjs/server";
 import { v4 as uuidv4 } from "uuid";
 import { requireRole } from "@/lib/auth";
 import * as Sentry from "@sentry/nextjs";
+import { slipKeyPrefix } from "@/lib/b2-delete";
 
 // Covers both upload flows through this router: book materials (pdf/doc/docx/epub,
 // up to 50MB) and aspirant admission-document verification (pdf/image, up to 5MB).
@@ -29,6 +30,13 @@ const ALLOWED_CONTENT_TYPES = new Set([
   "image/webp",
 ]);
 const ALLOWED_EXTENSIONS = new Set(["pdf", "doc", "docx", "epub", "png", "jpg", "jpeg", "webp"]);
+
+// Result slips (Grades page) are private per student: they live under
+// slips/<userId>/ so the grades API can verify a slip URL belongs to the
+// student attaching it. PDFs/images only, small, single-request upload.
+const SLIP_MAX_BYTES = 5 * 1024 * 1024;
+const SLIP_EXTENSIONS = new Set(["pdf", "png", "jpg", "jpeg", "webp"]);
+
 
 function isAllowedUpload(fileName: string, fileType: string) {
   const ext = fileName.split(".").pop()?.toLowerCase() || "";
@@ -62,7 +70,11 @@ export async function POST(req: Request) {
     const userId = authCheck.user!.id;
 
     const body = await req.json();
-    const { action, fileName, fileType, fileSize, uploadId, key, parts } = body;
+    const { action, fileName, fileType, fileSize, uploadId, key, parts, purpose } = body;
+    const isSlip = purpose === "result-slip";
+    if (isSlip && action && action !== "standard") {
+      return NextResponse.json({ error: "Result slips must be uploaded in one request" }, { status: 400 });
+    }
     const bucket = process.env.B2_BUCKET!;
     const deliveryEndpoint = process.env.B2_DELIVERY_ENDPOINT || "f005.backblazeb2.com";
 
@@ -74,15 +86,19 @@ export async function POST(req: Request) {
       if (!isAllowedUpload(fileName, fileType)) {
         return NextResponse.json({ error: "Unsupported file type" }, { status: 400 });
       }
-      if (typeof fileSize !== "number" || fileSize <= 0 || fileSize > MAX_FILE_SIZE_BYTES) {
+      const maxBytes = isSlip ? SLIP_MAX_BYTES : MAX_FILE_SIZE_BYTES;
+      if (typeof fileSize !== "number" || fileSize <= 0 || fileSize > maxBytes) {
         return NextResponse.json(
-          { error: `fileSize must be between 1 and ${MAX_FILE_SIZE_BYTES} bytes` },
+          { error: `fileSize must be between 1 and ${maxBytes} bytes` },
           { status: 400 },
         );
       }
 
-      const ext = fileName.split(".").pop();
-      const objectKey = `books/${uuidv4()}.${ext}`;
+      const ext = fileName.split(".").pop()?.toLowerCase();
+      if (isSlip && !SLIP_EXTENSIONS.has(ext || "")) {
+        return NextResponse.json({ error: "Result slips must be a PDF or an image" }, { status: 400 });
+      }
+      const objectKey = isSlip ? `${slipKeyPrefix(userId)}${uuidv4()}.${ext}` : `books/${uuidv4()}.${ext}`;
       const command = new PutObjectCommand({
         Bucket: bucket,
         Key: objectKey,

@@ -6,6 +6,7 @@ import {
   index,
   integer,
   jsonb,
+  numeric,
   pgEnum,
   pgTable,
   text,
@@ -493,6 +494,159 @@ export const notifications = pgTable("notifications", {
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 }, (table) => ({
   userReadDateIdx: index("notifications_user_read_date_idx").on(table.userId, table.isRead, table.createdAt),
+}));
+
+// One row per browser/device a user has enabled web push on. endpoint is
+// globally unique, so a shared device that a second user signs into is
+// re-pointed at the new user instead of duplicated.
+export const pushSubscriptions = pgTable("push_subscriptions", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  endpoint: text("endpoint").notNull().unique(),
+  p256dh: text("p256dh").notNull(),
+  auth: text("auth").notNull(),
+  userAgent: varchar("user_agent", { length: 512 }),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  lastUsedAt: timestamp("last_used_at", { withTimezone: true }),
+}, (table) => ({
+  userIdx: index("push_subscriptions_user_idx").on(table.userId),
+}));
+
+// Per-user push settings. A missing row means "all defaults" - rows are only
+// written once the user changes something. These gate *push* only; in-app
+// notifications are always recorded.
+export const notificationPreferences = pgTable("notification_preferences", {
+  userId: uuid("user_id")
+    .primaryKey()
+    .references(() => users.id, { onDelete: "cascade" }),
+  pushMessages: boolean("push_messages").default(true).notNull(),
+  pushConnections: boolean("push_connections").default(true).notNull(),
+  pushAcademic: boolean("push_academic").default(true).notNull(),
+  pushAccount: boolean("push_account").default(true).notNull(),
+  studyReminders: boolean("study_reminders").default(true).notNull(),
+  examReminders: boolean("exam_reminders").default(true).notNull(),
+  reminderHour: integer("reminder_hour").default(19).notNull(), // 0-23, Africa/Lagos
+  quietHours: boolean("quiet_hours").default(true).notNull(), // 22:00-07:00 Africa/Lagos
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
+// Dedupe ledger for scheduled reminders: the worker inserts (user, key) with
+// ON CONFLICT DO NOTHING and only sends when the insert wins, so repeated
+// ticks or multiple worker instances never double-send.
+export const reminderLog = pgTable("reminder_log", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  key: varchar("key", { length: 255 }).notNull(), // e.g. "study:2026-09-26", "exam:<courseId>:7"
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+}, (table) => ({
+  userKeyUniq: uniqueIndex("reminder_log_user_key_idx").on(table.userId, table.key),
+}));
+
+// Self-reported study done outside the app (hard copy, lecture notes, group
+// study...). Kept separate from reading_sessions on purpose: these count
+// toward the student's own streak/goals/analytics but never the leaderboard,
+// which only ranks verified in-app activity.
+export const studyMethodEnum = pgEnum("study_method", [
+  "TEXTBOOK",
+  "NOTES",
+  "PAST_QUESTIONS",
+  "GROUP",
+  "OTHER",
+]);
+
+export const studyLogs = pgTable("study_logs", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  courseId: uuid("course_id")
+    .notNull()
+    .references(() => courses.id, { onDelete: "cascade" }),
+  date: date("date").notNull(), // the day the study happened (yyyy-mm-dd)
+  timesRead: integer("times_read").default(1).notNull(), // how many times/sittings
+  minutes: integer("minutes"), // optional total time
+  method: studyMethodEnum("method").default("TEXTBOOK").notNull(),
+  note: varchar("note", { length: 280 }),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+}, (table) => ({
+  userDateIdx: index("study_logs_user_date_idx").on(table.userId, table.date),
+  userCourseIdx: index("study_logs_user_course_idx").on(table.userId, table.courseId),
+}));
+
+export const studyLogsRelations = relations(studyLogs, ({ one }) => ({
+  course: one(courses, {
+    fields: [studyLogs.courseId],
+    references: [courses.id],
+  }),
+}));
+
+// ── Grades / CGPA (UNIBEN 5-point scale, see lib/grading.ts) ─────────────
+// Private to the student: never exposed to other users or the leaderboard.
+export const letterGradeEnum = pgEnum("letter_grade", ["A", "B", "C", "D", "E", "F"]);
+
+// One row per student, written on first save. priorCgpa/priorUnits is the
+// quick-start "CGPA so far" for everything before the semesters recorded
+// in semester_results, so nobody has to type in four years of grades.
+export const academicProfiles = pgTable("academic_profiles", {
+  userId: uuid("user_id")
+    .primaryKey()
+    .references(() => users.id, { onDelete: "cascade" }),
+  priorCgpa: numeric("prior_cgpa", { precision: 3, scale: 2, mode: "number" }),
+  priorUnits: integer("prior_units"),
+  targetCgpa: numeric("target_cgpa", { precision: 3, scale: 2, mode: "number" }),
+  // Semester Planner (lib/planner.ts): weekly study budget, and which
+  // semester's registered courses to plan for (null = work it out).
+  weeklyStudyMinutes: integer("weekly_study_minutes"),
+  planSemester: SEMESTER_ENUM("plan_semester"),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
+export const semesterResults = pgTable("semester_results", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  session: varchar("session", { length: 9 }).notNull(), // "2025/2026"
+  semester: SEMESTER_ENUM("semester").notNull(),
+  level: LEVEL_ENUM("level").notNull(),
+  // Optional result-slip upload (private B2 object, served via signed URL).
+  // Self-attested: shown as "slip attached", not "verified".
+  slipUrl: text("slip_url"),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+}, (table) => ({
+  userTermUniq: uniqueIndex("semester_results_user_term_idx").on(table.userId, table.session, table.semester),
+}));
+
+export const courseGrades = pgTable("course_grades", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  resultId: uuid("result_id")
+    .notNull()
+    .references(() => semesterResults.id, { onDelete: "cascade" }),
+  // Linked when the course exists in our catalogue; free-text code otherwise
+  // (electives from other faculties aren't always in the DB).
+  courseId: uuid("course_id").references(() => courses.id, { onDelete: "set null" }),
+  courseCode: varchar("course_code", { length: 20 }).notNull(),
+  courseTitle: varchar("course_title", { length: 255 }),
+  units: integer("units").notNull(),
+  grade: letterGradeEnum("grade").notNull(),
+}, (table) => ({
+  resultCodeUniq: uniqueIndex("course_grades_result_code_idx").on(table.resultId, table.courseCode),
+}));
+
+export const semesterResultsRelations = relations(semesterResults, ({ many }) => ({
+  courses: many(courseGrades),
+}));
+
+export const courseGradesRelations = relations(courseGrades, ({ one }) => ({
+  result: one(semesterResults, {
+    fields: [courseGrades.resultId],
+    references: [semesterResults.id],
+  }),
 }));
 
 // Pre-Admission Hub Tables

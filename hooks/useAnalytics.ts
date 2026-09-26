@@ -8,7 +8,7 @@ interface AnalyticsData {
     daysToExam?: number;
     totalAiRequests?: number;
   };
-  heatmap: { date: string; count: number; value: number }[];
+  heatmap: { date: string; count: number; value: number; manual?: number }[];
   weeklyTrends: { date: string; minutes: number; day: string }[];
 }
 

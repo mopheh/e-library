@@ -7,6 +7,7 @@ import { auth } from "@clerk/nextjs/server";
 import { z } from "zod";
 import { format, subDays } from "date-fns";
 import * as Sentry from "@sentry/nextjs";
+import { invalidatePlan } from "@/lib/planner";
 
 // ── Zod Schemas ────────────────────────────────────────────────────────────────
 
@@ -82,7 +83,7 @@ export async function POST(req: NextRequest) {
         },
       });
 
-
+    await invalidatePlan(user.id);
     return NextResponse.json({ success: true }, { status: 200 });
   } catch (error) {
     Sentry.captureException(error);

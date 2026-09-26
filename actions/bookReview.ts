@@ -1,11 +1,11 @@
 "use server";
 
 import { db } from "@/database/drizzle";
-import { books, users, notifications, departments } from "@/database/schema";
+import { books, users, departments } from "@/database/schema";
 import { eq, and, desc, inArray } from "drizzle-orm";
 import { auth, clerkClient } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
-import { pusherServer } from "@/lib/pusher";
+import { notify } from "@/lib/notify";
 import { deleteB2File } from "@/lib/b2-delete";
 
 async function requireReviewer() {
@@ -94,16 +94,14 @@ export async function approveBook(bookId: string) {
       rejectionReason: null,
     }).where(eq(books.id, bookId));
 
-    const [notif] = await db.insert(notifications).values({
+    await notify({
       userId: book.postedBy,
       type: "GENERAL",
+      category: "academic",
       message: `Your upload "${book.title}" has been approved and is now live.`,
       targetId: book.id,
-    }).returning();
-
-    pusherServer
-      .trigger(`user-${book.postedBy}`, "new-notification", notif)
-      .catch((err) => console.error("Pusher trigger failed (new-notification):", err));
+      url: `/book/${book.id}`,
+    });
 
     revalidatePath("/dashboard/manage");
     return { success: true };
@@ -127,15 +125,12 @@ export async function rejectBook(bookId: string, reason: string) {
     }
 
     // Notify the uploader before deleting the record
-    const [notif] = await db.insert(notifications).values({
+    await notify({
       userId: book.postedBy,
       type: "GENERAL",
+      category: "academic",
       message: `Your upload "${book.title}" was rejected.${reason ? ` Reason: ${reason}` : ""}`,
-    }).returning();
-
-    pusherServer
-      .trigger(`user-${book.postedBy}`, "new-notification", notif)
-      .catch((err) => console.error("Pusher trigger failed (new-notification):", err));
+    });
 
     // Clean up: delete the file from B2 storage
     if (book.fileUrl && book.fileUrl.includes("backblazeb2.com")) {

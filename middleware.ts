@@ -22,21 +22,41 @@ const isProtectedRoute = createRouteMatcher([
 ]);
 
 import { Ratelimit } from "@upstash/ratelimit";
-import { redis } from "@/lib/redis";
+import { markRedisFailure, redis, redisAvailable } from "@/lib/redis";
 
-// General API rate-limiter: 20 requests per 10 seconds per IP
-const ratelimit = redis ? new Ratelimit({
+// Rate limits are keyed by the signed-in user where possible, not the IP:
+// Nigerian mobile networks put many subscribers behind one public IP
+// (carrier-grade NAT) and campus Wi-Fi does the same, so a per-IP limit
+// throttles whole groups of real students. A single dashboard load fires
+// ~12 API calls in parallel, so the per-user budget covers several page
+// views per window. Anonymous traffic keeps the stricter per-IP limit.
+// `timeout` (default 5s!) is how long a limit check may wait on Redis
+// before letting the request through - keep it short.
+const RATELIMIT_TIMEOUT_MS = 1000;
+
+const userRatelimit = redis ? new Ratelimit({
   redis,
-  limiter: Ratelimit.slidingWindow(20, "10 s"),
+  limiter: Ratelimit.slidingWindow(120, "10 s"),
+  prefix: "ratelimit:user",
+  timeout: RATELIMIT_TIMEOUT_MS,
   analytics: true,
 }) : null;
 
-// Stricter limiter for the AI /ask endpoint: 10 requests per 60 seconds per IP
-// This protects against LLM cost abuse at scale.
+// Anonymous API traffic: 20 requests per 10 seconds per IP
+const ratelimit = redis ? new Ratelimit({
+  redis,
+  limiter: Ratelimit.slidingWindow(20, "10 s"),
+  timeout: RATELIMIT_TIMEOUT_MS,
+  analytics: true,
+}) : null;
+
+// Stricter limiter for the AI /ask endpoint: 10 requests per 60 seconds
+// (per user when signed in). This protects against LLM cost abuse at scale.
 const askRatelimit = redis ? new Ratelimit({
   redis,
   limiter: Ratelimit.slidingWindow(10, "60 s"),
   prefix: "ratelimit:ask",
+  timeout: RATELIMIT_TIMEOUT_MS,
   analytics: true,
 }) : null;
 
@@ -48,14 +68,18 @@ export default clerkMiddleware(async (auth, req) => {
 
   // Rate Limiting for API routes
   if (path.startsWith("/api")) {
-    const ip = req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip") || "127.0.0.1";
+    // First hop only - the header can carry a proxy chain ("client, proxy")
+    const ip = (req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip") || "127.0.0.1").split(",")[0].trim();
 
     // Apply the stricter AI limiter first
-    const limiter = (path === "/api/ask" && askRatelimit) ? askRatelimit : ratelimit;
+    const limiter = path === "/api/ask" ? askRatelimit : userId ? userRatelimit : ratelimit;
+    const identifier = userId ? `user:${userId}` : ip;
 
-    if (limiter) {
+    // Skip the check entirely while Redis is known to be down (circuit open)
+    if (limiter && redisAvailable()) {
       try {
-        const { success, limit, reset, remaining } = await limiter.limit(ip);
+        const { success, limit, reset, remaining, reason } = await limiter.limit(identifier);
+        if (reason === "timeout") markRedisFailure();
         if (!success) {
           return NextResponse.json(
             { error: "Too many requests. Please try again later." },
@@ -70,6 +94,7 @@ export default clerkMiddleware(async (auth, req) => {
           );
         }
       } catch (err) {
+        markRedisFailure();
         // Fail OPEN: a Redis/Upstash hiccup should degrade rate-limiting,
         // not take down every API route on the site.
         if (!rateLimitWarnShown) {

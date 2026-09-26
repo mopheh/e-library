@@ -20,6 +20,7 @@ import ProfileForm from "@/components/profile/ProfileForm";
 import ActivityHistory from "@/components/profile/ActivityHistory";
 import PreferencesSettings from "@/components/profile/PreferencesSettings";
 import AspirantProfile from "@/components/aspirant/AspirantProfile";
+import { removePushSubscription } from "@/hooks/usePushNotifications";
 
 export default function ProfilePage() {
   const { data: userData, isLoading: userLoading } = useUserData();
@@ -28,8 +29,8 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
 
   const handleSignOut = () => {
-    signOut();
     localStorage.setItem(STORAGE_KEY, "[]");
+    removePushSubscription().finally(() => signOut());
   };
 
   const role = userData?.role?.toLowerCase() || "";

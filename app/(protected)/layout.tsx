@@ -8,6 +8,7 @@ import MobileMessagingButton from "@/components/Dashboard/MobileMessagingButton"
 import { usePathname } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
 import { LogoLoader } from "@/components/LogoLoader";
+import { StudyLogProvider } from "@/components/study-log/LogStudySheet";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const { isLoaded } = useUser();
@@ -19,7 +20,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
   if (!isLoaded) return <LogoLoader />;
   return (
-    <>
+    <StudyLogProvider>
       <div className="bg-zinc-50 dark:bg-zinc-900 flex h-screen">
         <Sidebar isOpen={isSidebarOpen} toggle={toggleSidebar} />
 
@@ -39,7 +40,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         </>
       )}
       <ChatSidebar />
-    </>
+    </StudyLogProvider>
   );
 }
 // export default function layout({ children }: { children: React.ReactNode }) {

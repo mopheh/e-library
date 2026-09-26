@@ -1,4 +1,5 @@
-import { S3Client, DeleteObjectCommand, ListObjectsV2Command } from "@aws-sdk/client-s3";
+import { S3Client, DeleteObjectCommand, GetObjectCommand, ListObjectsV2Command } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 const s3Client = new S3Client({
   region: "us-east-005",
@@ -11,6 +12,9 @@ const s3Client = new S3Client({
   },
   forcePathStyle: true,
 });
+
+/** Private per-student folder for Grades-page result slips. */
+export const slipKeyPrefix = (userId: string) => `slips/${userId}/`;
 
 export function b2KeyFromUrl(fileUrl: string): string | null {
   const match = fileUrl.match(/\/file\/[^/]+\/(.+)$/);
@@ -59,4 +63,18 @@ export async function listB2ObjectsOlderThan(prefix: string, olderThan: Date) {
   } while (continuationToken);
 
   return results;
+}
+
+/**
+ * Short-lived read link for a private object (the bucket isn't public).
+ * Callers must check the requester may see the file BEFORE calling this.
+ */
+export async function signedB2ReadUrl(fileUrl: string, expiresInSeconds = 300) {
+  const key = b2KeyFromUrl(fileUrl);
+  if (!key) return null;
+  return getSignedUrl(
+    s3Client,
+    new GetObjectCommand({ Bucket: process.env.B2_BUCKET!, Key: key }),
+    { expiresIn: expiresInSeconds },
+  );
 }

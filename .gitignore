@@ -35,6 +35,7 @@ workers/notificationWorker.ts
 .DS_Store
 *.pem
 public/fallback-*.js
+public/worker-*.js
 
 # debug
 npm-debug.log*

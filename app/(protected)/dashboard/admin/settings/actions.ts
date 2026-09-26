@@ -5,6 +5,7 @@ import { systemSettings, users } from "@/database/schema";
 import { eq } from "drizzle-orm";
 import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
+import { invalidateUserCache } from "@/lib/auth";
 
 async function requireAdmin() {
   const { userId } = await auth();
@@ -45,6 +46,7 @@ export async function setUserAiEnabled(userId: string, enabled: boolean) {
   await requireAdmin();
 
   await db.update(users).set({ aiEnabled: enabled }).where(eq(users.id, userId));
+  await invalidateUserCache({ userId });
 
   revalidatePath("/data/departments");
 }

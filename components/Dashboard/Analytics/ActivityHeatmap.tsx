@@ -7,7 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 
 interface ActivityHeatmapProps {
-  data: { date: string; count: number; value: number }[];
+  data: { date: string; count: number; value: number; manual?: number }[];
   loading?: boolean;
 }
 
@@ -19,7 +19,9 @@ const ActivityHeatmap = ({ data, loading }: ActivityHeatmapProps) => {
 
   const getIntensity = (date: Date) => {
     const entry = data.find((d) => isSameDay(new Date(d.date), date));
-    if (!entry || entry.value === 0) return "bg-zinc-100 dark:bg-zinc-800";
+    if (!entry || (entry.value === 0 && !entry.manual)) return "bg-zinc-100 dark:bg-zinc-800";
+    // Studied, but only logged (no in-app time recorded): lighter shade
+    if (entry.value === 0) return "bg-indigo-100 dark:bg-indigo-950/60 ring-1 ring-inset ring-indigo-300/70 dark:ring-indigo-800";
     if (entry.value < 15) return "bg-indigo-200 dark:bg-indigo-900/40"; 
     if (entry.value < 30) return "bg-indigo-400 dark:bg-indigo-700/40";
     if (entry.value < 60) return "bg-indigo-500 dark:bg-indigo-600/40";
@@ -28,7 +30,9 @@ const ActivityHeatmap = ({ data, loading }: ActivityHeatmapProps) => {
   
   const getValue = (date: Date) => {
     const entry = data.find((d) => isSameDay(new Date(d.date), date));
-    return entry ? `${entry.value} mins` : "No reading";
+    if (!entry) return "No reading";
+    const logged = entry.manual ? ` · ${entry.manual} logged session${entry.manual === 1 ? "" : "s"}` : "";
+    return `${entry.value} mins${logged}`;
   }
 
   return (

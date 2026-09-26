@@ -9,11 +9,22 @@ import {
   Users2,
   Layers,
   Menu,
+  Plus,
+  TrendingUp,
 } from "lucide-react";
 import { motion, useScroll, useMotionValueEvent } from "framer-motion";
 import { useKeyboardOpen } from "@/hooks/useKeyboardOpen";
+import { useUserData } from "@/hooks/useUsers";
+import { useLogStudySheet } from "@/components/study-log/LogStudySheet";
 
-const menuItems = [
+type NavItem = { name: string; path: string; icon: React.ElementType; id: string };
+
+// Students: Home · Library · [+ Log] · Progress · Menu. Spaces, Community and Profile
+// live in the sidebar (Menu) and the header avatar, which keeps the log
+// button dead centre. Aspirants have no courses to log, so they keep the
+// original set.
+const LOG_SLOT = "__log__";
+const aspirantItems: NavItem[] = [
   {
     name: "Home",
     path: "/dashboard",
@@ -46,6 +57,14 @@ const menuItems = [
   },
 ];
 
+const studentItems: (NavItem | typeof LOG_SLOT)[] = [
+  aspirantItems[0], // Home
+  aspirantItems[1], // Library
+  LOG_SLOT,
+  // Plan, readiness, grades and activity; Spaces is one tap away in Menu
+  { name: "Progress", path: "/dashboard/progress", icon: TrendingUp, id: "/dashboard/progress" },
+];
+
 export default function BottomNav({
   scrollRef,
   toggleSidebar,
@@ -56,6 +75,9 @@ export default function BottomNav({
   const pathname = usePathname();
   const router = useRouter();
   const keyboardOpen = useKeyboardOpen();
+  const { data: userData } = useUserData();
+  const { openLogStudy } = useLogStudySheet();
+  const items = userData?.role === "ASPIRANT" ? aspirantItems : studentItems;
 
   const [mounted, setMounted] = useState(false);
   const [hidden, setHidden] = useState(false);
@@ -99,7 +121,26 @@ export default function BottomNav({
       {/* Nav items */}
       <div className="relative flex items-center justify-around px-1 pt-2 pb-safe-or-3"
            style={{ paddingBottom: "max(12px, env(safe-area-inset-bottom))" }}>
-        {menuItems.map(({ name, icon: Icon, path, id }) => {
+        {items.map((item) => {
+          if (item === LOG_SLOT) {
+            return (
+              <button
+                key={LOG_SLOT}
+                onClick={() => openLogStudy()}
+                className="flex flex-col items-center gap-1 min-w-0 flex-1 py-1 px-0.5 group"
+                aria-label="Log study"
+                data-tour="mobile-log-study"
+              >
+                <div className="-mt-5 w-12 h-12 rounded-2xl bg-indigo-600 text-white flex items-center justify-center shadow-lg shadow-indigo-500/40 ring-4 ring-white dark:ring-zinc-950 group-active:scale-90 transition-transform">
+                  <Plus className="w-6 h-6" strokeWidth={2.5} />
+                </div>
+                <span className="text-[9.5px] font-bold tracking-wide font-cabin leading-none text-indigo-600 dark:text-indigo-400">
+                  Log
+                </span>
+              </button>
+            );
+          }
+          const { name, icon: Icon, path, id } = item;
           const isActive =
             pathname === id ||
             (id !== "/dashboard" && pathname.startsWith(id));

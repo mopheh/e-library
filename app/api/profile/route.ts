@@ -13,6 +13,7 @@ import {
 } from "@/database/schema";
 import { validateMatricNo } from "@/lib/facultyCodes";
 import * as Sentry from "@sentry/nextjs";
+import { invalidateUserCache } from "@/lib/auth";
 
 export async function GET() {
   try {
@@ -203,6 +204,7 @@ export async function PUT(req: Request) {
         .update(users)
         .set(updateData)
         .where(eq(users.clerkId, userId));
+      await invalidateUserCache({ clerkId: userId });
     }
 
     return NextResponse.json({

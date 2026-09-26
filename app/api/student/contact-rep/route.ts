@@ -1,7 +1,7 @@
 import { db } from "@/database/drizzle";
-import { complaints, notifications } from "@/database/schema";
+import { complaints } from "@/database/schema";
 import { getCurrentUser } from "@/lib/auth";
-import { pusherServer } from "@/lib/pusher";
+import { notify } from "@/lib/notify";
 import { NextResponse } from "next/server";
 import * as Sentry from "@sentry/nextjs";
 
@@ -26,23 +26,13 @@ export async function POST(req: Request) {
         status: "PENDING"
     }).returning();
 
-    // 1. Save Notification
-    const [newNotification] = await db.insert(notifications).values({
+    await notify({
         userId: facultyRepId,
         type: "COMPLAINT",
+        category: "messages",
         message: `New message from ${studentUser.fullName}`,
-    }).returning();
-
-    // 2. Trigger Real-time Event
-    try {
-        await pusherServer.trigger(
-            `user-${facultyRepId}`,
-            "new-notification",
-            newNotification
-        );
-    } catch (pusherError) {
-        console.error("Failed to trigger Pusher event:", pusherError);
-    }
+        url: "/profile",
+    });
 
     return NextResponse.json({ success: true, complaint: newComplaint });
 

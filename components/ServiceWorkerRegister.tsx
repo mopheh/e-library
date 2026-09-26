@@ -1,6 +1,8 @@
 
 "use client";
 import { useEffect } from "react";
+// Side-effect import: starts listening for beforeinstallprompt app-wide.
+import "@/hooks/useInstallPrompt";
 
 export default function ServiceWorkerRegister() {
     useEffect(() => {

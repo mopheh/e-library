@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -33,6 +33,19 @@ export default function CbtSetup({ courses, onStart, loading, starting }: CbtSet
   const [courseId, setCourseId] = useState("");
   const [numQuestions, setNumQuestions] = useState(20);
   const [duration, setDuration] = useState(30);
+
+  // Deep link from the Progress page: /cbt?course=<courseId> pre-selects it
+  // (only if it's one of the courses that actually has a question bank)
+  useEffect(() => {
+    if (courseId || !courses?.length) return;
+    const wanted = new URLSearchParams(window.location.search).get("course");
+    const match = wanted ? courses.find((c) => c.id === wanted) : undefined;
+    if (match) {
+      setCourseId(match.id);
+      // Never start above what the bank can supply
+      setNumQuestions((n) => Math.min(n, match.questionCount || n));
+    }
+  }, [courses, courseId]);
 
   const selectedCourse = courses?.find((c) => c.id === courseId); // Fixed optional chaining
   const maxQuestions = selectedCourse?.questionCount || 0;
@@ -72,6 +85,8 @@ export default function CbtSetup({ courses, onStart, loading, starting }: CbtSet
                 } />
             </div>
             <Select
+                // Controlled, so a pre-selected course (?course=) shows in the trigger
+                value={courseId || undefined}
                 onValueChange={(val) => {
                 setCourseId(val);
                 setNumQuestions(5);

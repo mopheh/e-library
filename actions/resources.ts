@@ -4,7 +4,6 @@ import { db } from "@/database/drizzle";
 import { 
     resourceRequests, 
     users, 
-    notifications, 
     books, 
     departmentCommunities, 
     communityPosts,
@@ -14,6 +13,7 @@ import { eq, or, and, desc, inArray } from "drizzle-orm";
 import { auth, clerkClient } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import { pusherServer } from "@/lib/pusher";
+import { notify, notifyMany } from "@/lib/notify";
 
 /**
  * Thrown for messages that are safe to show a user verbatim (validation,
@@ -73,18 +73,14 @@ export async function createResourceRequest(courseId: string, description: strin
             })
             : [];
 
-        for (const rep of reps) {
-            const [notif] = await db.insert(notifications).values({
-                userId: rep.id,
-                type: "GENERAL",
-                message: `${currentUser.fullName} requested material for ${course.courseCode}.`,
-                targetId: request.id,
-            }).returning();
-
-            pusherServer
-                .trigger(`user-${rep.id}`, "new-notification", notif)
-                .catch((err) => console.error("Pusher trigger failed (new-notification):", err));
-        }
+        await notifyMany(reps.map((rep) => ({
+            userId: rep.id,
+            type: "GENERAL" as const,
+            category: "academic" as const,
+            message: `${currentUser.fullName} requested material for ${course.courseCode}.`,
+            targetId: request.id,
+            url: "/dashboard/manage",
+        })));
 
         revalidatePath("/dashboard/requests");
         return { success: true, data: request };
@@ -200,18 +196,16 @@ export async function fulfillResourceRequest(requestId: string, url: string) {
             .where(eq(resourceRequests.id, requestId));
 
         // Create notification for requester
-        const [notif] = await db.insert(notifications).values({
+        await notify({
             userId: request.userId,
             type: "GENERAL",
+            category: "academic",
             message: `Your resource request for ${request.course.courseCode} has been fulfilled!`,
             targetId: request.id,
-        }).returning();
-
-        // Real-time notification (fire-and-forget so a Pusher hiccup doesn't
-        // make an already-fulfilled request report back as failed)
-        pusherServer
-            .trigger(`user-${request.userId}`, "new-notification", notif)
-            .catch((err) => console.error("Pusher trigger failed (new-notification):", err));
+            url: "/dashboard/requests",
+        });
+        // Fire-and-forget so a Pusher hiccup doesn't make an already-fulfilled
+        // request report back as failed
         pusherServer
             .trigger(`user-${request.userId}`, "resource-fulfilled", { requestId, url })
             .catch((err) => console.error("Pusher trigger failed (resource-fulfilled):", err));
@@ -262,13 +256,13 @@ export async function rejectResourceRequest(requestId: string, reason: string) {
             .where(eq(resourceRequests.id, requestId));
 
         // Notify user
-        {
-            await db.insert(notifications).values({
-                userId: request.userId,
-                type: "GENERAL",
-                message: `Your resource request for ${request.course.courseCode} was rejected. Reason: ${reason}`,
-            });
-        }
+        await notify({
+            userId: request.userId,
+            type: "GENERAL",
+            category: "academic",
+            message: `Your resource request for ${request.course.courseCode} was rejected. Reason: ${reason}`,
+            url: "/dashboard/requests",
+        });
 
         revalidatePath("/dashboard/manage");
         return { success: true };

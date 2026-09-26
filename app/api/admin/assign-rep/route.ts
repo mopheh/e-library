@@ -1,7 +1,7 @@
 import { db } from "@/database/drizzle";
-import { users, auditLogs, notifications } from "@/database/schema";
-import { getCurrentUser, requireRole } from "@/lib/auth";
-import { pusherServer } from "@/lib/pusher";
+import { users, auditLogs } from "@/database/schema";
+import { getCurrentUser, invalidateUserCache, requireRole } from "@/lib/auth";
+import { notify } from "@/lib/notify";
 import { eq, and } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { clerkClient } from "@clerk/nextjs/server";
@@ -62,6 +62,7 @@ export async function POST(req: Request) {
       .set({ role: "FACULTY REP" })
       .where(eq(users.id, userIdToAssign))
       .returning();
+    await invalidateUserCache({ clerkId: updatedUser.clerkId });
 
     // Log action to audit_logs
     await db.insert(auditLogs).values({
@@ -81,22 +82,13 @@ export async function POST(req: Request) {
       publicMetadata: { role: "FACULTY REP", repType },
     });
 
-    // Save notification
-    const [newNotification] = await db
-      .insert(notifications)
-      .values({
-        userId: updatedUser.id,
-        type: "SYSTEM",
-        message: "You have been assigned as the Faculty Representative for your faculty.",
-      })
-      .returning();
-
-    // Trigger real-time Pusher event
-    try {
-      await pusherServer.trigger(`user-${updatedUser.id}`, "new-notification", newNotification);
-    } catch (pusherError) {
-      console.error("[assign-rep] Pusher trigger failed:", pusherError);
-    }
+    await notify({
+      userId: updatedUser.id,
+      type: "SYSTEM",
+      category: "account",
+      message: "You have been assigned as the Faculty Representative for your faculty.",
+      url: "/dashboard/manage",
+    });
 
     return NextResponse.json({ success: true, user: updatedUser });
   } catch (error) {

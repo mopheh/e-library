@@ -28,6 +28,9 @@ import {
   Grid3X3,
   LogOut,
   Upload,
+  NotebookPen,
+  GraduationCap,
+  TrendingUp,
 } from "lucide-react";
 import { useAuth, useUser } from "@clerk/nextjs";
 import { useUserData } from "@/hooks/useUsers";
@@ -40,6 +43,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { removePushSubscription } from "@/hooks/usePushNotifications";
 
 interface SidebarProps {
   role?: string;
@@ -117,14 +121,23 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggle }) => {
        ]
     },
     {
-       label: "Academics",
+       label: "Learn",
        defaultOpen: true,
        items: [
          { name: "My Workspaces", path: "/workspaces", icon: Layers, id: "/workspaces" },
          { name: "Library", path: "/library", icon: BookOpen, id: "/library" },
+         { name: "CBT Practice", path: "/cbt", icon: ClipboardList, id: "/cbt" },
+         { name: "AI Assistant", path: "/dashboard/ai", icon: Brain, id: "/dashboard/ai" },
          { name: "Contribute Material", path: "/library?contribute=1", icon: Upload, id: "library-contribute" },
-         { name: "CBT", path: "/cbt", icon: ClipboardList, id: "/cbt" },
-         { name: "Saved", path: "/saved", icon: Bookmark, id: "/saved" },
+       ]
+    },
+    {
+       label: "Progress",
+       defaultOpen: true,
+       items: [
+         { name: "Progress", path: "/dashboard/progress", icon: TrendingUp, id: "/dashboard/progress" },
+         { name: "Study Log", path: "/dashboard/study-log", icon: NotebookPen, id: "/dashboard/study-log" },
+         { name: "Grades", path: "/dashboard/grades", icon: GraduationCap, id: "/dashboard/grades" },
        ]
     },
     {
@@ -134,17 +147,16 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggle }) => {
          { name: "Leaderboard", path: "/dashboard/leaderboard", icon: Trophy, id: "/dashboard/leaderboard" },
          { name: "Ask Seniors", path: "/dashboard/ask-seniors", icon: Sparkles, id: "/dashboard/ask-seniors" },
          { name: "Connect", path: "/connect", icon: User, id: "/connect" },
+         { name: "Opportunities", path: "/dashboard/opportunities", icon: Briefcase, id: "/dashboard/opportunities" },
        ]
     },
     {
-       label: "Discover",
+       label: "Tools",
        defaultOpen: false,
        items: [
-         { name: "AI Assistant", path: "/dashboard/ai", icon: Brain, id: "/dashboard/ai" },
          { name: "Calendar", path: "/dashboard/calendar", icon: CalendarDays, id: "/dashboard/calendar" },
          { name: "Record Lecture", path: "/dashboard/record", icon: Mic, id: "/dashboard/record" },
          { name: "Mini Apps", path: "/dashboard/mini-apps", icon: Grid3X3, id: "/dashboard/mini-apps" },
-         { name: "Opportunities", path: "/dashboard/opportunities", icon: Briefcase, id: "/dashboard/opportunities" },
        ]
     }
   ];
@@ -257,8 +269,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggle }) => {
                   mobile, so this is the only logout entry point there. */}
               <div
                 onClick={() => {
-                  signOut();
                   localStorage.setItem(STORAGE_KEY, "[]");
+                  removePushSubscription().finally(() => signOut());
                 }}
                 className="flex gap-3 font-poppins text-xs items-center cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-800 p-2 rounded-xl transition-colors text-zinc-500 dark:text-zinc-400 font-light"
               >

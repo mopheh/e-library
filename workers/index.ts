@@ -1,10 +1,9 @@
 import { Sentry } from "./sentry";
-import { eq, sql, and, isNull, lt, lte, gte, SQL, desc, or } from "drizzle-orm";
+import { eq, sql, and, lt, gte, desc, or, inArray } from "drizzle-orm";
 import { processJob } from "./processor";
-import { jobs, books, opportunities, verificationRequests } from "@/database/schema";
+import { jobs, books } from "@/database/schema";
 import { db } from "./db";
 import { JobPayload } from "@/types";
-import { listB2ObjectsOlderThan, deleteB2Key, b2KeyFromUrl } from "@/lib/b2-delete";
 export const JOB_TYPES = [
   "parse_book",
   "generate_questions",
@@ -12,6 +11,12 @@ export const JOB_TYPES = [
   "send_scholarship_reminder_email",
 ] as const;
 export type JobType = (typeof JOB_TYPES)[number];
+
+// This process only does the heavy PDF/AI work, and can be run by hand
+// (`npm run worker`) when uploads need processing. Everything light and
+// time-based - push reminders, scholarship emails, B2 cleanup - runs from
+// GET /api/cron/tick instead, so it doesn't depend on this being up.
+const WORKER_JOB_TYPES = ["parse_book", "generate_questions"] as const;
 
 const POLL_INTERVAL = 3000;
 
@@ -89,92 +94,6 @@ async function reapOrphanedJobs() {
   });
 }
 
-// A client can get a presigned B2 upload URL, upload the file straight to
-// B2, and then never call POST /api/books (or submit the verification form)
-// to actually register it - abandoned form, network drop, etc. Nothing else
-// ever points at that object, so left alone it sits in B2 forever, quietly
-// costing storage. This sweep finds and removes those orphans.
-const B2_ORPHAN_MIN_AGE_MS = 24 * 60 * 60 * 1000; // grace period — don't race an in-flight registration
-const B2_SWEEP_INTERVAL_MS = 6 * 60 * 60 * 1000;
-
-async function sweepOrphanedB2Uploads() {
-  const cutoff = new Date(Date.now() - B2_ORPHAN_MIN_AGE_MS);
-  const candidates = await listB2ObjectsOlderThan("books/", cutoff);
-  if (candidates.length === 0) return;
-
-  // Every upload through /api/b2 (book materials AND aspirant verification
-  // documents) is written under the same "books/" prefix, so both tables
-  // that can reference one need to be checked before anything is deleted.
-  const [bookRows, verificationRows] = await Promise.all([
-    db.select({ fileUrl: books.fileUrl }).from(books),
-    db.select({ proofUrl: verificationRequests.proofUrl }).from(verificationRequests),
-  ]);
-
-  const referencedKeys = new Set<string>();
-  for (const row of bookRows) {
-    const key = row.fileUrl ? b2KeyFromUrl(row.fileUrl) : null;
-    if (key) referencedKeys.add(key);
-  }
-  for (const row of verificationRows) {
-    const key = b2KeyFromUrl(row.proofUrl);
-    if (key) referencedKeys.add(key);
-  }
-
-  const orphanKeys = candidates.map((c) => c.key).filter((key) => !referencedKeys.has(key));
-  if (orphanKeys.length === 0) return;
-
-  let deleted = 0;
-  for (const key of orphanKeys) {
-    try {
-      await deleteB2Key(key);
-      deleted++;
-    } catch (err) {
-      console.error(`⚠️ Failed to delete orphaned B2 object ${key}:`, err);
-      Sentry.captureException(err);
-    }
-  }
-
-  console.log(`🧹 Swept ${deleted}/${orphanKeys.length} orphaned B2 upload(s) (uploaded but never registered).`);
-}
-
-const REMINDER_WINDOW_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
-const REMINDER_CHECK_INTERVAL_MS = 60 * 60 * 1000; // hourly is plenty for a 7-day window
-
-// Finds SCHOLARSHIP opportunities whose deadline falls within the next 7 days
-// and haven't had a reminder sent yet, and enqueues one reminder-email job per
-// opportunity. The UPDATE...RETURNING atomically "claims" each row (sets
-// reminderSentAt) so that if multiple worker instances run this sweep at the
-// same time, only one of them enqueues the job for a given opportunity.
-async function checkExpiringScholarships() {
-  const now = new Date();
-  const windowEnd = new Date(now.getTime() + REMINDER_WINDOW_MS);
-
-  const claimed = await db
-    .update(opportunities)
-    .set({ reminderSentAt: now })
-    .where(
-      and(
-        eq(opportunities.type, "SCHOLARSHIP"),
-        isNull(opportunities.reminderSentAt),
-        gte(opportunities.deadline, now),
-        lte(opportunities.deadline, windowEnd),
-      )
-    )
-    .returning({ id: opportunities.id });
-
-  if (claimed.length === 0) return;
-
-  await db.insert(jobs).values(
-    claimed.map((opp) => ({
-      type: "send_scholarship_reminder_email",
-      payload: { opportunityId: opp.id },
-      status: "pending",
-    }))
-  );
-
-  console.log(`📧 Enqueued ${claimed.length} scholarship deadline reminder email(s).`);
-}
-
 async function fetchNextJob() {
   const STALE_THRESHOLD_MS = 10 * 60 * 1000; // 10 minutes
 
@@ -195,7 +114,9 @@ async function fetchNextJob() {
               sql`${jobs.lockedAt} < ${new Date(Date.now() - STALE_THRESHOLD_MS)}`
             )
           ),
-          lt(jobs.attempts, jobs.maxAttempts)
+          lt(jobs.attempts, jobs.maxAttempts),
+          // Email jobs are sent by GET /api/cron/tick (lib/scheduled-tasks.ts)
+          inArray(jobs.type, [...WORKER_JOB_TYPES])
         )
       )
       .orderBy(desc(jobs.createdAt))
@@ -244,34 +165,6 @@ async function run() {
       Sentry.captureException(err);
     });
   }, 10 * 60 * 1000);
-
-  try {
-    await checkExpiringScholarships();
-  } catch (err: any) {
-    console.error("⚠️ Failed to check expiring scholarships on startup:", err.message);
-    Sentry.captureException(err);
-  }
-
-  setInterval(() => {
-    checkExpiringScholarships().catch((err) => {
-      console.error("⚠️ Failed to check expiring scholarships:", err.message);
-      Sentry.captureException(err);
-    });
-  }, REMINDER_CHECK_INTERVAL_MS);
-
-  try {
-    await sweepOrphanedB2Uploads();
-  } catch (err: any) {
-    console.error("⚠️ Failed to sweep orphaned B2 uploads on startup:", err.message);
-    Sentry.captureException(err);
-  }
-
-  setInterval(() => {
-    sweepOrphanedB2Uploads().catch((err) => {
-      console.error("⚠️ Failed to sweep orphaned B2 uploads:", err.message);
-      Sentry.captureException(err);
-    });
-  }, B2_SWEEP_INTERVAL_MS);
 
   while (true) {
     let job;

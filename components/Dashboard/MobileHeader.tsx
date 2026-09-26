@@ -8,6 +8,7 @@ import { Bell, Sparkles, Search, LogOut, User, Settings } from "lucide-react";
 import { useAnalytics } from "@/hooks/useAnalytics";
 import { motion, AnimatePresence } from "framer-motion";
 import { STORAGE_KEY } from "@/lib/utils";
+import { removePushSubscription } from "@/hooks/usePushNotifications";
 
 export default function MobileHeader() {
   const { user, isLoaded } = useUser();
@@ -112,8 +113,8 @@ export default function MobileHeader() {
                   </Link>
                   <button
                     onClick={() => {
-                      signOut();
                       localStorage.setItem(STORAGE_KEY, "[]");
+                      removePushSubscription().finally(() => signOut());
                     }}
                     className="flex items-center gap-3 px-4 py-2.5 text-xs font-medium text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors w-full"
                   >

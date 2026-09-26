@@ -4,12 +4,16 @@ import React from "react";
 import MobileHeader from "./MobileHeader";
 import MobileStudyCarousel from "./MobileStudyCarousel";
 import MobileReadingChart from "./MobileReadingChart";
+import Link from "next/link";
 import QuickActions from "./QuickActions";
 import StreakTracker from "./StreakTracker";
 import ContinueReading from "./Analytics/ContinueReading";
 import { useAnalytics } from "@/hooks/useAnalytics";
 import { OnboardingTour } from "./OnboardingTour";
 import { ContributeWelcomeNudge } from "./ContributeWelcomeNudge";
+import { PushPrompt } from "./PushPrompt";
+import { TodayCard } from "@/components/progress/TodayCard";
+import { DashboardReadiness } from "@/components/progress/Readiness";
 import { motion } from "framer-motion";
 import { BookOpen, Clock, Flame, Brain } from "lucide-react";
 
@@ -105,6 +109,10 @@ export default function MobileDashboard() {
       {/* Main content */}
       <div className="flex flex-col gap-7 pt-2">
 
+        <PushPrompt className="mx-4" />
+
+        <TodayCard className="mx-4" />
+
         {/* 1. Carousel Section */}
         <section className="px-4" data-tour="mobile-carousel">
           <MobileStudyCarousel />
@@ -122,11 +130,19 @@ export default function MobileDashboard() {
           <QuickActions hideSectionLabel />
         </section>
 
-        {/* 4. Reading Activity Chart */}
+        {/* 4. Reading Activity Chart (also shown on the Progress page) */}
         <section>
-          <SectionLabel>Reading Activity</SectionLabel>
+          <div className="flex items-center justify-between pr-4">
+            <SectionLabel>Reading Activity</SectionLabel>
+            <Link href="/dashboard/progress" className="mb-3 text-[11px] font-bold text-indigo-600 dark:text-indigo-400">
+              Open Progress →
+            </Link>
+          </div>
           <MobileReadingChart />
         </section>
+
+        {/* 5. Exam readiness */}
+        <DashboardReadiness className="px-4" />
 
         {/* 5. Streak Tracker — DO NOT TOUCH */}
         <section className="px-4" data-tour="mobile-streak">

@@ -1,12 +1,14 @@
 "use server";
 
 import { db } from "@/database/drizzle";
-import { verificationRequests, users, notifications } from "@/database/schema";
+import { verificationRequests, users } from "@/database/schema";
+import { notify } from "@/lib/notify";
 import { eq } from "drizzle-orm";
 import { auth, clerkClient } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { invalidateUserCache } from "@/lib/auth";
 
 export async function getSignedProofUrl(proofUrl: string) {
   try {
@@ -104,6 +106,7 @@ export async function approveVerification(requestId: string) {
         year: requestItem.level || undefined,
       })
       .where(eq(users.id, requestItem.userId));
+    await invalidateUserCache({ userId: requestItem.userId });
 
     // 3. Sync with Clerk Metadata for immediate role update
     const client = await clerkClient();
@@ -114,10 +117,12 @@ export async function approveVerification(requestId: string) {
     });
 
     // 4. Create a notification
-    await db.insert(notifications).values({
+    await notify({
       userId: requestItem.userId,
       type: "SYSTEM",
+      category: "account",
       message: "Your verification has been approved! You now have full access as a Student.",
+      url: "/dashboard",
     });
 
     revalidatePath("/dashboard/admin/verifications");
@@ -184,10 +189,12 @@ export async function rejectVerification(requestId: string) {
     });
 
     // 3. Create notification
-    await db.insert(notifications).values({
+    await notify({
       userId: req.userId,
       type: "SYSTEM",
+      category: "account",
       message: "Your verification request was rejected. Please review your submission and try again or contact support.",
+      url: "/verify",
     });
 
     revalidatePath("/dashboard/admin/verifications");

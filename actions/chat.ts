@@ -1,10 +1,11 @@
 "use server";
 
 import { db } from "@/database/drizzle";
-import { users, chatRooms, chatMessages, notifications } from "@/database/schema";
+import { users, chatRooms, chatMessages } from "@/database/schema";
 import { eq, or, and, desc, asc, sql, inArray } from "drizzle-orm";
 import { auth, clerkClient } from "@clerk/nextjs/server";
 import { pusherServer } from "@/lib/pusher";
+import { notify } from "@/lib/notify";
 
 export async function getChatRooms() {
     try {
@@ -159,16 +160,17 @@ export async function sendMessage(roomId: string, content: string) {
 
         // Notify recipient
         const recipientId = room.userOneId === currentUser.id ? room.userTwoId : room.userOneId;
-        const [notif] = await db.insert(notifications).values({
+        await notify({
             userId: recipientId,
             type: "MESSAGE",
+            category: "messages",
             message: `New message from ${currentUser.fullName}: ${content.substring(0, 50)}${content.length > 50 ? '...' : ''}`,
             targetId: roomId,
-        }).returning();
-
-        pusherServer
-            .trigger(`user-${recipientId}`, "new-notification", notif)
-            .catch((err) => console.error("Pusher trigger failed (new-notification):", err));
+            title: currentUser.fullName,
+            url: `/dashboard/messages?roomId=${roomId}`,
+            // One device notification per conversation, updated in place
+            tag: `chat-${roomId}`,
+        });
 
         return { success: true, data: newMessage };
         

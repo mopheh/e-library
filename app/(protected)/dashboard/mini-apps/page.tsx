@@ -4,13 +4,16 @@ import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Calculator, Timer, Ruler, FileText, ChevronLeft, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import Link from "next/link";
+import { GRADE_POINTS as UNIBEN_GRADE_POINTS, degreeClass } from "@/lib/grading";
 
 /* ── Types ──────────────────────────────────────────────────── */
 type AppId = "gpa" | "pomodoro" | "units" | "wordcount" | null;
 
 
 interface Course { id: string; name: string; units: number; grade: string }
-const GRADE_POINTS: Record<string, number> = { "A": 5, "B": 4, "C": 3, "D": 2, "E": 1, "F": 0 };
+// Shared UNIBEN scale (lib/grading.ts) so this can't drift from the Grades page
+const GRADE_POINTS: Record<string, number> = UNIBEN_GRADE_POINTS;
 
 function GPACalculator() {
   const [courses, setCourses] = useState<Course[]>([
@@ -31,8 +34,9 @@ function GPACalculator() {
     setSemesterGPA(parseFloat((totalPoints / totalUnits).toFixed(2)));
   };
 
-  const gpaColor = semesterGPA === null ? "" : semesterGPA >= 4.5 ? "text-emerald-600" : semesterGPA >= 3.5 ? "text-blue-600" : semesterGPA >= 2.5 ? "text-amber-600" : "text-red-600";
-  const gpaLabel = semesterGPA === null ? "" : semesterGPA >= 4.5 ? "First Class" : semesterGPA >= 3.5 ? "Second Class Upper" : semesterGPA >= 2.5 ? "Second Class Lower" : semesterGPA >= 1.5 ? "Third Class" : "Fail";
+  const cls = semesterGPA === null ? null : degreeClass(semesterGPA);
+  const gpaColor = !cls ? "" : { FIRST: "text-emerald-600", SECOND_UPPER: "text-blue-600", SECOND_LOWER: "text-amber-600", THIRD: "text-orange-600", NONE: "text-red-600" }[cls.key];
+  const gpaLabel = cls?.label ?? "";
 
   return (
     <div className="space-y-4">
@@ -71,6 +75,9 @@ function GPACalculator() {
           <p className={`text-4xl font-black font-cabin ${gpaColor}`}>{semesterGPA.toFixed(2)}</p>
           <p className={`text-sm font-bold mt-1 ${gpaColor}`}>{gpaLabel}</p>
           <p className="text-xs text-zinc-400 mt-1">Based on 5.0 scale (UNIBEN)</p>
+          <Link href="/dashboard/grades" className="inline-block mt-3 text-xs font-bold text-indigo-600 dark:text-indigo-400">
+            Save your grades and track your CGPA →
+          </Link>
         </motion.div>
       )}
     </div>

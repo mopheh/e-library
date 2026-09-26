@@ -442,6 +442,34 @@
       "when": 1784812936885,
       "tag": "0062_wonderful_smiling_tiger",
       "breakpoints": true
+    },
+    {
+      "idx": 63,
+      "version": "7",
+      "when": 1790404610590,
+      "tag": "0063_push_notifications",
+      "breakpoints": true
+    },
+    {
+      "idx": 64,
+      "version": "7",
+      "when": 1790406275942,
+      "tag": "0064_study_logs",
+      "breakpoints": true
+    },
+    {
+      "idx": 65,
+      "version": "7",
+      "when": 1790422431349,
+      "tag": "0065_grades",
+      "breakpoints": true
+    },
+    {
+      "idx": 66,
+      "version": "7",
+      "when": 1790424576390,
+      "tag": "0066_planner",
+      "breakpoints": true
     }
   ]
 }

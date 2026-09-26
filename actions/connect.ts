@@ -1,11 +1,13 @@
 "use server";
 
 import { db } from "@/database/drizzle";
-import { users, departmentCommunities, communityPosts, studentConnections, notifications, departments, chatRooms } from "@/database/schema";
+import { users, departmentCommunities, communityPosts, studentConnections, departments, chatRooms } from "@/database/schema";
 import { eq, desc, and, or, ne, inArray } from "drizzle-orm";
 import { auth, clerkClient } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import { pusherServer } from "@/lib/pusher";
+import { notify } from "@/lib/notify";
+import { invalidateUserCache } from "@/lib/auth";
 
 export async function getConnectData() {
   try {
@@ -172,17 +174,13 @@ export async function sendConnectionRequest(targetStudentId: string) {
                 .where(eq(studentConnections.id, mutualRequest.id));
 
             // Notify both parties of a "Match"
-            const matchNotif = await db.insert(notifications).values({
+            await notify({
                 userId: targetStudentId,
                 type: "GENERAL",
+                category: "connections",
                 message: `It's a match! You are now connected with ${currentUser.fullName}.`,
-            }).returning();
-
-            if (matchNotif.length > 0) {
-                pusherServer
-                    .trigger(`user-${targetStudentId}`, "new-notification", matchNotif[0])
-                    .catch((err) => console.error("Pusher trigger failed (match notification):", err));
-            }
+                url: "/dashboard/messages",
+            });
 
             return { success: true, message: "Mutual interest detected! You are now connected." };
         }
@@ -228,18 +226,13 @@ export async function sendConnectionRequest(targetStudentId: string) {
 
         // Trigger Notification
         if (connection.length > 0) {
-            const newNotif = await db.insert(notifications).values({
+            await notify({
                 userId: targetStudentId,
                 type: "CONNECTION_REQUEST",
+                category: "connections",
                 message: `${currentUser.fullName} wants to connect with you.`,
                 targetId: connection[0].id,
-            }).returning();
-
-            if (newNotif.length > 0) {
-                pusherServer
-                    .trigger(`user-${targetStudentId}`, "new-notification", newNotif[0])
-                    .catch((err) => console.error("Pusher trigger failed (connection request):", err));
-            }
+            });
         }
 
         return { success: true };
@@ -298,23 +291,19 @@ export async function respondToConnectionRequest(connectionId: string, status: "
                     console.error("Chat room creation failed:", err);
                 }
 
-                const newNotif = await db.insert(notifications).values({
+                await notify({
                     userId: requester.id,
                     type: "GENERAL",
+                    category: "connections",
                     message: `${currentUser.fullName} accepted your connection request!`,
-                }).returning();
-
-                if (newNotif.length > 0) {
-                    pusherServer
-                        .trigger(`user-${requester.id}`, "new-notification", newNotif[0])
-                        .catch((err) => console.error("Pusher trigger failed (accepted notification):", err));
-                    pusherServer
-                        .trigger(`user-${requester.id}`, "connection-accepted", {
-                            peerId: currentUser.id,
-                            roomId: roomId
-                        })
-                        .catch((err) => console.error("Pusher trigger failed (connection-accepted):", err));
-                }
+                    url: roomId ? `/dashboard/messages?roomId=${roomId}` : "/dashboard/messages",
+                });
+                pusherServer
+                    .trigger(`user-${requester.id}`, "connection-accepted", {
+                        peerId: currentUser.id,
+                        roomId: roomId
+                    })
+                    .catch((err) => console.error("Pusher trigger failed (connection-accepted):", err));
             }
         }
 
@@ -395,6 +384,7 @@ export async function updateUserInterests(interests: string) {
         await db.update(users)
             .set({ interests })
             .where(eq(users.clerkId, clerkId));
+        await invalidateUserCache({ clerkId });
 
         return { success: true };
     } catch (error) {

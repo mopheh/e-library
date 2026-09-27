@@ -30,7 +30,7 @@ export const ChatMessage = ({ message }: ChatMessageProps) => {
       </div>
 
       <div
-        className={`flex-1 max-w-[85%] rounded-2xl px-4 py-2.5 text-xs leading-relaxed ${isUser
+        className={`flex-1 min-w-0 max-w-[85%] break-words rounded-2xl px-4 py-2.5 text-xs leading-relaxed ${isUser
           ? "bg-gradient-to-br from-blue-600 to-violet-600 text-white rounded-tr-sm ml-auto font-poppins"
           : "bg-zinc-50 dark:bg-zinc-800/40 border border-zinc-200 dark:border-zinc-800/60 text-zinc-800 dark:text-zinc-100 rounded-tl-sm"
           }`}
@@ -38,7 +38,9 @@ export const ChatMessage = ({ message }: ChatMessageProps) => {
         {isUser ? (
           <p>{message.content}</p>
         ) : (
-          <div className="prose prose-xs dark:prose-invert max-w-none prose-p:my-1 prose-ul:my-1 prose-li:my-0.5 font-poppins">
+          // Wide content (display maths, tables, code) scrolls inside the
+          // bubble instead of widening the page on phones
+          <div className="prose prose-xs dark:prose-invert max-w-none prose-p:my-1 prose-ul:my-1 prose-li:my-0.5 font-poppins [&_pre]:overflow-x-auto [&_table]:block [&_table]:overflow-x-auto [&_.katex-display]:overflow-x-auto [&_.katex-display]:overflow-y-hidden [&_a]:break-all">
             <AIResponse markdown={convertToMarkdownMath(message.content)} />
           </div>
         )}

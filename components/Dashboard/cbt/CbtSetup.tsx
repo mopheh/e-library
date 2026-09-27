@@ -34,11 +34,13 @@ export default function CbtSetup({ courses, onStart, loading, starting }: CbtSet
   const [numQuestions, setNumQuestions] = useState(20);
   const [duration, setDuration] = useState(30);
 
-  // Deep link from the Progress page: /cbt?course=<courseId> pre-selects it
+  // Deep links (/cbt?course=<id> from Progress, ?courseId=<id> from a course
+  // workspace) pre-select the course
   // (only if it's one of the courses that actually has a question bank)
   useEffect(() => {
     if (courseId || !courses?.length) return;
-    const wanted = new URLSearchParams(window.location.search).get("course");
+    const params = new URLSearchParams(window.location.search);
+    const wanted = params.get("course") ?? params.get("courseId");
     const match = wanted ? courses.find((c) => c.id === wanted) : undefined;
     if (match) {
       setCourseId(match.id);

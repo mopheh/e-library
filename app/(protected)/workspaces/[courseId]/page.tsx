@@ -47,6 +47,9 @@ export default function CourseWorkspacePage({
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<string>("All");
+  // Below xl the two columns stack; let students switch instead of scrolling
+  // past every material card to reach the AI chat.
+  const [mobileView, setMobileView] = useState<"materials" | "chat">("materials");
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -147,7 +150,7 @@ export default function CourseWorkspacePage({
   const { course, stats } = workspace;
 
   return (
-    <div className="min-h-screen pb-24">
+    <div className="min-h-screen pb-24 px-4 sm:px-0">
       {/* Breadcrumb */}
       <div className="pt-2 pb-4">
         <button
@@ -217,10 +220,35 @@ export default function CourseWorkspacePage({
         </div>
       </div>
 
+      {/* Materials / AI switch (phones & tablets; both columns show on xl) */}
+      <div className="xl:hidden sticky top-0 z-20 -mx-4 sm:mx-0 px-4 sm:px-0 py-2 mb-4 bg-zinc-50/90 dark:bg-zinc-900/90 backdrop-blur-md">
+        <div className="grid grid-cols-2 gap-1 p-1 rounded-xl bg-zinc-100 dark:bg-zinc-800/60" role="tablist">
+          {([
+            ["materials", `Materials (${stats.totalBooks})`],
+            ["chat", "AI Assistant"],
+          ] as const).map(([view, label]) => (
+            <button
+              key={view}
+              role="tab"
+              aria-selected={mobileView === view}
+              onClick={() => setMobileView(view)}
+              className={`flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-semibold font-poppins transition-all ${
+                mobileView === view
+                  ? "bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white shadow-sm"
+                  : "text-zinc-500 dark:text-zinc-400"
+              }`}
+            >
+              {view === "chat" ? <Brain className="w-3.5 h-3.5" /> : <BookOpen className="w-3.5 h-3.5" />}
+              {label}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* Main 2-column layout */}
       <div className="max-w-[1400px] mx-auto grid grid-cols-1 xl:grid-cols-[1fr_420px] gap-8">
         {/* Left: Materials */}
-        <div className="flex flex-col gap-6">
+        <div className={`flex-col gap-6 min-w-0 ${mobileView === "materials" ? "flex" : "hidden"} xl:flex`}>
           {/* Section header */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -313,8 +341,8 @@ export default function CourseWorkspacePage({
         </div>
 
         {/* Right: AI Study Chat */}
-        <div className="flex flex-col h-full">
-          <div className="sticky top-4 flex flex-col gap-0 rounded-2xl border border-zinc-200 dark:border-zinc-800 overflow-hidden bg-white dark:bg-zinc-900 shadow-lg">
+        <div className={`flex-col h-full min-w-0 ${mobileView === "chat" ? "flex" : "hidden"} xl:flex`}>
+          <div className="xl:sticky xl:top-4 flex flex-col gap-0 rounded-2xl border border-zinc-200 dark:border-zinc-800 overflow-hidden bg-white dark:bg-zinc-900 shadow-lg">
             {/* Chat header */}
             <div className="flex items-center gap-3 px-4 py-3.5 bg-zinc-50 dark:bg-zinc-900/90 border-b border-zinc-200 dark:border-zinc-800/80 backdrop-blur-md">
               <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-600 to-violet-600 flex items-center justify-center shadow-sm">
@@ -344,7 +372,7 @@ export default function CourseWorkspacePage({
             </div>
 
             {/* Messages area */}
-            <div className="flex flex-col gap-4 p-4 h-[460px] overflow-y-auto">
+            <div className="flex flex-col gap-4 p-4 h-[55dvh] min-h-[320px] xl:h-[460px] overflow-y-auto overflow-x-hidden">
               {messages.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full gap-5 text-center">
                   <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-violet-600 flex items-center justify-center shadow-sm">

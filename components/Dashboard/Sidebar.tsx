@@ -44,6 +44,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { removePushSubscription } from "@/hooks/usePushNotifications";
+import { PREMIUM_ENABLED } from "@/lib/features";
 
 interface SidebarProps {
   role?: string;
@@ -234,20 +235,22 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggle }) => {
           </div>
 
           {/* Upgrade Card */}
-          <div className="mt-4 p-5 glass-card rounded-2xl border-blue-100 dark:border-blue-900/30 flex flex-col gap-3 relative overflow-hidden group">
-             <div className="absolute top-0 right-0 -translate-y-4 translate-x-4 opacity-10 group-hover:scale-125 transition-transform">
-                <Crown className="w-20 h-20 text-blue-600" />
-             </div>
-             <div>
-                <h4 className="text-sm font-semibold font-poppins text-zinc-900 dark:text-zinc-100">Level Up?</h4>
-                <p className="text-[10px] text-zinc-500 leading-relaxed max-w-[150px] font-manrope font-normal">Get unlimited AI Tutor requests and full CBT access.</p>
-             </div>
-             <Link href="/dashboard/pricing">
-                <button className="bg-blue-600 text-white px-4 py-2.5 rounded-xl text-[10px] font-normal font-manrope shadow-lg shadow-blue-200 dark:shadow-none hover:bg-blue-700 transition-colors flex items-center gap-1.5 w-fit">
-                   <Zap className="w-3 h-3 fill-white" /> Upgrade Now
-                </button>
-             </Link>
-          </div>
+          {PREMIUM_ENABLED && (
+            <div className="mt-4 p-5 glass-card rounded-2xl border-blue-100 dark:border-blue-900/30 flex flex-col gap-3 relative overflow-hidden group">
+               <div className="absolute top-0 right-0 -translate-y-4 translate-x-4 opacity-10 group-hover:scale-125 transition-transform">
+                  <Crown className="w-20 h-20 text-blue-600" />
+               </div>
+               <div>
+                  <h4 className="text-sm font-semibold font-poppins text-zinc-900 dark:text-zinc-100">Level Up?</h4>
+                  <p className="text-[10px] text-zinc-500 leading-relaxed max-w-[150px] font-manrope font-normal">Get unlimited AI Tutor requests and full CBT access.</p>
+               </div>
+               <Link href="/dashboard/pricing">
+                  <button className="bg-blue-600 text-white px-4 py-2.5 rounded-xl text-[10px] font-normal font-manrope shadow-lg shadow-blue-200 dark:shadow-none hover:bg-blue-700 transition-colors flex items-center gap-1.5 w-fit">
+                     <Zap className="w-3 h-3 fill-white" /> Upgrade Now
+                  </button>
+               </Link>
+            </div>
+          )}
 
           <div className="pt-2 flex flex-col gap-4 mt-auto">
               <hr className="border-t border-zinc-200 dark:border-zinc-800" />

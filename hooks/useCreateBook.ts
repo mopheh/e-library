@@ -5,9 +5,16 @@ type CreateBookPayload = {
   type: string;
   courseIds: string[];
   fileUrl?: string;
-  link?: string;
   fileSize?: number;
 };
+
+/** Carries the API's per-field messages so the form can show them inline. */
+export class CreateBookError extends Error {
+  constructor(message: string, public fieldErrors: Record<string, string>) {
+    super(message);
+    this.name = "CreateBookError";
+  }
+}
 
 export function useCreateBook() {
   const createBook = async (payload: CreateBookPayload) => {
@@ -20,7 +27,8 @@ export function useCreateBook() {
     });
 
     if (!res.ok) {
-      throw new Error("Failed to create book");
+      const data = await res.json().catch(() => null);
+      throw new CreateBookError(data?.error || "Failed to create book", data?.fieldErrors ?? {});
     }
 
     return res.json();

@@ -3,25 +3,43 @@ import { auth } from "@clerk/nextjs/server";
 import {
   bookCourses,
   books,
+  courseDepartments,
   courses,
   jobs,
   users,
 } from "@/database/schema";
 import { db } from "@/database/drizzle";
-import { and, eq, sql, desc, ilike, or } from "drizzle-orm";
+import { and, eq, sql, desc, ilike, inArray, or } from "drizzle-orm";
 import { z } from "zod";
 import { requireRole, getCurrentUser } from "@/lib/auth";
 import * as Sentry from "@sentry/nextjs";
+import { fieldErrors, materialDetailsSchema } from "@/lib/validation/contribution";
 
-const bookSchema = z.object({
-  title: z.string().min(1, "Title is required").max(255),
-  description: z.string().optional(),
-  departmentId: z.string().uuid("Department ID must be a valid UUID"),
-  type: z.string().min(1, "Type is required"),
-  courseIds: z.array(z.string().uuid()).optional().default([]),
-  fileUrl: z.string().url("File URL must be a valid URL"),
-  fileSize: z.number().optional().default(0),
+const MAX_FILE_BYTES = 50 * 1024 * 1024;
+// Non-admins can't flood the review queue: past this many uploads awaiting
+// review, new ones are refused until some are approved or rejected.
+const MAX_PENDING_PER_USER = 10;
+
+// Only files our own /api/b2 flow produced are accepted - never an arbitrary
+// URL, which would let anyone publish a phishing / malware link as "material".
+function isOwnBookFileUrl(fileUrl: string) {
+  const host = process.env.B2_DELIVERY_ENDPOINT || "f005.backblazeb2.com";
+  const bucket = process.env.B2_BUCKET;
+  if (!bucket) return false;
+  const esc = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return new RegExp(
+    `^https://${esc(host)}/file/${esc(bucket)}/books/[0-9a-f-]{36}\\.(pdf|doc|docx|epub)$`,
+    "i",
+  ).test(fileUrl);
+}
+
+const bookSchema = materialDetailsSchema.extend({
+  fileUrl: z.string().refine(isOwnBookFileUrl, "Upload the file again - that file link isn't valid"),
+  fileSize: z.number().int().min(1, "The file is empty").max(MAX_FILE_BYTES, "Files must be 50MB or smaller"),
 });
+
+const reject = (status: number, error: string, fields?: Record<string, string>) =>
+  NextResponse.json({ error, ...(fields && { fieldErrors: fields }) }, { status });
 
 export async function GET(req: NextRequest) {
   try {
@@ -161,24 +179,79 @@ export async function POST(req: Request) {
     }
     const user = authCheck.user!;
 
-    const result = bookSchema.safeParse(await req.json());
+    const result = bookSchema.safeParse(await req.json().catch(() => null));
     if (!result.success) {
-      return NextResponse.json(
-        { error: "Validation failed", issues: result.error.errors },
-        { status: 400 },
-      );
+      const fields = fieldErrors<string>(result.error);
+      return reject(400, Object.values(fields)[0] || "Invalid material details", fields as Record<string, string>);
     }
     const { title, description, departmentId, type, courseIds, fileUrl, fileSize } = result.data;
 
-    // Admin uploads publish immediately; Faculty Rep uploads need admin
+    // Admin uploads publish immediately; everyone else's need admin
     // approval before students can see them.
     const isAdmin = user.role === "ADMIN";
+
+    if (!isAdmin && departmentId !== user.departmentId) {
+      return reject(403, "You can only contribute to your own department", {
+        departmentId: "You can only contribute to your own department",
+      });
+    }
+
+    // Every course must belong to (or be shared with) the chosen department.
+    const validCourses = await db
+      .select({ id: courses.id })
+      .from(courses)
+      .leftJoin(
+        courseDepartments,
+        and(eq(courseDepartments.courseId, courses.id), eq(courseDepartments.departmentId, departmentId)),
+      )
+      .where(
+        and(
+          inArray(courses.id, courseIds),
+          or(eq(courses.departmentId, departmentId), eq(courseDepartments.departmentId, departmentId)),
+        ),
+      );
+    if (new Set(validCourses.map((c) => c.id)).size !== courseIds.length) {
+      return reject(400, "One of the selected courses isn't offered by this department", {
+        courseIds: "One of the selected courses isn't offered by this department",
+      });
+    }
+
+    const [dupe] = await db
+      .select({ fileUrl: books.fileUrl, title: books.title })
+      .from(books)
+      .where(
+        or(
+          eq(books.fileUrl, fileUrl),
+          and(eq(books.departmentId, departmentId), sql`lower(${books.title}) = lower(${title})`),
+        ),
+      )
+      .limit(1);
+    if (dupe) {
+      return dupe.fileUrl === fileUrl
+        ? reject(409, "This file has already been submitted")
+        : reject(409, "Material with this exact title already exists in this department", {
+            title: "This title is already taken in your department. Make it more specific, e.g. add the year or topic.",
+          });
+    }
+
+    if (!isAdmin) {
+      const [{ pending }] = await db
+        .select({ pending: sql<number>`count(*)::int` })
+        .from(books)
+        .where(and(eq(books.postedBy, user.id), eq(books.reviewStatus, "PENDING")));
+      if (pending >= MAX_PENDING_PER_USER) {
+        return reject(
+          429,
+          `You have ${pending} uploads waiting for review. Please wait until some are reviewed before adding more.`,
+        );
+      }
+    }
 
     const [createdBook] = await db
       .insert(books)
       .values({
         title,
-        description: description ?? "",
+        description,
         departmentId,
         type,
         fileUrl,

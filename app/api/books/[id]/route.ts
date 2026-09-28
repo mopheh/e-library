@@ -4,6 +4,7 @@ import { db } from "@/database/drizzle";
 import { books, bookCourses, userBooks, readingSessions, bookPages, annotations } from "@/database/schema";
 import { authorizeB2, b2 } from "@/lib/utils";
 import { requireRole, getCurrentUser } from "@/lib/auth";
+import { fieldErrors, materialDetailsSchema } from "@/lib/validation/contribution";
 import * as Sentry from "@sentry/nextjs";
 
 export async function GET(
@@ -99,8 +100,18 @@ export async function PUT(
     }
 
     const { id: bookId } = await context.params;
-    const body = await req.json();
-    const { title, description, type, courseIds } = body;
+    const parsed = materialDetailsSchema
+      .pick({ title: true, description: true, type: true, courseIds: true })
+      .partial()
+      .safeParse(await req.json().catch(() => null));
+    if (!parsed.success) {
+      const fields = fieldErrors<string>(parsed.error);
+      return NextResponse.json(
+        { error: Object.values(fields)[0] || "Invalid material details", fieldErrors: fields },
+        { status: 400 },
+      );
+    }
+    const { title, description, type, courseIds } = parsed.data;
 
     const [existing] = await db.select().from(books).where(eq(books.id, bookId)).limit(1);
     if (!existing) return NextResponse.json({ error: "Book not found" }, { status: 404 });
@@ -117,7 +128,7 @@ export async function PUT(
       await db.delete(bookCourses).where(eq(bookCourses.bookId, bookId));
       if (courseIds.length > 0) {
         await db.insert(bookCourses).values(
-          courseIds.map((courseId: string) => ({ bookId, courseId }))
+          courseIds.map((courseId) => ({ bookId, courseId }))
         );
       }
     }

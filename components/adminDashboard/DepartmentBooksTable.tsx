@@ -214,11 +214,22 @@ function EditBookModal({
   });
 
   const onSubmit = async (data: any) => {
+    // Only send what changed: courses aren't pre-filled here, so an empty
+    // selection means "leave them alone", not "unlink every course".
+    const changes: Record<string, unknown> = {};
+    if (data.title !== book.title) changes.title = data.title;
+    if (data.description !== book.description) changes.description = data.description;
+    if (data.type !== book.type) changes.type = data.type;
+    if (data.courseIds?.length) changes.courseIds = data.courseIds;
+    if (Object.keys(changes).length === 0) {
+      onClose();
+      return;
+    }
     try {
       const res = await fetch(`/api/books/${book.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
+        body: JSON.stringify(changes),
       });
       const result = await res.json();
       if (!res.ok) throw new Error(result.error || "Failed to update");

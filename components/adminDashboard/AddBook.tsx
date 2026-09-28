@@ -6,9 +6,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import {
-  ClipboardPaste,
-  CloudUpload,
-  Link as LinkIcon,
   Lock,
   Search,
   CheckCircle2,
@@ -16,47 +13,49 @@ import {
   UploadCloud,
   Sparkles,
 } from "lucide-react";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import { useCourses } from "@/hooks/useCourses";
 
-import { useCreateBook } from "@/hooks/useCreateBook";
+import { CreateBookError, useCreateBook } from "@/hooks/useCreateBook";
 import { Department } from "@/types";
 import { FileUploadDropzone } from "@/components/shared/FileUploadDropzone";
+import { QuickAddCourse } from "./QuickAddCourse";
 import { useUserData } from "@/hooks/useUsers";
 import { BOOK_TYPES, TYPE_STYLES } from "@/lib/bookTypes";
+import { MAX_COURSES_PER_MATERIAL, courseCodeKey, materialDetailsSchema } from "@/lib/validation/contribution";
 
-// schema
-export const bookSchema = z
-  .object({
-    title: z.string().min(3),
-    description: z.string().min(10),
-    departmentId: z.string().min(1, "Select a department"),
-    type: z.string().min(1, "Select a resource type"),
-    courseIds: z.array(z.string()).nonempty("Select at least one course"),
-    source: z.enum(["file", "link"]),
+// Same rules the API enforces (lib/validation/contribution), plus the file.
+export const bookSchema = materialDetailsSchema
+  .extend({
     fileUrl: z.string().optional(),
     fileSize: z.number().optional(),
-    link: z.string().url().or(z.literal("")).optional(),
   })
-  .refine(
-    (data) => (data.source === "file" ? !!data.fileUrl : true),
-    {
-      message: "Please upload a file first",
-      path: ["fileUrl"],
-    },
-  )
-  .refine((data) => (data.source === "link" ? !!data.link : true), {
-    message: "Link is required when source is link",
-    path: ["link"],
+  .refine((data) => !!data.fileUrl, {
+    message: "Please upload a file first",
+    path: ["fileUrl"],
   });
 
-type BookFormData = z.infer<typeof bookSchema>;
+type BookFormInput = z.input<typeof bookSchema>;
+type BookFormData = z.output<typeof bookSchema>;
+
+// Server field errors we can pin to an input; anything else becomes a toast.
+const FIELD_NAMES = { title: 1, description: 1, type: 1, departmentId: 1, courseIds: 1, fileUrl: 1 };
 
 const inputClass =
   "w-full border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-4 py-3 rounded-2xl text-sm font-poppins outline-none focus:ring-2 ring-blue-500/20 transition-shadow disabled:opacity-60 disabled:cursor-not-allowed";
 const labelClass = "text-[10px] font-black uppercase tracking-wider text-zinc-400 font-cabin";
 const errorClass = "text-red-500 text-[11px] mt-1";
+const hintClass = "text-zinc-400 text-[11px] mt-1";
+const errorInputClass = "border-red-400 dark:border-red-800 ring-2 ring-red-500/15";
+
+function CharCount({ value, max }: { value?: string; max: number }) {
+  const n = value?.length ?? 0;
+  return (
+    <span className={cn("text-[10px] tabular-nums", n > max * 0.9 ? "text-amber-600" : "text-zinc-400")}>
+      {n}/{max}
+    </span>
+  );
+}
 
 export function UploadBookForm({
   department,
@@ -90,23 +89,24 @@ export function UploadBookForm({
     watch,
     reset,
     setValue,
+    getValues,
     formState: { errors },
-  } = useForm<BookFormData>({
+    setError,
+  } = useForm<BookFormInput, unknown, BookFormData>({
     resolver: zodResolver(bookSchema),
+    // Validate a field once the user leaves it, then live while they fix it.
+    mode: "onTouched",
     defaultValues: {
       title: initialTitle || "",
       description: "",
       departmentId: "",
-      type: "",
+      type: undefined,
       courseIds: [],
-      source: "file",
       fileUrl: undefined,
       fileSize: undefined,
-      link: "",
     },
   });
 
-  const source = watch("source");
   const selectedType = watch("type");
   const selectedDepartmentId = watch("departmentId");
 
@@ -133,7 +133,7 @@ export function UploadBookForm({
   const prevDepartmentRef = useRef(effectiveDepartmentId);
   useEffect(() => {
     if (prevDepartmentRef.current && prevDepartmentRef.current !== effectiveDepartmentId) {
-      setValue("courseIds", [] as unknown as [string, ...string[]]);
+      setValue("courseIds", []);
     }
     prevDepartmentRef.current = effectiveDepartmentId;
   }, [effectiveDepartmentId, setValue]);
@@ -142,8 +142,11 @@ export function UploadBookForm({
     if (!courses) return [];
     const q = courseSearch.trim().toLowerCase();
     if (!q) return courses;
+    // "csc201" should still find "CSC 201".
+    const qKey = courseCodeKey(q);
     return courses.filter(
-      (c) => c.courseCode.toLowerCase().includes(q) || c.title.toLowerCase().includes(q),
+      (c) =>
+        (qKey && courseCodeKey(c.courseCode).includes(qKey)) || c.title.toLowerCase().includes(q),
     );
   }, [courses, courseSearch]);
 
@@ -151,71 +154,52 @@ export function UploadBookForm({
   const lockedDepartmentName =
     lockedDepartment?.departmentName || lockedDepartment?.name || "your department";
 
+  const effectiveDepartment = department?.find((d) => d.id === effectiveDepartmentId);
+  const effectiveDepartmentName =
+    effectiveDepartment?.departmentName || effectiveDepartment?.name || "this department";
+
+  const selectAddedCourse = (course: { id: string }) => {
+    const current = getValues("courseIds") || [];
+    if (!current.includes(course.id)) {
+      setValue("courseIds", [...current, course.id], { shouldValidate: true });
+    }
+    setCourseSearch("");
+  };
+
   const onSubmit: SubmitHandler<BookFormData> = async (data) => {
     setLoading(true);
     toast.info("Uploading...");
 
     try {
-      if (data.source === "file" && data.fileUrl) {
-        await createBook({
-          fileUrl: data.fileUrl,
-          title: data.title,
-          description: data.description,
-          departmentId: data.departmentId,
-          type: data.type,
-          courseIds: data.courseIds,
-          fileSize: data.fileSize,
-        });
+      await createBook({
+        fileUrl: data.fileUrl!,
+        title: data.title,
+        description: data.description,
+        departmentId: data.departmentId,
+        type: data.type,
+        courseIds: data.courseIds,
+        fileSize: data.fileSize,
+      });
 
-        toast.success(uploadSuccessMessage);
-        reset();
-        setOpen(false);
-        return;
-      }
-
-      if (data.source === "link" && data.link) {
-        const res = await fetch("/api/books", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            title: data.title,
-            description: data.description,
-            departmentId: data.departmentId,
-            type: data.type,
-            courseIds: data.courseIds,
-            fileUrl: data.link,
-          }),
-        });
-
-        if (!res.ok) {
-          const err = await res.json();
-          throw new Error(err.error || "Failed to upload book");
-        }
-
-        toast.success(uploadSuccessMessage);
-
-        reset();
-        setOpen(false);
-      }
+      toast.success(uploadSuccessMessage);
+      reset();
+      setOpen(false);
     } catch (err) {
       console.error(err);
-      toast.error("Upload failed");
+      if (err instanceof CreateBookError) {
+        const fields = Object.entries(err.fieldErrors).filter(([f]) => f in FIELD_NAMES);
+        fields.forEach(([field, message], i) =>
+          setError(field as keyof BookFormInput, { message }, { shouldFocus: i === 0 }),
+        );
+        toast.error(fields.length ? "Please fix the highlighted fields" : err.message);
+      } else {
+        toast.error("Upload failed. Please try again.");
+      }
     } finally {
       setLoading(false);
     }
   };
 
-  const handlePaste = async () => {
-    try {
-      const text = await navigator.clipboard.readText();
-      if (text) {
-        setValue("link", text);
-        toast.success("Pasted from clipboard");
-      }
-    } catch {
-      toast.error("Clipboard access denied");
-    }
-  };
   const onError = (errors: unknown) => {
     console.error("❌ validation failed", errors);
   };
@@ -249,26 +233,42 @@ export function UploadBookForm({
       <form onSubmit={handleSubmit(onSubmit, onError)} className="text-sm space-y-5">
         {/* Title */}
         <div className="space-y-1.5">
-          <label className={labelClass}>Title</label>
+          <div className="flex items-center justify-between">
+            <label className={labelClass} htmlFor="material-title">Title</label>
+            <CharCount value={watch("title")} max={120} />
+          </div>
           <input
+            id="material-title"
             type="text"
-            placeholder="e.g. Introduction to Circuit Theory"
+            placeholder="e.g. EEE316 Past Questions 2019/2020"
+            maxLength={120}
+            aria-invalid={!!errors.title}
             {...register("title")}
-            className={inputClass}
+            className={cn(inputClass, errors.title && errorInputClass)}
           />
-          {errors.title && <p className={errorClass}>{errors.title.message}</p>}
+          {errors.title ? (
+            <p role="alert" className={errorClass}>{errors.title.message}</p>
+          ) : (
+            <p className={hintClass}>Be specific: course, topic or year. No links, phone numbers or emoji.</p>
+          )}
         </div>
 
         {/* Description */}
         <div className="space-y-1.5">
-          <label className={labelClass}>Description</label>
+          <div className="flex items-center justify-between">
+            <label className={labelClass} htmlFor="material-description">Description</label>
+            <CharCount value={watch("description")} max={1000} />
+          </div>
           <textarea
-            placeholder="What's this resource about?"
+            id="material-description"
+            placeholder="What does it cover? e.g. Chapters 1–5 on network theorems, with worked examples."
             rows={3}
+            maxLength={1000}
+            aria-invalid={!!errors.description}
             {...register("description")}
-            className={cn(inputClass, "resize-none")}
+            className={cn(inputClass, "resize-none", errors.description && errorInputClass)}
           />
-          {errors.description && <p className={errorClass}>{errors.description.message}</p>}
+          {errors.description && <p role="alert" className={errorClass}>{errors.description.message}</p>}
         </div>
 
         {/* Type */}
@@ -328,7 +328,7 @@ export function UploadBookForm({
           <div className="flex items-center justify-between">
             <label className={labelClass}>Courses</label>
             <span className="text-[10px] text-zinc-400">
-              {watch("courseIds")?.length || 0} selected
+              {watch("courseIds")?.length || 0}/{MAX_COURSES_PER_MATERIAL} selected
             </span>
           </div>
 
@@ -341,9 +341,18 @@ export function UploadBookForm({
               <Loader2 className="w-3.5 h-3.5 animate-spin" /> Loading courses…
             </div>
           ) : !courses?.length ? (
-            <p className="text-xs text-zinc-400 italic px-1">
-              No courses found for this department yet — ask an admin to add one first.
-            </p>
+            <>
+              <p className="text-xs text-zinc-500 px-1">
+                {effectiveDepartmentName} doesn&apos;t have any courses yet. Add the one this material is for.
+              </p>
+              <QuickAddCourse
+                key={effectiveDepartmentId}
+                departmentId={effectiveDepartmentId}
+                departmentName={effectiveDepartmentName}
+                defaultOpen
+                onAdded={selectAddedCourse}
+              />
+            </>
           ) : (
             <>
               {courses.length > 8 && (
@@ -369,6 +378,7 @@ export function UploadBookForm({
                     ) : (
                       filteredCourses.map((course) => {
                         const active = field.value.includes(course.id);
+                        const atLimit = !active && field.value.length >= MAX_COURSES_PER_MATERIAL;
                         return (
                           <button
                             type="button"
@@ -381,12 +391,13 @@ export function UploadBookForm({
                               )
                             }
                             className={cn(
-                              "flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold border transition-all",
+                              "flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold border transition-all disabled:opacity-40 disabled:cursor-not-allowed",
                               active
                                 ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300"
                                 : "border-zinc-200 dark:border-zinc-800 text-zinc-500 hover:border-zinc-300 dark:hover:border-zinc-700",
                             )}
-                            title={course.title}
+                            title={atLimit ? `You can tag up to ${MAX_COURSES_PER_MATERIAL} courses` : course.title}
+                            disabled={atLimit}
                           >
                             {active && <CheckCircle2 className="w-3 h-3" />}
                             {course.courseCode}
@@ -397,73 +408,31 @@ export function UploadBookForm({
                   </div>
                 )}
               />
+              <QuickAddCourse
+                key={effectiveDepartmentId}
+                departmentId={effectiveDepartmentId}
+                departmentName={effectiveDepartmentName}
+                initialQuery={courseSearch}
+                onAdded={selectAddedCourse}
+              />
             </>
           )}
           {errors.courseIds && <p className={errorClass}>{errors.courseIds.message}</p>}
         </div>
 
-        {/* Source Toggle (Tabs instead of radios) */}
+        {/* File */}
         <div className="space-y-1.5">
-          <label className={labelClass}>Source</label>
-          <Tabs
-            value={source}
-            onValueChange={(val) => setValue("source", val as "file" | "link")}
-            className="w-full"
-          >
-            <TabsList className="grid grid-cols-2 w-full rounded-2xl bg-zinc-100 dark:bg-zinc-800">
-              <TabsTrigger
-                value="file"
-                className={cn(
-                  "flex items-center gap-2 data-[state=active]:bg-white dark:data-[state=active]:bg-zinc-900 rounded-xl",
-                )}
-              >
-                <CloudUpload className="w-4 h-4" /> Upload File
-              </TabsTrigger>
-              <TabsTrigger
-                value="link"
-                className={cn(
-                  "flex items-center gap-2 data-[state=active]:bg-white dark:data-[state=active]:bg-zinc-900 rounded-xl",
-                )}
-              >
-                <LinkIcon className="w-4 h-4" /> Paste Link
-              </TabsTrigger>
-            </TabsList>
-
-            {/* File Upload */}
-            <TabsContent value="file" className="mt-4">
-              <FileUploadDropzone
-                onUploadSuccess={(url, fileObj) => {
-                  setValue("fileUrl", url, { shouldValidate: true });
-                  setValue("fileSize", fileObj.size, { shouldValidate: true });
-                }}
-                accept=".pdf,.doc,.docx,.epub"
-                maxSizeMB={50}
-                label="Click or drag book file here"
-              />
-              {errors.fileUrl && <p className={errorClass}>{errors.fileUrl.message}</p>}
-            </TabsContent>
-
-            {/* Link Upload */}
-            <TabsContent value="link" className="mt-4">
-              <div className="flex items-center gap-2">
-                <input
-                  type="url"
-                  {...register("link")}
-                  placeholder="https://drive.google.com/..."
-                  className={inputClass}
-                />
-                <button
-                  type="button"
-                  onClick={handlePaste}
-                  className="p-3 bg-zinc-100 hover:bg-zinc-200 rounded-2xl dark:bg-zinc-800 dark:hover:bg-zinc-700 shrink-0 transition-colors"
-                  title="Paste from clipboard"
-                >
-                  <ClipboardPaste size={16} />
-                </button>
-              </div>
-              {errors.link && <p className={errorClass}>{errors.link.message}</p>}
-            </TabsContent>
-          </Tabs>
+          <label className={labelClass}>File</label>
+          <FileUploadDropzone
+            onUploadSuccess={(url, fileObj) => {
+              setValue("fileUrl", url, { shouldValidate: true });
+              setValue("fileSize", fileObj.size, { shouldValidate: true });
+            }}
+            accept=".pdf,.doc,.docx,.epub"
+            maxSizeMB={50}
+            label="Click or drag book file here"
+          />
+          {errors.fileUrl && <p className={errorClass}>{errors.fileUrl.message}</p>}
         </div>
 
         {/* Submit */}

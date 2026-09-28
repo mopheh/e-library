@@ -58,7 +58,7 @@ const plans = [
   },
 ];
 
-export default function PricingPage() {
+export default function PricingView() {
   return (
     <div className="flex-1 p-4 md:p-8 pt-12 min-h-screen premium-bg font-poppins">
       <div className="max-w-6xl mx-auto space-y-16">

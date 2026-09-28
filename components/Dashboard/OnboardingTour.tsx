@@ -22,7 +22,7 @@ import {
 
 // ── Constants ────────────────────────────────────────────────────────────────
 
-const TOUR_KEY = "rcf-dashboard-tour-done";
+export const TOUR_KEY = "rcf-dashboard-tour-done";
 const CARD_W = 340;
 const CARD_W_MOBILE_MAX = 300; // max width; actual width is fluid (100vw - 32px)
 const CARD_H_EST = 270; // conservative estimated card height

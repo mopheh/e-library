@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Lock, Target, TrendingUp } from "lucide-react";
+import { Target, TrendingUp } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   DEGREE_CLASSES,
@@ -65,9 +65,8 @@ export function CgpaHero({ data }: { data: Grades }) {
           <p className={cn("text-5xl sm:text-6xl font-black font-cabin tracking-tighter mt-1", tone.text)}>{cgpa.toFixed(2)}</p>
           <span className={cn("inline-block mt-2 px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap", tone.pill)}>{cls.label}</span>
         </div>
-        <div className="text-right text-xs text-zinc-500 space-y-1 pt-1">
+        <div className="text-right text-xs text-zinc-500 pt-1">
           <p><span className="font-bold text-zinc-800 dark:text-zinc-200">{totalUnits}</span> units counted</p>
-          <p className="flex items-center gap-1 justify-end"><Lock className="w-3 h-3" /> Only you can see this</p>
         </div>
       </div>
 

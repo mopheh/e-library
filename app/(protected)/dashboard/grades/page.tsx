@@ -2,7 +2,7 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { GraduationCap, Info, Lock, Plus, Zap } from "lucide-react";
+import { GraduationCap, Info, Plus, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { round2 } from "@/lib/grading";
 import { useEnrolledCourses } from "@/hooks/useEnrolledCourses";
@@ -135,7 +135,7 @@ export default function GradesPage() {
         <div>
           <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Academics</p>
           <h1 className="text-2xl md:text-3xl font-black font-cabin tracking-tighter text-zinc-900 dark:text-zinc-50">Grades</h1>
-          <p className="text-sm text-zinc-500 mt-1 flex items-center gap-1.5"><Lock className="w-3.5 h-3.5" /> Private to you. UNIBEN 5-point scale.</p>
+          <p className="text-sm text-zinc-500 mt-1">Your CGPA on the UNIBEN 5-point scale.</p>
         </div>
         {hasAnything && (
           <button onClick={openNew}

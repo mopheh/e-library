@@ -1,18 +1,16 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { UserCircle, MessageSquare, Send, PartyPopper, ShieldCheck } from "lucide-react";
+import { UserCircle, MessageSquare, Send, ShieldCheck } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { useUser } from "@clerk/nextjs";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
+
+const card = "rounded-[22px] bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800/60 shadow-sm";
 
 export default function FacultyRepSection() {
-    const { user } = useUser();
-    const isRep = user?.unsafeMetadata?.role === "FACULTY REP" || user?.unsafeMetadata?.role === "faculty-rep"  || false;
-
     const [rep, setRep] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [messageModalOpen, setMessageModalOpen] = useState(false);
@@ -34,7 +32,7 @@ export default function FacultyRepSection() {
             }
         };
         fetchRep();
-    }, [user?.id]);
+    }, []);
 
     const handleSendMessage = async () => {
         if (!message.trim() || !rep) return;
@@ -60,26 +58,20 @@ export default function FacultyRepSection() {
 
     if (loading) {
         return (
-            <Card className="animate-pulse border-none bg-zinc-50 dark:bg-zinc-900/50">
-                <CardContent className="h-24"></CardContent>
-            </Card>
+            <div className={cn(card, "h-28 animate-pulse")} />
         );
     }
 
-    if (!rep && isRep) return null;
-
     return (
-        <Card className="overflow-hidden border-zinc-100 dark:border-zinc-800 shadow-sm bg-gradient-to-br from-indigo-50/10 to-transparent dark:from-indigo-900/10">
-            <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                    <ShieldCheck className="w-4 h-4 text-indigo-500" />
-                    Faculty Support
-                </CardTitle>
-            </CardHeader>
-            <CardContent>
+        <div className={cn(card, "p-5")}>
+            <h2 className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.18em] text-zinc-400 font-cabin">
+                <ShieldCheck className="w-3.5 h-3.5" />
+                Faculty support
+            </h2>
+            <div>
                 {rep ? (
-                    <div className="flex flex-col sm:flex-row items-center gap-6 py-4">
-                        <div className="h-20 w-20 flex items-center justify-center rounded-3xl bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400 font-bold text-2xl shrink-0 shadow-inner overflow-hidden border-2 border-white dark:border-zinc-800">
+                    <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-5 pt-4">
+                        <div className="h-14 w-14 flex items-center justify-center rounded-2xl bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400 font-bold text-2xl shrink-0 shadow-inner overflow-hidden border-2 border-white dark:border-zinc-800">
                             {rep.imageUrl ? (
                                  <img src={rep.imageUrl} alt={rep.fullName} className="h-full w-full object-cover" />
                             ) : (
@@ -87,7 +79,7 @@ export default function FacultyRepSection() {
                             )}
                         </div>
                         <div className="flex-1 text-center sm:text-left space-y-1">
-                            <h4 className="text-lg font-bold text-zinc-900 dark:text-zinc-50">{rep.fullName}</h4>
+                            <h4 className="text-base font-bold text-zinc-900 dark:text-zinc-50">{rep.fullName}</h4>
                             <p className="text-xs text-zinc-500 font-medium uppercase tracking-wide flex items-center justify-center sm:justify-start gap-2">
                                 <MessageSquare className="w-3.5 h-3.5" />
                                 {rep.repType || "Faculty Representative"}
@@ -102,14 +94,14 @@ export default function FacultyRepSection() {
                         </Button>
                     </div>
                 ) : (
-                    <div className="py-6 text-center space-y-3">
+                    <div className="pt-5 pb-1 text-center space-y-3">
                         <div className="w-12 h-12 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center mx-auto text-zinc-400">
                             <UserCircle className="w-6 h-6" />
                         </div>
                         <p className="text-sm text-zinc-500 font-medium">No Faculty Representative assigned yet.</p>
                     </div>
                 )}
-            </CardContent>
+            </div>
 
             <Dialog open={messageModalOpen} onOpenChange={setMessageModalOpen}>
                 <DialogContent className="sm:max-w-[425px]">
@@ -137,6 +129,6 @@ export default function FacultyRepSection() {
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
-        </Card>
+        </div>
     );
 }

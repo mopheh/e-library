@@ -2,6 +2,7 @@ import { db } from "@/database/drizzle";
 import { readingSessions, userBooks, users, studentCourses, courses, academicCalendarEvents } from "@/database/schema";
 import { getCurrentUser } from "@/lib/auth";
 import { withCache } from "@/lib/redis";
+import { studyStreak } from "@/lib/profile";
 import { manualStudyByDate } from "@/lib/study-logs";
 import { NextResponse } from "next/server";
 import { and, desc, eq, gte, sql } from "drizzle-orm";
@@ -122,27 +123,8 @@ export async function GET() {
         new Set([...sessions.map(s => s.date), ...manualByDate.map(d => d.date)])
       ).sort().reverse();
 
-      let streak = 0;
-      const todayStr     = format(new Date(), "yyyy-MM-dd");
-      const yesterdayStr = format(subDays(new Date(), 1), "yyyy-MM-dd");
-
-      if (uniqueDateStrings.length > 0) {
-        const lastDateStr = uniqueDateStrings[0];
-        if (lastDateStr === todayStr || lastDateStr === yesterdayStr) {
-          streak = 1;
-          let currentStr = lastDateStr;
-          for (let i = 1; i < uniqueDateStrings.length; i++) {
-            const prevStr         = uniqueDateStrings[i];
-            const expectedPrevStr = format(subDays(parseISO(currentStr), 1), "yyyy-MM-dd");
-            if (prevStr === expectedPrevStr) {
-              streak++;
-              currentStr = prevStr;
-            } else {
-              break;
-            }
-          }
-        }
-      }
+      // Lagos-time days, shared with the profile page (lib/profile.ts).
+      const streak = studyStreak(uniqueDateStrings);
 
       // ── 3. Heatmap + Weekly trends — also in parallel ─────────────────────
       const sevenDaysAgo = subDays(new Date(), 6);

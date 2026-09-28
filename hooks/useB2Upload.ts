@@ -1,6 +1,63 @@
+const MIME_BY_EXT: Record<string, string> = {
+  pdf: "application/pdf",
+  doc: "application/msword",
+  docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  epub: "application/epub+zip",
+  png: "image/png",
+  jpg: "image/jpeg",
+  jpeg: "image/jpeg",
+  webp: "image/webp",
+};
+const EXT_BY_MIME: Record<string, string> = Object.fromEntries(
+  Object.entries(MIME_BY_EXT).map(([ext, mime]) => [mime, ext]),
+);
+
+// On Android, a file picked from Google Drive (or any cloud provider) is only a
+// handle to a content:// URI - the bytes are fetched lazily when XHR streams the
+// body. That stream often fails mid-upload (file not downloaded yet, the
+// picker's read grant lapses, or the provider's reported size doesn't match the
+// bytes it serves - which also breaks our signed Content-Length), and Chrome
+// reports all of these as a generic XHR "network error". Reading the whole file
+// into memory up front forces the download, gives us the true size, and turns
+// an unreadable file into a clear error before we touch B2.
+async function materializeFile(file: File): Promise<File> {
+  let buffer: ArrayBuffer;
+  try {
+    buffer = await file.arrayBuffer();
+  } catch {
+    throw new Error(
+      "Couldn't read this file from your device. If it's in Google Drive, download it first (Drive → ⋮ → Download), then pick it from your Downloads folder.",
+    );
+  }
+  if (buffer.byteLength === 0) {
+    throw new Error("This file is empty or couldn't be read. Try downloading it to your device first.");
+  }
+
+  // Cloud providers sometimes give an empty/generic MIME type, or a name with
+  // no extension (e.g. a Google Doc exported on the fly). The server keys its
+  // allow-list and object name off the extension, so fill in whichever is missing.
+  let name = file.name || "upload";
+  let ext = name.includes(".") ? name.split(".").pop()!.toLowerCase() : "";
+  let type = file.type;
+  if (!ext && EXT_BY_MIME[type]) {
+    ext = EXT_BY_MIME[type];
+    name = `${name}.${ext}`;
+  }
+  if ((!type || type === "application/octet-stream") && MIME_BY_EXT[ext]) {
+    type = MIME_BY_EXT[ext];
+  }
+
+  return new File([buffer], name, { type, lastModified: file.lastModified });
+}
+
+async function errorFrom(res: Response, fallback: string) {
+  const data = await res.json().catch(() => null);
+  return new Error(data?.error || fallback);
+}
+
 export function useB2Upload() {
   const upload = (
-    file: File,
+    pickedFile: File,
     onProgress?: (progress: number) => void,
     // "result-slip" stores the file in the student's private slips/ folder
     // (server enforces <=5MB, PDF/image)
@@ -8,6 +65,7 @@ export function useB2Upload() {
   ): Promise<string> => {
     return new Promise(async (resolve, reject) => {
       try {
+        const file = await materializeFile(pickedFile);
         const CHUNK_SIZE = 5 * 1024 * 1024; // 5MB
 
         if (file.size <= CHUNK_SIZE) {
@@ -24,7 +82,7 @@ export function useB2Upload() {
             }),
           });
           
-          if (!res.ok) throw new Error("Failed to get upload auth");
+          if (!res.ok) throw await errorFrom(res, "Failed to get upload auth");
           const { uploadUrl, publicUrl } = await res.json();
           
           const xhr = new XMLHttpRequest();
@@ -63,7 +121,7 @@ export function useB2Upload() {
             }),
           });
 
-          if (!createRes.ok) throw new Error("Failed to initialize multipart upload");
+          if (!createRes.ok) throw await errorFrom(createRes, "Failed to initialize multipart upload");
           const { uploadId, key } = await createRes.json();
 
           const totalParts = Math.ceil(file.size / CHUNK_SIZE);

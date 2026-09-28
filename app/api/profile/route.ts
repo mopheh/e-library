@@ -1,222 +1,138 @@
-import { eq, sum, desc } from "drizzle-orm";
-import { auth } from "@clerk/nextjs/server";
+import { and, eq, ne } from "drizzle-orm";
+import { clerkClient } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
+import { z } from "zod";
 import { db } from "@/database/drizzle";
-import {
-  departments,
-  faculty,
-  systemSettings,
-  users,
-  userBooks,
-  readingSessions,
-  activities,
-} from "@/database/schema";
+import { departments, faculty, LEVEL_ENUM, systemSettings, users } from "@/database/schema";
 import { validateMatricNo } from "@/lib/facultyCodes";
 import * as Sentry from "@sentry/nextjs";
-import { invalidateUserCache } from "@/lib/auth";
+import { getCurrentUser, invalidateUserCache } from "@/lib/auth";
+import { loadProfile } from "@/lib/profile";
+import { invalidatePlan } from "@/lib/planner";
+import { invalidateCache } from "@/lib/redis";
 
 export async function GET() {
   try {
-    const { userId } = await auth();
-    if (!userId) {
+    const user = await getCurrentUser();
+    if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-
-    const cliqRes = await fetch(`https://api.clerk.com/v1/users/${userId}`, {
-      headers: {
-        Authorization: `Bearer ${process.env.CLERK_SECRET_KEY}`,
-      },
-    });
-
-    if (!cliqRes.ok) {
-      throw new Error("Failed to fetch from CLIQ");
-    }
-
-    const cliqData = await cliqRes.json();
-
-    const cliqProfile = {
-      firstName: cliqData.first_name,
-      lastName: cliqData.last_name,
-      email: cliqData.email_addresses?.[0]?.email_address || null,
-      avatarUrl: cliqData.image_url,
-    };
-
-    const [dbProfile] = await db
-      .select({
-        id: users.id,
-        matricNumber: users.matricNo,
-        year: users.year,
-        gender: users.gender,
-        address: users.address,
-        role: users.role,
-        phoneNumber: users.phoneNumber,
-        faculty: {
-          id: faculty.id,
-          name: faculty.name,
-        },
-        department: {
-          id: departments.id,
-          name: departments.name,
-        },
-      })
-      .from(users)
-      .where(eq(users.clerkId, userId))
-      .leftJoin(faculty, eq(users.facultyId, faculty.id))
-      .leftJoin(departments, eq(users.departmentId, departments.id));
-
-    if (!dbProfile) {
-      return NextResponse.json(
-        { error: "Profile not found in database" },
-        { status: 404 }
-      );
-    }
-
-    // Fetch stats
-    const [booksStats] = await db
-      .select({
-        booksRead: sum(userBooks.readCount),
-        downloads: sum(userBooks.downloadCount),
-        aiRequests: sum(userBooks.aiRequests),
-      })
-      .from(userBooks)
-      .where(eq(userBooks.userId, dbProfile.id));
-
-    const [sessionStats] = await db
-      .select({
-        totalMinutes: sum(readingSessions.duration),
-        totalPages: sum(readingSessions.pagesRead),
-      })
-      .from(readingSessions)
-      .where(eq(readingSessions.userId, dbProfile.id));
-
-    const recentActivities = await db
-      .select()
-      .from(activities)
-      .where(eq(activities.userId, dbProfile.id))
-      .orderBy(desc(activities.createdAt))
-      .limit(10);
-
-    const mergedProfile = {
-      ...cliqProfile,
-      ...dbProfile,
-      stats: {
-        booksRead: Number(booksStats?.booksRead || 0),
-        downloads: Number(booksStats?.downloads || 0),
-        aiRequests: Number(booksStats?.aiRequests || 0),
-        totalMinutes: Number(sessionStats?.totalMinutes || 0),
-        totalPages: Number(sessionStats?.totalPages || 0),
-      },
-      recentActivities,
-    };
-
-    return NextResponse.json(mergedProfile);
-  } catch (error: any) {
+    return NextResponse.json(await loadProfile(user));
+  } catch (error) {
     Sentry.captureException(error);
     console.error("Profile fetch error:", error);
-    return NextResponse.json(
-      { error: "Failed to load profile" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Failed to load profile" }, { status: 500 });
   }
 }
 
+const MIN_AGE = 13;
+const MAX_AGE = 100;
+
+function ageOn(dob: string, today = new Date()) {
+  const d = new Date(`${dob}T00:00:00Z`);
+  let age = today.getUTCFullYear() - d.getUTCFullYear();
+  const m = today.getUTCMonth() - d.getUTCMonth();
+  if (m < 0 || (m === 0 && today.getUTCDate() < d.getUTCDate())) age--;
+  return age;
+}
+
+const updateSchema = z.object({
+  firstName: z.string().trim().min(1, "First name is required").max(60),
+  lastName: z.string().trim().min(1, "Last name is required").max(60),
+  // Nigerian mobile (0803…, +234803…) or any international number; spaces/dashes ignored.
+  phoneNumber: z
+    .string()
+    .transform((v) => v.replace(/[\s()-]/g, ""))
+    .refine((v) => v === "" || /^(?:0[789]\d{9}|\+?\d{10,15})$/.test(v), "Enter a valid phone number, e.g. 0803 123 4567"),
+  gender: z.enum(["MALE", "FEMALE"]),
+  dateOfBirth: z
+    .string()
+    .refine((v) => v === "" || (/^\d{4}-\d{2}-\d{2}$/.test(v) && !Number.isNaN(Date.parse(v))), "Enter a valid date")
+    .refine((v) => v === "" || (ageOn(v) >= MIN_AGE && ageOn(v) <= MAX_AGE), "Check your date of birth"),
+  address: z.string().trim().min(1, "Address is required").max(255),
+  matricNo: z.string().trim().min(1, "Matric number is required").max(40).transform((v) => v.toUpperCase()),
+  facultyId: z.string().uuid("Choose your faculty"),
+  departmentId: z.string().uuid("Choose your department"),
+  level: z.enum(LEVEL_ENUM.enumValues, { message: "Choose your level" }),
+});
+
 export async function PUT(req: Request) {
   try {
-    const { userId } = await auth();
-    if (!userId) {
+    const user = await getCurrentUser();
+    if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const body = await req.json();
-    const {
-      firstName,
-      lastName,
-      phoneNumber,
-      faculty: facultyIdInput,
-      department,
-      year,
-      matricNumber,
-      gender,
-      address,
-      dob,
-    } = body;
+    const parsed = updateSchema.safeParse(await req.json().catch(() => null));
+    if (!parsed.success) {
+      const issue = parsed.error.issues[0];
+      return NextResponse.json({ error: issue?.message ?? "Invalid details", field: issue?.path[0] }, { status: 400 });
+    }
+    const v = parsed.data;
 
-    // Matric number format is faculty-dependent, so validate against
-    // whichever faculty applies after this update (the submitted one, or
-    // the user's current one if faculty isn't being changed). ASPIRANTs
-    // reuse this column for a JAMB reg number, so they're exempt.
-    if (matricNumber) {
-      const [currentUser] = await db
-        .select({ role: users.role, facultyId: users.facultyId })
-        .from(users)
-        .where(eq(users.clerkId, userId))
-        .limit(1);
+    // The department must belong to the chosen faculty.
+    const [place] = await db
+      .select({ facultyName: faculty.name })
+      .from(departments)
+      .innerJoin(faculty, eq(faculty.id, departments.facultyId))
+      .where(and(eq(departments.id, v.departmentId), eq(departments.facultyId, v.facultyId)))
+      .limit(1);
+    if (!place) {
+      return NextResponse.json({ error: "That department isn't in the selected faculty", field: "departmentId" }, { status: 400 });
+    }
 
-      const effectiveFacultyId = facultyIdInput || currentUser?.facultyId;
-      if (currentUser?.role === "STUDENT" && effectiveFacultyId) {
-        const [fac] = await db
-          .select({ name: faculty.name })
-          .from(faculty)
-          .where(eq(faculty.id, effectiveFacultyId))
-          .limit(1);
-
-        if (fac) {
-          const [settings] = await db.select().from(systemSettings).limit(1);
-          const result = validateMatricNo(matricNumber, fac.name, settings?.matricFacultyCheckEnabled ?? false);
-          if (!result.valid) {
-            return NextResponse.json({ error: result.reason }, { status: 400 });
-          }
+    if (v.matricNo !== user.matricNo) {
+      // Matric format is faculty-dependent. ASPIRANTs reuse this column for
+      // a JAMB reg number, so they're exempt.
+      if (user.role === "STUDENT") {
+        const [settings] = await db.select().from(systemSettings).limit(1);
+        const result = validateMatricNo(v.matricNo, place.facultyName, settings?.matricFacultyCheckEnabled ?? false);
+        if (!result.valid) {
+          return NextResponse.json({ error: result.reason, field: "matricNo" }, { status: 400 });
         }
+      }
+      const [taken] = await db
+        .select({ id: users.id })
+        .from(users)
+        .where(and(eq(users.matricNo, v.matricNo), ne(users.id, user.id)))
+        .limit(1);
+      if (taken) {
+        return NextResponse.json({ error: "That matric number is already registered to another account", field: "matricNo" }, { status: 409 });
       }
     }
 
-    // Update clerk details
-    if (firstName || lastName) {
-      await fetch(`https://api.clerk.com/v1/users/${userId}`, {
-        method: "PATCH",
-        headers: {
-          Authorization: `Bearer ${process.env.CLERK_SECRET_KEY}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          first_name: firstName,
-          last_name: lastName,
-        }),
-      });
+    // Clerk first: if the name can't be saved there, don't leave the two out of step.
+    const fullName = `${v.firstName} ${v.lastName}`;
+    if (fullName !== user.fullName) {
+      const client = await clerkClient();
+      await client.users.updateUser(user.clerkId, { firstName: v.firstName, lastName: v.lastName });
     }
 
-    // Update local database
-    const updateData: any = {};
-    if (firstName || lastName) {
-      updateData.fullName = `${firstName || ""} ${lastName || ""}`.trim();
-    }
-    if (phoneNumber !== undefined) updateData.phoneNumber = phoneNumber;
-    if (facultyIdInput) updateData.facultyId = facultyIdInput;
-    if (department) updateData.departmentId = department;
-    if (year) updateData.year = year;
-    if (matricNumber) updateData.matricNo = matricNumber;
-    if (gender) updateData.gender = gender;
-    if (address) updateData.address = address;
-    if (dob) updateData.dateOfBirth = dob;
+    await db
+      .update(users)
+      .set({
+        fullName,
+        phoneNumber: v.phoneNumber || null,
+        gender: v.gender,
+        dateOfBirth: v.dateOfBirth || null,
+        address: v.address,
+        matricNo: v.matricNo,
+        facultyId: v.facultyId,
+        departmentId: v.departmentId,
+        year: v.level,
+      })
+      .where(eq(users.id, user.id));
 
-    if (Object.keys(updateData).length > 0) {
-      await db
-        .update(users)
-        .set(updateData)
-        .where(eq(users.clerkId, userId));
-      await invalidateUserCache({ clerkId: userId });
+    await invalidateUserCache({ clerkId: user.clerkId });
+    // Department and level decide which courses, exams and plan the student sees.
+    if (v.departmentId !== user.departmentId || v.level !== user.year) {
+      await Promise.all([invalidatePlan(user.id), invalidateCache(`analytics:${user.id}`)]);
     }
 
-    return NextResponse.json({
-      success: true,
-      message: "Profile updated successfully",
-    });
-  } catch (error: any) {
+    return NextResponse.json({ success: true });
+  } catch (error) {
     Sentry.captureException(error);
     console.error("Profile update error:", error);
-    return NextResponse.json(
-      { error: "Failed to update profile" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Failed to update profile" }, { status: 500 });
   }
 }

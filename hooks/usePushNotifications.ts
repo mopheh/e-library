@@ -36,12 +36,34 @@ function pushSupported() {
     "Notification" in window;
 }
 
-async function getRegistration() {
-  // navigator.serviceWorker.ready never resolves if no SW is registered
-  // (e.g. dev, where next-pwa is disabled) - don't hang the UI on it.
+const SW_READY_TIMEOUT_MS = 10_000;
+
+/**
+ * Returns the active service worker registration, registering /sw.js first
+ * if nothing has yet (e.g. the push UI rendered before ServiceWorkerRegister
+ * got to it). Resolves null only if registration fails or the worker doesn't
+ * become ready in time - never hangs the UI (navigator.serviceWorker.ready
+ * alone would wait forever if nothing is registered, e.g. in dev where
+ * next-pwa doesn't build sw.js).
+ */
+export async function ensureServiceWorker(): Promise<ServiceWorkerRegistration | null> {
+  if (!("serviceWorker" in navigator)) return null;
   const existing = await navigator.serviceWorker.getRegistration();
-  return existing ? navigator.serviceWorker.ready : null;
+  if (!existing) {
+    try {
+      await navigator.serviceWorker.register("/sw.js", { scope: "/" });
+    } catch (err) {
+      console.error("SW registration failed:", err);
+      return null;
+    }
+  }
+  return Promise.race([
+    navigator.serviceWorker.ready,
+    new Promise<null>((resolve) => setTimeout(() => resolve(null), SW_READY_TIMEOUT_MS)),
+  ]);
 }
+
+const getRegistration = ensureServiceWorker;
 
 /**
  * Best-effort removal of this device's subscription - call before signOut so

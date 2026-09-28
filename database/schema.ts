@@ -585,7 +585,8 @@ export const studyLogsRelations = relations(studyLogs, ({ one }) => ({
 }));
 
 // ── Grades / CGPA (UNIBEN 5-point scale, see lib/grading.ts) ─────────────
-// Private to the student: never exposed to other users or the leaderboard.
+// Visible to the student and to admins (Student Performance); never shown
+// to other students or on the leaderboard.
 export const letterGradeEnum = pgEnum("letter_grade", ["A", "B", "C", "D", "E", "F"]);
 
 // One row per student, written on first save. priorCgpa/priorUnits is the

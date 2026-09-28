@@ -57,6 +57,13 @@ const nextConfig: NextConfig = {
 const pwaConfig = withPWA({
   dest: "public",
   disable: process.env.NODE_ENV === "development", // disable PWA in dev
+  // Workbox aborts the whole service-worker install if any precached URL
+  // 404s. Sentry deletes client source maps after uploading them, and
+  // app-build-manifest.json is never served - precaching either meant the
+  // worker never installed on any device (no offline mode, and push
+  // reported "this browser can't do notifications").
+  // @ts-ignore
+  buildExcludes: [/\.map$/, /app-build-manifest\.json$/],
   // @ts-ignore
   fallbacks: {
     // HTML fallback

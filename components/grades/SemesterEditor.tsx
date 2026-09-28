@@ -159,7 +159,7 @@ export function SemesterEditor({ open, onOpenChange, editing, data }: {
         <div className="mx-auto mt-2.5 h-1.5 w-10 rounded-full bg-zinc-200 dark:bg-zinc-700 sm:hidden" />
         <SheetHeader className="px-5 pt-4 pb-2">
           <SheetTitle className="font-cabin font-black text-xl tracking-tight">{editing ? "Edit results" : "Add semester results"}</SheetTitle>
-          <SheetDescription className="text-xs">Enter the grades from your result slip. Only you can see them.</SheetDescription>
+          <SheetDescription className="text-xs">Enter the grades from your result slip.</SheetDescription>
         </SheetHeader>
 
         <div className="overflow-y-auto px-5 pb-4 space-y-5">

@@ -10,8 +10,10 @@ import CourseManagement from "@/components/adminDashboard/CourseManagement";
 import AspirantManagement from "@/components/adminDashboard/AspirantManagement";
 import AcademicScheduleManager from "@/components/adminDashboard/AcademicScheduleManager";
 import CourseCbtQuestionManager from "@/components/adminDashboard/CourseCbtQuestionManager";
+import StudentPerformance from "@/components/adminDashboard/StudentPerformance";
 import {
     LayoutDashboard,
+    Activity,
     Link as LinkIcon,
     ShieldCheck,
     Settings,
@@ -37,6 +39,7 @@ type TabId =
     | "courses"
     | "aspirants"
     | "schedule"
+    | "performance"
     | "data"
     | "coursecbt";
 
@@ -131,6 +134,7 @@ export default function FacultyManagementPage() {
         { id: "schedule" as TabId,      label: "Schedule",      icon: Calendar },
         ...(isAdmin
             ? [
+                  { id: "performance" as TabId, label: "Performance", icon: Activity },
                   { id: "coursecbt" as TabId, label: "Course CBT",    icon: GraduationCap },
                   { id: "aspirants" as TabId, label: "Aspirants",     icon: Users },
                   { id: "data" as TabId,      label: "Platform Data", icon: Database },
@@ -375,6 +379,9 @@ export default function FacultyManagementPage() {
                 )}
                 {activeTab === "announcements" && (
                     <div className="lg:col-span-7 max-w-3xl mx-auto w-full"><AnnouncementTool /></div>
+                )}
+                {activeTab === "performance" && isAdmin && (
+                    <div className="lg:col-span-7"><StudentPerformance /></div>
                 )}
                 {activeTab === "data" && isAdmin && (
                     <div className="lg:col-span-7"><AdminDashboard /></div>

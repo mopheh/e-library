@@ -15,6 +15,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const pathname = usePathname();
+  const isReader = !!pathname?.includes("/book/");
 
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
 
@@ -30,10 +31,10 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             w-full overflow-y-auto overflow-x-hidden ${isSidebarOpen ? "!overflow-hidden" : ""}`}
         >
           <Nav />
-          <main className="pb-24 sm:pb-0">{children}</main>
+          <main className={isReader ? "" : "pb-24 sm:pb-0"}>{children}</main>
         </div>
       </div>
-      {!pathname?.includes("/book/") && (
+      {!isReader && (
         <>
           <MobileMessagingButton />
           <BottomNav scrollRef={scrollRef} toggleSidebar={toggleSidebar} />

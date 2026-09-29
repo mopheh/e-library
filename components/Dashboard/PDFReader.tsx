@@ -31,6 +31,7 @@ import { STORAGE_KEY } from "@/lib/utils";
 import { getOfflinePdf, checkIsPdfOffline } from "@/lib/offline-storage";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useKeyboardOpen } from "@/hooks/useKeyboardOpen";
 import { IoBookOutline } from "react-icons/io5";
 import { AiOutlineBook } from "react-icons/ai";
 
@@ -95,6 +96,7 @@ const PDFStudyView = ({ fileUrl, bookId }: PDFStudyViewProps) => {
   const [displayUrl, setDisplayUrl] = useState<string | Uint8Array>(fileUrl);
   const [assistantInput, setAssistantInput] = useState("");
   const [mobileTab, setMobileTab] = useState("study");
+  const keyboardOpen = useKeyboardOpen();
 
   // Unified page-change handler: updates state AND records the page visit in the
   // viewedPages ref so the 60-second reading-session interval always has data.
@@ -570,8 +572,8 @@ const PDFStudyView = ({ fileUrl, bookId }: PDFStudyViewProps) => {
 
       {/* Mobile Layout (Unchanged mostly, just worker update) */}
       <div className="md:hidden h-full flex flex-col w-full">
-        <Tabs value={mobileTab} onValueChange={setMobileTab} className="flex flex-col h-full w-full">
-          <div className="flex-1 overflow-hidden w-full">
+        <Tabs value={mobileTab} onValueChange={setMobileTab} className="flex flex-col gap-0 h-full w-full">
+          <div className="flex-1 min-h-0 overflow-hidden w-full">
             <TabsContent
               value="study"
               forceMount
@@ -632,7 +634,7 @@ const PDFStudyView = ({ fileUrl, bookId }: PDFStudyViewProps) => {
             <TabsContent
               value="assistant"
               forceMount
-              className="h-full data-[state=inactive]:hidden w-full overflow-y-auto"
+              className="h-full data-[state=inactive]:hidden w-full overflow-hidden"
             >
               <AIChatAssistant 
                 pageNumber={pages?.[currentPage]?.pageNumber}
@@ -644,20 +646,25 @@ const PDFStudyView = ({ fileUrl, bookId }: PDFStudyViewProps) => {
             </TabsContent>
           </div>
 
-          <TabsList className="fixed bottom-0 left-0 w-full flex justify-around font-poppins text-xs border-t dark:bg-zinc-900 text-zinc-500 bg-zinc-50 z-50 h-14 pb-safe">
-            <TabsTrigger value="study" className="flex-1 h-full rounded-none">
+          {/* In the flex flow, not fixed: a fixed bar sat on top of the assistant's input.
+              Hidden while the keyboard is up so the input and messages get the room. */}
+          <TabsList
+            className={`shrink-0 w-full justify-around font-poppins text-xs border-t dark:bg-zinc-900 text-zinc-500 bg-zinc-50 h-auto rounded-none p-0 ${keyboardOpen ? "hidden" : "flex"}`}
+            style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+          >
+            <TabsTrigger value="study" className="flex-1 h-14 rounded-none">
               <div className="flex flex-col items-center gap-1">
                  <IoBookOutline size={20} /> 
                  <span>Read</span>
               </div>
             </TabsTrigger>
-            <TabsTrigger value="outline" className="flex-1 h-full rounded-none">
+            <TabsTrigger value="outline" className="flex-1 h-14 rounded-none">
                <div className="flex flex-col items-center gap-1">
                  <svg stroke="currentColor" fill="currentColor" strokeWidth="0" viewBox="0 0 24 24" height="20" width="20" xmlns="http://www.w3.org/2000/svg"><path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h16v2H4z"></path></svg>
                  <span>Outline</span>
               </div>
             </TabsTrigger>
-            <TabsTrigger value="assistant" className="flex-1 h-full rounded-none">
+            <TabsTrigger value="assistant" className="flex-1 h-14 rounded-none">
                <div className="flex flex-col items-center gap-1">
                  <AiOutlineBook size={20} /> 
                  <span>Assistant</span>

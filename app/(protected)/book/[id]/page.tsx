@@ -54,7 +54,7 @@ const Page = () => {
   }
 
   return (
-    <div className="h-[calc(100dvh-theme(spacing.4))] md:h-[calc(100vh-9rem)] w-full overflow-hidden flex flex-col">
+    <div className="h-[100dvh] sm:h-[calc(100dvh-theme(spacing.12))] md:h-[calc(100vh-9rem)] w-full overflow-hidden flex flex-col">
       <div className="flex-1 w-full h-full overflow-hidden">
         <PDFReader fileUrl={book.fileUrl} bookId={book.id} />
       </div>

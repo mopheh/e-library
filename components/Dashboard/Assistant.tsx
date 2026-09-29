@@ -318,7 +318,7 @@ export default function AIChatAssistant({
               handleInputChange(e);
               if (onInputChange) onInputChange(e.target.value);
             }}
-            className="flex-1 pl-4 pr-12 py-2.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 border-transparent focus:bg-white dark:focus:bg-zinc-950 border focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 outline-none transition-all text-sm dark:text-white placeholder:text-zinc-400 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex-1 pl-4 pr-12 py-2.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 border-transparent focus:bg-white dark:focus:bg-zinc-950 border focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 outline-none transition-all text-base md:text-sm dark:text-white placeholder:text-zinc-400 disabled:opacity-50 disabled:cursor-not-allowed"
             placeholder={
               errorKind === "rate_limited"
                 ? "Daily limit reached..."
